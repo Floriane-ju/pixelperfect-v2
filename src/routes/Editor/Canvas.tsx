@@ -216,6 +216,7 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
       isDrawing.current = false;
       lastPixel.current = null;
       drawSessionSnapshot.current = null;
+      panLastPos.current = null; // évite le saut si on revient à 1 doigt
       navSnapshot.current = {
         pointers: new Map(navPointers.current),
         transform: { ...transformRef.current },
@@ -274,6 +275,9 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
       const cp0 = navPointers.current.get(ids[0]);
       const cp1 = navPointers.current.get(ids[1]);
       if (cp0 && cp1) {
+        const wr = wrapperRef.current!.getBoundingClientRect();
+        const wcx = wr.left + wr.width / 2;
+        const wcy = wr.top + wr.height / 2;
         const smx = (sp0.x + sp1.x) / 2, smy = (sp0.y + sp1.y) / 2;
         const cmx = (cp0.x + cp1.x) / 2, cmy = (cp0.y + cp1.y) / 2;
         const sdist = Math.hypot(sp1.x - sp0.x, sp1.y - sp0.y);
@@ -282,10 +286,21 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
           Math.atan2(cp1.y - cp0.y, cp1.x - cp0.x) -
           Math.atan2(sp1.y - sp0.y, sp1.x - sp0.x)
         ) * (180 / Math.PI);
+        const newScale = clamp(snap.transform.scale * (sdist > 0 ? cdist / sdist : 1), MIN_SCALE, MAX_SCALE);
+        // Pivot = midpoint des doigts au snapshot, relatif au centre du wrapper
+        const pivotX = smx - wcx - snap.transform.x;
+        const pivotY = smy - wcy - snap.transform.y;
+        // Faire pivoter le pivot de angleDelta pour le nouveau référentiel
+        const rad = angleDelta * Math.PI / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const rotPivotX = pivotX * cos - pivotY * sin;
+        const rotPivotY = pivotX * sin + pivotY * cos;
+        // La translation place le pivot pivoté sous le nouveau midpoint des doigts
         applyTransform({
-          x: snap.transform.x + (cmx - smx),
-          y: snap.transform.y + (cmy - smy),
-          scale: clamp(snap.transform.scale * (sdist > 0 ? cdist / sdist : 1), MIN_SCALE, MAX_SCALE),
+          x: cmx - wcx - rotPivotX * newScale / snap.transform.scale,
+          y: cmy - wcy - rotPivotY * newScale / snap.transform.scale,
+          scale: newScale,
           angle: snap.transform.angle + angleDelta,
         });
       }
@@ -311,8 +326,17 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
   const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     wrapperRef.current?.releasePointerCapture(e.pointerId);
     navPointers.current.delete(e.pointerId);
-    if (navPointers.current.size < 2) navSnapshot.current = null;
-    if (navPointers.current.size === 0) panLastPos.current = null;
+    const remaining = navPointers.current.size;
+    if (remaining < 2) {
+      const wasNav = navSnapshot.current !== null;
+      navSnapshot.current = null;
+      if (remaining === 1 && wasNav) {
+        // Transition 2→1 doigt : reprendre le pan avec le doigt restant (pas de saut)
+        const [pos] = navPointers.current.values();
+        panLastPos.current = pos ?? null;
+      }
+    }
+    if (remaining === 0) panLastPos.current = null;
     isDrawing.current = false;
     lastPixel.current = null;
     drawSessionSnapshot.current = null;
