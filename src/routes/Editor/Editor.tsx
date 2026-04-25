@@ -3,14 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { fetchDrawing, updateDrawingData } from '@/lib/drawings';
 import type { DrawingData, DrawingRow, HexColor, PixelLayer } from '@/types';
 import { Canvas } from './Canvas';
+import type { Tool } from './Canvas';
 import { Topbar } from './Topbar';
 import styles from './Editor.module.scss';
-
-type Tool = 'pencil' | 'eraser' | 'fill';
 type OpenPanel = 'layers' | 'color' | null;
 type Status = 'loading' | 'ready' | 'error' | 'saving';
 
 const SAVE_DELAY = 1500;
+const MAX_HISTORY = 50;
 
 export function Editor() {
   const { id } = useParams<{ id: string }>();
@@ -24,9 +24,17 @@ export function Editor() {
   const [recentColors, setRecentColors] = useState<HexColor[]>([]);
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null);
   const [showInvisibleModal, setShowInvisibleModal] = useState(false);
+  const [mirrorH, setMirrorH] = useState(false);
+  const [mirrorV, setMirrorV] = useState(false);
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestDataRef = useRef<DrawingData | null>(null);
+
+  const pastRef = useRef<DrawingData[]>([]);
+  const futureRef = useRef<DrawingData[]>([]);
+  const strokeSnapshotRef = useRef<DrawingData | null>(null);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
 
   // Keep latestDataRef in sync for flush-on-unmount
   useEffect(() => {
@@ -74,6 +82,71 @@ export function Editor() {
     }, SAVE_DELAY);
   }, [id]);
 
+  const syncHistoryFlags = useCallback(() => {
+    setCanUndo(pastRef.current.length > 0);
+    setCanRedo(futureRef.current.length > 0);
+  }, []);
+
+  const pushHistory = useCallback((before: DrawingData) => {
+    const past = pastRef.current;
+    pastRef.current = past.length >= MAX_HISTORY ? [...past.slice(1), before] : [...past, before];
+    futureRef.current = [];
+    syncHistoryFlags();
+  }, [syncHistoryFlags]);
+
+  const handleDrawStart = useCallback(() => {
+    strokeSnapshotRef.current = latestDataRef.current;
+  }, []);
+
+  const handleDrawEnd = useCallback(() => {
+    if (strokeSnapshotRef.current) {
+      pushHistory(strokeSnapshotRef.current);
+      strokeSnapshotRef.current = null;
+    }
+  }, [pushHistory]);
+
+  const handleUndo = useCallback(() => {
+    const past = pastRef.current;
+    if (past.length === 0) return;
+    const before = past[past.length - 1];
+    pastRef.current = past.slice(0, -1);
+    const current = latestDataRef.current;
+    if (current) futureRef.current = [...futureRef.current, current];
+    setDrawing(prev => prev ? { ...prev, data: before } : prev);
+    scheduleSave();
+    syncHistoryFlags();
+  }, [scheduleSave, syncHistoryFlags]);
+
+  const handleRedo = useCallback(() => {
+    const future = futureRef.current;
+    if (future.length === 0) return;
+    const after = future[future.length - 1];
+    futureRef.current = future.slice(0, -1);
+    const current = latestDataRef.current;
+    if (current) pastRef.current = [...pastRef.current, current];
+    setDrawing(prev => prev ? { ...prev, data: after } : prev);
+    scheduleSave();
+    syncHistoryFlags();
+  }, [scheduleSave, syncHistoryFlags]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      } else if (
+        ((e.ctrlKey || e.metaKey) && e.key === 'y') ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z')
+      ) {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [handleUndo, handleRedo]);
+
   // Layer handlers
   const handleLayerChange = useCallback(
     (layerId: string, pixels: Record<string, HexColor>) => {
@@ -93,6 +166,7 @@ export function Editor() {
   );
 
   const handleLayerVisibilityToggle = useCallback((layerId: string) => {
+    if (latestDataRef.current) pushHistory(latestDataRef.current);
     setDrawing(prev => {
       if (!prev) return prev;
       return {
@@ -104,9 +178,10 @@ export function Editor() {
       };
     });
     scheduleSave();
-  }, [scheduleSave]);
+  }, [scheduleSave, pushHistory]);
 
   const handleLayerDuplicate = useCallback((layerId: string) => {
+    if (latestDataRef.current) pushHistory(latestDataRef.current);
     setDrawing(prev => {
       if (!prev) return prev;
       const src = prev.data.layers.find(l => l.id === layerId);
@@ -128,7 +203,32 @@ export function Editor() {
     scheduleSave();
   }, [scheduleSave]);
 
+  const handleLayerAdd = useCallback(() => {
+    if (latestDataRef.current) pushHistory(latestDataRef.current);
+    setDrawing(prev => {
+      if (!prev) return prev;
+      const newLayer: PixelLayer = {
+        id: crypto.randomUUID(),
+        name: `Calque ${prev.data.layers.length + 1}`,
+        pixels: {},
+        opacity: 1,
+        visible: true,
+      };
+      const activeIdx = prev.data.layers.findIndex(l => l.id === activeLayerId);
+      const insertAt = activeIdx >= 0 ? activeIdx + 1 : prev.data.layers.length;
+      const layers = [
+        ...prev.data.layers.slice(0, insertAt),
+        newLayer,
+        ...prev.data.layers.slice(insertAt),
+      ];
+      setActiveLayerId(newLayer.id);
+      return { ...prev, data: { ...prev.data, layers } };
+    });
+    scheduleSave();
+  }, [activeLayerId, scheduleSave, pushHistory]);
+
   const handleLayerDelete = useCallback((layerId: string) => {
+    if (latestDataRef.current) pushHistory(latestDataRef.current);
     setDrawing(prev => {
       if (!prev || prev.data.layers.length <= 1) return prev;
       const layers = prev.data.layers.filter(l => l.id !== layerId);
@@ -140,7 +240,7 @@ export function Editor() {
       return remaining[0]?.id ?? '';
     });
     scheduleSave();
-  }, [scheduleSave, drawing]);
+  }, [scheduleSave, drawing, pushHistory]);
 
   const handleColorChange = useCallback((newColor: HexColor) => {
     setColor(newColor);
@@ -200,6 +300,7 @@ export function Editor() {
         openPanel={openPanel}
         onPanelToggle={handlePanelToggle}
         onPanelClose={() => setOpenPanel(null)}
+        onLayerAdd={handleLayerAdd}
         onLayerSelect={setActiveLayerId}
         onLayerVisibilityToggle={handleLayerVisibilityToggle}
         onLayerDuplicate={handleLayerDuplicate}
@@ -207,7 +308,15 @@ export function Editor() {
         onColorChange={handleColorChange}
         recentColors={recentColors}
         drawingColors={drawingColors}
+        mirrorH={mirrorH}
+        mirrorV={mirrorV}
+        onMirrorHToggle={() => setMirrorH(v => !v)}
+        onMirrorVToggle={() => setMirrorV(v => !v)}
         onBack={() => navigate('/gallery')}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
       />
       <div className={styles.canvasArea}>
         <Canvas
@@ -215,8 +324,12 @@ export function Editor() {
           activeLayerId={activeLayerId}
           tool={tool}
           color={color}
+          mirrorH={mirrorH}
+          mirrorV={mirrorV}
           onLayerChange={handleLayerChange}
           onInvisibleLayerAttempt={() => setShowInvisibleModal(true)}
+          onDrawStart={handleDrawStart}
+          onDrawEnd={handleDrawEnd}
         />
       </div>
       {status === 'saving' && (

@@ -2,10 +2,10 @@ import { useEffect, useRef } from 'react';
 import { Button } from '@/components/Button';
 import { ColorPicker } from '@/components/ColorPicker';
 import type { HexColor, PixelLayer } from '@/types';
+import type { Tool } from './Canvas';
 import { LayerPanel } from './LayerPanel';
 import styles from './Topbar.module.scss';
 
-type Tool = 'pencil' | 'eraser' | 'fill';
 type OpenPanel = 'layers' | 'color' | null;
 
 interface TopbarProps {
@@ -18,6 +18,7 @@ interface TopbarProps {
   openPanel: OpenPanel;
   onPanelToggle: (p: 'layers' | 'color') => void;
   onPanelClose: () => void;
+  onLayerAdd: () => void;
   onLayerSelect: (id: string) => void;
   onLayerVisibilityToggle: (id: string) => void;
   onLayerDuplicate: (id: string) => void;
@@ -25,7 +26,15 @@ interface TopbarProps {
   onColorChange: (c: HexColor) => void;
   recentColors: HexColor[];
   drawingColors: HexColor[];
+  mirrorH: boolean;
+  mirrorV: boolean;
+  onMirrorHToggle: () => void;
+  onMirrorVToggle: () => void;
   onBack: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
 }
 
 export function Topbar({
@@ -38,6 +47,7 @@ export function Topbar({
   openPanel,
   onPanelToggle,
   onPanelClose,
+  onLayerAdd,
   onLayerSelect,
   onLayerVisibilityToggle,
   onLayerDuplicate,
@@ -45,7 +55,15 @@ export function Topbar({
   onColorChange,
   recentColors,
   drawingColors,
+  mirrorH,
+  mirrorV,
+  onMirrorHToggle,
+  onMirrorVToggle,
   onBack,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
 }: TopbarProps) {
   const topbarRef = useRef<HTMLElement>(null);
   const activeLayer = layers.find(l => l.id === activeLayerId);
@@ -72,8 +90,40 @@ export function Topbar({
 
       <div className={styles.toolGroup}>
         <Button
+          variant="ghost"
+          size="sm"
+          className={styles.toolBtn}
+          title="Annuler (Ctrl+Z)"
+          aria-label="Annuler"
+          disabled={!canUndo}
+          onClick={onUndo}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 7v6h6" />
+            <path d="M3 13C5.5 6.5 14 4 21 8" />
+          </svg>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={styles.toolBtn}
+          title="Rétablir (Ctrl+Y)"
+          aria-label="Rétablir"
+          disabled={!canRedo}
+          onClick={onRedo}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 7v6h-6" />
+            <path d="M21 13C18.5 6.5 10 4 3 8" />
+          </svg>
+        </Button>
+
+        <span className={styles.toolDivider} />
+
+        <Button
           variant={tool === 'pencil' ? 'primary' : 'ghost'}
           size="sm"
+          className={styles.toolBtn}
           title="Crayon"
           aria-label="Crayon"
           aria-pressed={tool === 'pencil'}
@@ -87,6 +137,7 @@ export function Topbar({
         <Button
           variant={tool === 'eraser' ? 'primary' : 'ghost'}
           size="sm"
+          className={styles.toolBtn}
           title="Gomme"
           aria-label="Gomme"
           aria-pressed={tool === 'eraser'}
@@ -100,6 +151,7 @@ export function Topbar({
         <Button
           variant={tool === 'fill' ? 'primary' : 'ghost'}
           size="sm"
+          className={styles.toolBtn}
           title="Pot de peinture"
           aria-label="Pot de peinture"
           aria-pressed={tool === 'fill'}
@@ -112,9 +164,85 @@ export function Topbar({
             <path d="M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4Z" />
           </svg>
         </Button>
+
+        <span className={styles.toolDivider} />
+
+        <Button
+          variant={tool === 'line' ? 'primary' : 'ghost'}
+          size="sm"
+          className={styles.toolBtn}
+          title="Ligne"
+          aria-label="Ligne"
+          aria-pressed={tool === 'line'}
+          onClick={() => onToolChange('line')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="4" y1="20" x2="20" y2="4" />
+          </svg>
+        </Button>
+        <Button
+          variant={tool === 'square' ? 'primary' : 'ghost'}
+          size="sm"
+          className={styles.toolBtn}
+          title="Rectangle"
+          aria-label="Rectangle"
+          aria-pressed={tool === 'square'}
+          onClick={() => onToolChange('square')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" />
+          </svg>
+        </Button>
+        <Button
+          variant={tool === 'circle' ? 'primary' : 'ghost'}
+          size="sm"
+          className={styles.toolBtn}
+          title="Ellipse"
+          aria-label="Ellipse"
+          aria-pressed={tool === 'circle'}
+          onClick={() => onToolChange('circle')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <ellipse cx="12" cy="12" rx="9" ry="7" />
+          </svg>
+        </Button>
       </div>
 
       <div className={styles.right}>
+        {/* Mirror toggles */}
+        <Button
+          variant={mirrorH ? 'primary' : 'ghost'}
+          size="sm"
+          className={styles.toolBtn}
+          title="Miroir horizontal"
+          aria-label="Miroir horizontal"
+          aria-pressed={mirrorH}
+          onClick={onMirrorHToggle}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="3" x2="12" y2="21" strokeDasharray="2 2" />
+            <polyline points="7,8 3,12 7,16" />
+            <polyline points="17,8 21,12 17,16" />
+          </svg>
+        </Button>
+        <Button
+          variant={mirrorV ? 'primary' : 'ghost'}
+          size="sm"
+          className={styles.toolBtn}
+          title="Miroir vertical"
+          aria-label="Miroir vertical"
+          aria-pressed={mirrorV}
+          onClick={onMirrorVToggle}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12" strokeDasharray="2 2" />
+            <polyline points="8,7 12,3 16,7" />
+            <polyline points="8,17 12,21 16,17" />
+          </svg>
+        </Button>
+
+        <span className={styles.toolDivider} />
+
         {/* Layer panel anchor */}
         <div className={styles.panelAnchor}>
           <Button
@@ -135,6 +263,7 @@ export function Topbar({
             <LayerPanel
               layers={layers}
               activeLayerId={activeLayerId}
+              onAdd={onLayerAdd}
               onSelect={id => { onLayerSelect(id); }}
               onVisibilityToggle={onLayerVisibilityToggle}
               onDuplicate={onLayerDuplicate}

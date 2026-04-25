@@ -14,8 +14,28 @@
 .header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: $space-3 $space-4;
   border-bottom: $border-width solid $color-border;
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: $color-text-muted;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: background $transition-fast, color $transition-fast;
+
+  &:hover {
+    background: $color-surface-2;
+    color: $color-primary;
+  }
 }
 
 .title {

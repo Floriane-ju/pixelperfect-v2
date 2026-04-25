@@ -1,16 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DrawingData, HexColor } from '@/types';
+import { bresenham, expandMirror, floodFill, getShapePixels } from './shapePixels';
 import styles from './Canvas.module.scss';
 
-type Tool = 'pencil' | 'eraser' | 'fill';
+export type Tool = 'pencil' | 'eraser' | 'fill' | 'circle' | 'square' | 'line';
+
+function isShapeTool(t: Tool): t is 'circle' | 'square' | 'line' {
+  return t === 'circle' || t === 'square' || t === 'line';
+}
 
 interface CanvasProps {
   data: DrawingData;
   activeLayerId: string;
   tool: Tool;
   color: HexColor;
+  mirrorH: boolean;
+  mirrorV: boolean;
   onLayerChange: (layerId: string, pixels: Record<string, HexColor>) => void;
   onInvisibleLayerAttempt: () => void;
+  onDrawStart?: () => void;
+  onDrawEnd?: () => void;
 }
 
 interface Transform { x: number; y: number; scale: number; angle: number; }
@@ -19,58 +28,15 @@ const MIN_SCALE = 0.25;
 const MAX_SCALE = 48;
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-function floodFill(
-  pixels: Record<string, HexColor>,
-  sx: number, sy: number,
-  width: number, height: number,
-  fillColor: HexColor,
-): Record<string, HexColor> | null {
-  const targetColor = pixels[`${sx},${sy}`];
-  if (targetColor === fillColor) return null;
-  const next = { ...pixels };
-  const queue: Array<[number, number]> = [[sx, sy]];
-  const visited = new Set<string>([`${sx},${sy}`]);
-  let head = 0;
-  while (head < queue.length) {
-    const [x, y] = queue[head++];
-    next[`${x},${y}`] = fillColor;
-    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as const) {
-      const nx = x + dx, ny = y + dy;
-      if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
-      const nk = `${nx},${ny}`;
-      if (visited.has(nk) || pixels[nk] !== targetColor) continue;
-      visited.add(nk);
-      queue.push([nx, ny]);
-    }
-  }
-  return next;
-}
-
-function bresenham(x0: number, y0: number, x1: number, y1: number): Array<{ x: number; y: number }> {
-  const pts: Array<{ x: number; y: number }> = [];
-  const dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
-  const sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
-  let err = dx - dy, cx = x0, cy = y0;
-  while (true) {
-    pts.push({ x: cx, y: cy });
-    if (cx === x1 && cy === y1) break;
-    const e2 = 2 * err;
-    if (e2 > -dy) { err -= dy; cx += sx; }
-    if (e2 < dx) { err += dx; cy += sy; }
-  }
-  return pts;
-}
-
-export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvisibleLayerAttempt }: CanvasProps) {
+export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onLayerChange, onInvisibleLayerAttempt, onDrawStart, onDrawEnd }: CanvasProps) {
   const checkerRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const previewRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Display size: logical CSS dimensions of the canvas before any transform
   const displaySizeRef = useRef({ w: 256, h: 256 });
   const [displaySize, setDisplaySize] = useState({ w: 256, h: 256 });
 
-  // View transform: applied to the .stack div
   const transformRef = useRef<Transform>({ x: 0, y: 0, scale: 1, angle: 0 });
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1, angle: 0 });
 
@@ -79,13 +45,12 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
     setTransform(t);
   }, []);
 
-  // Drawing state
   const isDrawing = useRef(false);
   const lastPixel = useRef<{ x: number; y: number } | null>(null);
   const layerPixelsRef = useRef<Record<string, HexColor>>({});
   const drawSessionSnapshot = useRef<Record<string, HexColor> | null>(null);
+  const shapeStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Navigation state
   const navPointers = useRef(new Map<number, { x: number; y: number }>());
   const navSnapshot = useRef<{
     pointers: Map<number, { x: number; y: number }>;
@@ -157,7 +122,6 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
       const wcx = wr.left + wr.width / 2;
       const wcy = wr.top + wr.height / 2;
       const t = transformRef.current;
-      // ctrlKey = true for trackpad pinch (continuous), false for mouse wheel (discrete)
       const delta = e.ctrlKey ? e.deltaY / 100 : Math.sign(e.deltaY) * 0.15;
       const factor = Math.exp(-delta);
       const newScale = clamp(t.scale * factor, MIN_SCALE, MAX_SCALE);
@@ -170,18 +134,14 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
     return () => wrapper.removeEventListener('wheel', onWheel);
   }, [applyTransform]);
 
-  // Convert screen coordinates to drawing pixel coordinates (inverse of CSS transform)
   const screenToCanvas = useCallback((sx: number, sy: number): { x: number; y: number } => {
     const wr = wrapperRef.current!.getBoundingClientRect();
     const { x: tx, y: ty, scale, angle } = transformRef.current;
-    // Point relative to transform origin (wrapper center + pan offset)
     const rx = sx - (wr.left + wr.width / 2 + tx);
     const ry = sy - (wr.top + wr.height / 2 + ty);
-    // Inverse rotate
     const rad = (angle * Math.PI) / 180;
     const usx = (rx * Math.cos(-rad) - ry * Math.sin(-rad)) / scale;
     const usy = (rx * Math.sin(-rad) + ry * Math.cos(-rad)) / scale;
-    // Map from center-relative to top-left-relative, then to drawing pixels
     const ds = displaySizeRef.current;
     return {
       x: Math.floor((usx + ds.w / 2) * (data.width / ds.w)),
@@ -189,10 +149,27 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
     };
   }, [data.width, data.height]);
 
+  const drawPreview = useCallback((pts: Array<{ x: number; y: number }>) => {
+    const canvas = previewRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, data.width, data.height);
+    ctx.fillStyle = color;
+    for (const { x, y } of expandMirror(pts, data.width, data.height, mirrorH, mirrorV)) {
+      if (x >= 0 && y >= 0 && x < data.width && y < data.height) ctx.fillRect(x, y, 1, 1);
+    }
+  }, [data.width, data.height, color, mirrorH, mirrorV]);
+
+  const clearPreview = useCallback(() => {
+    previewRef.current?.getContext('2d')?.clearRect(0, 0, data.width, data.height);
+  }, [data.width, data.height]);
+
   const paint = useCallback((pixels: Array<{ x: number; y: number }>) => {
+    const expanded = expandMirror(pixels, data.width, data.height, mirrorH, mirrorV);
     const next = { ...layerPixelsRef.current };
     let changed = false;
-    for (const { x, y } of pixels) {
+    for (const { x, y } of expanded) {
       if (x < 0 || y < 0 || x >= data.width || y >= data.height) continue;
       const key = `${x},${y}`;
       if (tool === 'pencil') { next[key] = color; changed = true; }
@@ -201,7 +178,7 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
     if (!changed) return;
     layerPixelsRef.current = next;
     onLayerChange(activeLayerId, next);
-  }, [tool, color, activeLayerId, data.width, data.height, onLayerChange]);
+  }, [tool, color, activeLayerId, data.width, data.height, onLayerChange, mirrorH, mirrorV]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     navPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -213,10 +190,12 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
         layerPixelsRef.current = drawSessionSnapshot.current;
         onLayerChange(activeLayerId, drawSessionSnapshot.current);
       }
+      clearPreview();
+      shapeStartRef.current = null;
       isDrawing.current = false;
       lastPixel.current = null;
       drawSessionSnapshot.current = null;
-      panLastPos.current = null; // évite le saut si on revient à 1 doigt
+      panLastPos.current = null;
       navSnapshot.current = {
         pointers: new Map(navPointers.current),
         transform: { ...transformRef.current },
@@ -249,19 +228,31 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
     const px = screenToCanvas(e.clientX, e.clientY);
 
     if (tool === 'fill') {
+      onDrawStart?.();
       const filled = floodFill(layerPixelsRef.current, px.x, px.y, data.width, data.height, color);
       if (filled) {
         layerPixelsRef.current = filled;
         onLayerChange(activeLayerId, filled);
       }
+      onDrawEnd?.();
       return;
     }
 
+    if (isShapeTool(tool)) {
+      onDrawStart?.();
+      drawSessionSnapshot.current = { ...layerPixelsRef.current };
+      isDrawing.current = true;
+      shapeStartRef.current = px;
+      drawPreview([px]);
+      return;
+    }
+
+    onDrawStart?.();
     drawSessionSnapshot.current = { ...layerPixelsRef.current };
     isDrawing.current = true;
     lastPixel.current = px;
     paint([px]);
-  }, [data.layers, data.width, data.height, activeLayerId, tool, color, onInvisibleLayerAttempt, screenToCanvas, paint, onLayerChange]);
+  }, [data.layers, data.width, data.height, activeLayerId, tool, color, onInvisibleLayerAttempt, screenToCanvas, paint, onLayerChange, drawPreview, clearPreview, onDrawStart, onDrawEnd]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     navPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -287,16 +278,11 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
           Math.atan2(sp1.y - sp0.y, sp1.x - sp0.x)
         ) * (180 / Math.PI);
         const newScale = clamp(snap.transform.scale * (sdist > 0 ? cdist / sdist : 1), MIN_SCALE, MAX_SCALE);
-        // Pivot = midpoint des doigts au snapshot, relatif au centre du wrapper
         const pivotX = smx - wcx - snap.transform.x;
         const pivotY = smy - wcy - snap.transform.y;
-        // Faire pivoter le pivot de angleDelta pour le nouveau référentiel
         const rad = angleDelta * Math.PI / 180;
-        const cos = Math.cos(rad);
-        const sin = Math.sin(rad);
-        const rotPivotX = pivotX * cos - pivotY * sin;
-        const rotPivotY = pivotX * sin + pivotY * cos;
-        // La translation place le pivot pivoté sous le nouveau midpoint des doigts
+        const rotPivotX = pivotX * Math.cos(rad) - pivotY * Math.sin(rad);
+        const rotPivotY = pivotX * Math.sin(rad) + pivotY * Math.cos(rad);
         applyTransform({
           x: cmx - wcx - rotPivotX * newScale / snap.transform.scale,
           y: cmy - wcy - rotPivotY * newScale / snap.transform.scale,
@@ -315,13 +301,18 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
       return;
     }
 
-    // Draw
     if (!isDrawing.current) return;
     const px = screenToCanvas(e.clientX, e.clientY);
+
+    if (isShapeTool(tool) && shapeStartRef.current) {
+      drawPreview(getShapePixels(tool, shapeStartRef.current, px));
+      return;
+    }
+
     const last = lastPixel.current;
     paint(last ? bresenham(last.x, last.y, px.x, px.y) : [px]);
     lastPixel.current = px;
-  }, [applyTransform, screenToCanvas, paint]);
+  }, [applyTransform, screenToCanvas, paint, tool, drawPreview]);
 
   const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     wrapperRef.current?.releasePointerCapture(e.pointerId);
@@ -331,16 +322,34 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
       const wasNav = navSnapshot.current !== null;
       navSnapshot.current = null;
       if (remaining === 1 && wasNav) {
-        // Transition 2→1 doigt : reprendre le pan avec le doigt restant (pas de saut)
         const [pos] = navPointers.current.values();
         panLastPos.current = pos ?? null;
       }
     }
     if (remaining === 0) panLastPos.current = null;
+
+    const wasDrawing = isDrawing.current;
+
+    if (wasDrawing && isShapeTool(tool) && shapeStartRef.current) {
+      const endPx = screenToCanvas(e.clientX, e.clientY);
+      const pts = expandMirror(getShapePixels(tool, shapeStartRef.current, endPx), data.width, data.height, mirrorH, mirrorV);
+      const next = { ...layerPixelsRef.current };
+      for (const { x, y } of pts) {
+        if (x >= 0 && y >= 0 && x < data.width && y < data.height) next[`${x},${y}`] = color;
+      }
+      layerPixelsRef.current = next;
+      onLayerChange(activeLayerId, next);
+      clearPreview();
+      shapeStartRef.current = null;
+      onDrawEnd?.();
+    } else if (wasDrawing) {
+      onDrawEnd?.();
+    }
+
     isDrawing.current = false;
     lastPixel.current = null;
     drawSessionSnapshot.current = null;
-  }, []);
+  }, [tool, screenToCanvas, data.width, data.height, color, activeLayerId, onLayerChange, clearPreview, mirrorH, mirrorV, onDrawEnd]);
 
   const cssSize = { width: displaySize.w, height: displaySize.h };
   const { x, y, scale, angle } = transform;
@@ -360,6 +369,7 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
       >
         <canvas ref={checkerRef} className={styles.checker} width={data.width} height={data.height} />
         <canvas ref={canvasRef} className={styles.canvas} width={data.width} height={data.height} />
+        <canvas ref={previewRef} className={styles.preview} width={data.width} height={data.height} />
       </div>
     </div>
   );

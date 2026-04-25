@@ -8,6 +8,7 @@ interface LayerPanelProps {
   onVisibilityToggle: (id: string) => void;
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
+  onAdd: () => void;
 }
 
 export function LayerPanel({
@@ -17,6 +18,7 @@ export function LayerPanel({
   onVisibilityToggle,
   onDuplicate,
   onDelete,
+  onAdd,
 }: LayerPanelProps) {
   const reversed = [...layers].reverse();
   const canDelete = layers.length > 1;
@@ -25,6 +27,17 @@ export function LayerPanel({
     <div className={styles.panel} role="dialog" aria-label="Calques">
       <div className={styles.header}>
         <span className={styles.title}>Calques</span>
+        <button
+          className={styles.addBtn}
+          title="Nouveau calque"
+          aria-label="Nouveau calque"
+          onClick={onAdd}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
       </div>
       <ul className={styles.list} role="listbox">
         {reversed.map(layer => (

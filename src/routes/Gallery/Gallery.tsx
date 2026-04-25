@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/Button';
 import { DrawingCard } from '@/components/DrawingCard';
 import { DrawingGroup } from '@/components/DrawingGroup';
-import { fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup } from '@/lib/drawings';
+import { NewDrawingModal } from '@/components/NewDrawingModal';
+import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup } from '@/lib/drawings';
 import { groupDrawings } from '@/lib/groupDrawings';
 import type { DrawingRow } from '@/types';
 import styles from './Gallery.module.scss';
@@ -15,6 +16,7 @@ export function Gallery() {
   const [drawings, setDrawings] = useState<DrawingRow[]>([]);
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [showNewModal, setShowNewModal] = useState(false);
 
   useEffect(() => {
     setStatus('loading');
@@ -55,6 +57,11 @@ export function Gallery() {
     });
   };
 
+  const handleCreate = async (name: string, width: number, height: number) => {
+    const newDrawing = await createDrawing(name, width, height);
+    navigate(`/editor/${newDrawing.id}`);
+  };
+
   const { groups, ungrouped } = groupDrawings(drawings);
   const hasContent = drawings.length > 0;
 
@@ -65,10 +72,17 @@ export function Gallery() {
           <h1 className={styles.title}>Galerie</h1>
           <span className={styles.version}>v{__APP_VERSION__}</span>
         </div>
-        <Button variant="primary" onClick={() => navigate('/editor/new')}>
+        <Button variant="primary" onClick={() => setShowNewModal(true)}>
           Nouveau dessin
         </Button>
       </header>
+
+      {showNewModal && (
+        <NewDrawingModal
+          onClose={() => setShowNewModal(false)}
+          onConfirm={handleCreate}
+        />
+      )}
 
       {status === 'loading' && (
         <div className={styles.state}>Chargement…</div>

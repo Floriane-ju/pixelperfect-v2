@@ -1,0 +1,147 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: $z-modal;
+}
+
+.modal {
+  background: $color-surface;
+  border: $border-width solid $color-border;
+  border-radius: $radius-lg;
+  padding: $space-6;
+  max-width: 360px;
+  width: calc(100% - $space-8);
+  box-shadow: $shadow-lg;
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+}
+
+.heading {
+  margin: 0;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-muted;
+}
+
+.input {
+  background: $color-bg;
+  border: $border-width solid $color-border;
+  border-radius: $radius-md;
+  color: $color-text;
+  font-size: $font-size-md;
+  padding: $space-2 $space-3;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color $transition-fast;
+  min-height: 44px;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+  }
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+
+.presetBtn {
+  padding: $space-2 $space-3;
+  background: $color-bg;
+  border: $border-width solid $color-border;
+  border-radius: $radius-md;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  transition: background $transition-fast, color $transition-fast, border-color $transition-fast;
+  min-height: 44px;
+
+  &:hover {
+    background: $color-surface-2;
+    color: $color-text;
+  }
+}
+
+.presetBtnActive {
+  border-color: $color-primary;
+  color: $color-primary;
+  background: rgba(85, 170, 255, 0.08);
+}
+
+.customRow {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  margin-top: $space-1;
+}
+
+.dimensionField {
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+}
+
+.dimensionLabel {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  font-weight: $font-weight-medium;
+}
+
+.dimensionInput {
+  background: $color-bg;
+  border: $border-width solid $color-border;
+  border-radius: $radius-md;
+  color: $color-text;
+  font-size: $font-size-sm;
+  padding: $space-2;
+  width: 64px;
+  text-align: center;
+  min-height: 44px;
+  box-sizing: border-box;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+  }
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    opacity: 1;
+  }
+}
+
+.dimensionSep {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.dimensionUnit {
+  color: $color-text-muted;
+  font-size: $font-size-xs;
+}
+
+.actions {
+  display: flex;
+  gap: $space-2;
+  justify-content: flex-end;
+}

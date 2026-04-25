@@ -23,8 +23,22 @@
 
 .toolGroup {
   display: flex;
+  align-items: center;
   gap: $space-1;
   margin-left: $space-2;
+}
+
+.toolBtn {
+  padding: 0 $space-2;
+  min-width: 32px;
+}
+
+.toolDivider {
+  width: 1px;
+  height: 16px;
+  background: $color-border;
+  margin: 0 $space-1;
+  flex-shrink: 0;
 }
 
 .right {
