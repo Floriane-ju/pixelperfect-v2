@@ -61,7 +61,10 @@ export function Gallery() {
   return (
     <section className={styles.gallery}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Galerie</h1>
+        <div className={styles.titleGroup}>
+          <h1 className={styles.title}>Galerie</h1>
+          <span className={styles.version}>v{__APP_VERSION__}</span>
+        </div>
         <Button variant="primary" onClick={() => navigate('/editor/new')}>
           Nouveau dessin
         </Button>

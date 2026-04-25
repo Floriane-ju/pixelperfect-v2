@@ -83,6 +83,7 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
   const isDrawing = useRef(false);
   const lastPixel = useRef<{ x: number; y: number } | null>(null);
   const layerPixelsRef = useRef<Record<string, HexColor>>({});
+  const drawSessionSnapshot = useRef<Record<string, HexColor> | null>(null);
 
   // Navigation state
   const navPointers = useRef(new Map<number, { x: number; y: number }>());
@@ -206,10 +207,15 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
     navPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     canvasRef.current?.setPointerCapture(e.pointerId);
 
-    // 2+ fingers → navigation (cancel any in-progress drawing)
+    // 2+ fingers → navigation (cancel any in-progress drawing and rollback pixels)
     if (navPointers.current.size >= 2) {
+      if (isDrawing.current && drawSessionSnapshot.current !== null) {
+        layerPixelsRef.current = drawSessionSnapshot.current;
+        onLayerChange(activeLayerId, drawSessionSnapshot.current);
+      }
       isDrawing.current = false;
       lastPixel.current = null;
+      drawSessionSnapshot.current = null;
       navSnapshot.current = {
         pointers: new Map(navPointers.current),
         transform: { ...transformRef.current },
@@ -243,6 +249,7 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
       return;
     }
 
+    drawSessionSnapshot.current = { ...layerPixelsRef.current };
     isDrawing.current = true;
     lastPixel.current = px;
     paint([px]);
@@ -301,6 +308,7 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
     if (navPointers.current.size === 0) panLastPos.current = null;
     isDrawing.current = false;
     lastPixel.current = null;
+    drawSessionSnapshot.current = null;
   }, []);
 
   const cssSize = { width: displaySize.w, height: displaySize.h };

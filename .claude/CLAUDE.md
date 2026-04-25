@@ -43,6 +43,7 @@ src/
 - Imports via l'alias `@/` (= `src/`).
 - Pas d'`any`. Utiliser `unknown` puis narrower.
 - Pas de `console.log` committé.
+- Montée de version du package.json aorès toute modification
 
 ## PWA
 - Manifest et service worker générés par `vite-plugin-pwa` (cf. `vite.config.ts`).
