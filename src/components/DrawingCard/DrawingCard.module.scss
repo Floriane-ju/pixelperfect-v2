@@ -1,0 +1,155 @@
+// overflow: hidden retiré de .card pour laisser le ContextMenu déborder.
+// Le clip du preview est géré par border-radius ciblé sur .preview.
+.card {
+  display: flex;
+  flex-direction: column;
+  background: $color-surface;
+  border: $border-width solid $color-border;
+  border-radius: $radius-lg;
+  cursor: pointer;
+  transition: border-color $transition-fast, transform $transition-fast;
+
+  &:hover {
+    border-color: $color-primary;
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+    outline-offset: 0;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: repeating-conic-gradient(
+      #2a2a2a 0% 25%,
+      #242424 0% 50%
+    )
+    0 0 / 16px 16px;
+  padding: $space-4;
+  border-radius: $radius-lg $radius-lg 0 0;
+  overflow: hidden;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-3 $space-4;
+  border-top: $border-width solid $color-border;
+  position: relative;
+  min-height: 40px;
+}
+
+.title {
+  flex: 1;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.size {
+  flex-shrink: 0;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  font-family: $font-family-mono;
+}
+
+// Rename input
+.renameInput {
+  flex: 1;
+  height: 26px;
+  padding: 0 $space-2;
+  background: $color-surface-2;
+  border: $border-width solid $color-primary;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  color: $color-text;
+  outline: none;
+}
+
+// Menu anchor (positionne le ContextMenu)
+.menuAnchor {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.menuBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-sm;
+  font-size: 16px;
+  color: $color-text-muted;
+  letter-spacing: 1px;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover {
+    background: $color-surface-2;
+    color: $color-text;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// Confirmation delete inline
+.confirmRow {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding: $space-3 $space-4;
+  border-top: $border-width solid $color-border;
+  border-radius: 0 0 $radius-lg $radius-lg;
+}
+
+.confirmLabel {
+  font-size: $font-size-xs;
+  color: $color-danger;
+}
+
+.confirmActions {
+  display: flex;
+  gap: $space-2;
+}
+
+.confirmBtn {
+  flex: 1;
+  height: 28px;
+  background: $color-danger;
+  color: $color-text;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  transition: filter $transition-fast;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+.cancelBtn {
+  flex: 1;
+  height: 28px;
+  background: $color-surface-2;
+  color: $color-text-muted;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background: $color-border;
+  }
+}

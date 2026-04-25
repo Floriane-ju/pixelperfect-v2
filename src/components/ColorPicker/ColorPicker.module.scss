@@ -1,0 +1,148 @@
+.picker {
+  width: 260px;
+  background: $color-surface;
+  border: $border-width solid $color-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
+  padding: $space-4;
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  @include no-select;
+}
+
+// SV gradient square
+.svSquare {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  touch-action: none;
+  cursor: crosshair;
+  background: hsl(var(--hue-deg), 100%, 50%);
+}
+
+.svWhite {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #fff, transparent);
+  pointer-events: none;
+}
+
+.svBlack {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, #000);
+  pointer-events: none;
+}
+
+.cursor {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+// Hue slider
+.hueSlider {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  border-radius: $radius-pill;
+  touch-action: none;
+  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    hsl(0, 100%, 50%),
+    hsl(60, 100%, 50%),
+    hsl(120, 100%, 50%),
+    hsl(180, 100%, 50%),
+    hsl(240, 100%, 50%),
+    hsl(300, 100%, 50%),
+    hsl(360, 100%, 50%)
+  );
+}
+
+.hueThumb {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: $shadow-sm;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+// Hex row
+.hexRow {
+  display: flex;
+  gap: $space-2;
+  align-items: center;
+}
+
+.preview {
+  width: 32px;
+  height: 32px;
+  border-radius: $radius-sm;
+  border: $border-width solid $color-border;
+  flex-shrink: 0;
+}
+
+.hexInput {
+  flex: 1;
+  height: 32px;
+  padding: 0 $space-3;
+  background: $color-surface-2;
+  border: $border-width solid $color-border;
+  border-radius: $radius-sm;
+  font-family: $font-family-mono;
+  font-size: $font-size-sm;
+  color: $color-text;
+  outline: none;
+
+  &:focus {
+    border-color: $color-primary;
+  }
+}
+
+// Swatches
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.sectionLabel {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-1;
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: $radius-sm;
+  border: $border-width solid $color-border;
+  cursor: pointer;
+  transition: transform $transition-fast;
+  padding: 0;
+
+  &:hover {
+    transform: scale(1.2);
+    z-index: 1;
+  }
+}

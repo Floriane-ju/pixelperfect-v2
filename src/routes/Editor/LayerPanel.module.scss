@@ -1,0 +1,92 @@
+.panel {
+  position: absolute;
+  top: calc(100% + $space-2);
+  right: 0;
+  z-index: $z-dropdown;
+  width: 260px;
+  background: $color-surface;
+  border: $border-width solid $color-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
+  @include no-select;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: $space-3 $space-4;
+  border-bottom: $border-width solid $color-border;
+}
+
+.title {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: $space-1;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-2;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: background $transition-fast;
+
+  &:hover {
+    background: $color-surface-2;
+  }
+}
+
+.itemActive {
+  background: $color-surface-2;
+}
+
+.layerName {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: $color-text-muted;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: background $transition-fast, color $transition-fast;
+  flex-shrink: 0;
+
+  &:hover {
+    background: $color-border;
+    color: $color-text;
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+.iconBtnDanger:not(:disabled):hover {
+  background: rgba(255, 85, 119, 0.15);
+  color: $color-danger;
+}

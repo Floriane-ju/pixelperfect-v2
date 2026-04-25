@@ -1,0 +1,70 @@
+.topbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  padding: 0 $space-3;
+  height: $header-height;
+  background: $color-surface;
+  border-bottom: $border-width solid $color-border;
+  flex-shrink: 0;
+  @include safe-area-top;
+  @include no-select;
+}
+
+.titleText {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+.toolGroup {
+  display: flex;
+  gap: $space-1;
+  margin-left: $space-2;
+}
+
+.right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.panelAnchor {
+  position: relative;
+}
+
+.layerName {
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: $space-1;
+}
+
+.colorSwatch {
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-sm;
+  border: 2px solid $color-border;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: border-color $transition-fast, transform $transition-fast;
+
+  &:hover {
+    border-color: $color-primary;
+    transform: scale(1.1);
+  }
+}
+
+.colorPanel {
+  position: absolute;
+  top: calc(100% + $space-2);
+  right: 0;
+  z-index: $z-dropdown;
+}

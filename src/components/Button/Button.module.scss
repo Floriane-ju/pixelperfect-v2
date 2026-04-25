@@ -1,0 +1,96 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  border-radius: $radius-md;
+  font-weight: $font-weight-medium;
+  transition: background-color $transition-fast, color $transition-fast,
+    border-color $transition-fast, transform $transition-fast;
+  @include no-select;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+// Variants
+.variant-primary {
+  background: $color-primary;
+  color: $color-bg;
+
+  &:hover:not(:disabled) {
+    background: $color-primary-hover;
+  }
+}
+
+.variant-secondary {
+  background: $color-surface-2;
+  color: $color-text;
+  border: $border-width solid $color-border;
+
+  &:hover:not(:disabled) {
+    border-color: $color-primary;
+  }
+}
+
+.variant-ghost {
+  background: transparent;
+  color: $color-text;
+
+  &:hover:not(:disabled) {
+    background: $color-surface-2;
+  }
+}
+
+.variant-danger {
+  background: $color-danger;
+  color: $color-text;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+}
+
+// Sizes
+.size-sm {
+  height: 28px;
+  padding: 0 $space-3;
+  font-size: $font-size-sm;
+}
+
+.size-md {
+  height: 36px;
+  padding: 0 $space-4;
+  font-size: $font-size-md;
+}
+
+.size-lg {
+  height: 44px;
+  padding: 0 $space-5;
+  font-size: $font-size-lg;
+}

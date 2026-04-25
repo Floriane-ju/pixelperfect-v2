@@ -1,0 +1,54 @@
+.gallery {
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+  padding: $space-6;
+  height: 100%;
+  overflow-y: auto;
+  @include safe-area-top;
+  @include safe-area-bottom;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+}
+
+.title {
+  margin: 0;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: $space-8;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: $space-4;
+
+  @include tablet-up {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: $space-5;
+  }
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: $color-text-muted;
+  font-size: $font-size-md;
+}
+
+.stateError {
+  @extend .state;
+  color: $color-danger;
+}

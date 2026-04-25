@@ -1,0 +1,33 @@
+@use 'sass:map';
+@use 'variables' as *;
+
+@mixin tablet-up {
+  @media (min-width: #{$bp-tablet}) {
+    @content;
+  }
+}
+
+@mixin desktop-up {
+  @media (min-width: #{$bp-desktop}) {
+    @content;
+  }
+}
+
+@mixin focus-ring {
+  outline: 2px solid $color-primary;
+  outline-offset: 2px;
+}
+
+@mixin no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@mixin safe-area-top {
+  padding-top: max(#{$space-2}, env(safe-area-inset-top));
+}
+
+@mixin safe-area-bottom {
+  padding-bottom: max(#{$space-2}, env(safe-area-inset-bottom));
+}

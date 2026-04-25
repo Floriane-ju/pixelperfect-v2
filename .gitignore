@@ -1,0 +1,30 @@
+node_modules
+dist
+dist-ssr
+*.local
+
+.DS_Store
+Thumbs.db
+
+.env
+.env.local
+.env.*.local
+
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Vite
+*.tsbuildinfo
+
+# PWA generated
+dev-dist/
+
+# Claude local overrides
+.claude/settings.local.json
+.claude/sessions/
