@@ -203,9 +203,9 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
     onLayerChange(activeLayerId, next);
   }, [tool, color, activeLayerId, data.width, data.height, onLayerChange]);
 
-  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     navPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    canvasRef.current?.setPointerCapture(e.pointerId);
+    wrapperRef.current?.setPointerCapture(e.pointerId);
 
     // 2+ fingers → navigation (cancel any in-progress drawing and rollback pixels)
     if (navPointers.current.size >= 2) {
@@ -229,13 +229,20 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
       return;
     }
 
-    // Single left click / single touch → draw
     if (e.button !== 0) return;
+
+    // Single touch/click on empty area (outside canvas) → pan
+    if (e.target !== canvasRef.current) {
+      panLastPos.current = { x: e.clientX, y: e.clientY };
+      return;
+    }
+
+    // Single left click on canvas → draw
     const activeLayer = data.layers.find(l => l.id === activeLayerId);
     if (activeLayer && !activeLayer.visible) {
       onInvisibleLayerAttempt();
       navPointers.current.delete(e.pointerId);
-      canvasRef.current?.releasePointerCapture(e.pointerId);
+      wrapperRef.current?.releasePointerCapture(e.pointerId);
       return;
     }
     const px = screenToCanvas(e.clientX, e.clientY);
@@ -255,7 +262,7 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
     paint([px]);
   }, [data.layers, data.width, data.height, activeLayerId, tool, color, onInvisibleLayerAttempt, screenToCanvas, paint, onLayerChange]);
 
-  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     navPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
     // 2-finger gesture: pan + zoom + rotate
@@ -301,8 +308,8 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
     lastPixel.current = px;
   }, [applyTransform, screenToCanvas, paint]);
 
-  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
-    canvasRef.current?.releasePointerCapture(e.pointerId);
+  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    wrapperRef.current?.releasePointerCapture(e.pointerId);
     navPointers.current.delete(e.pointerId);
     if (navPointers.current.size < 2) navSnapshot.current = null;
     if (navPointers.current.size === 0) panLastPos.current = null;
@@ -315,22 +322,20 @@ export function Canvas({ data, activeLayerId, tool, color, onLayerChange, onInvi
   const { x, y, scale, angle } = transform;
 
   return (
-    <div ref={wrapperRef} className={styles.wrapper}>
+    <div
+      ref={wrapperRef}
+      className={styles.wrapper}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+    >
       <div
         className={styles.stack}
         style={{ ...cssSize, transform: `translate(${x}px,${y}px) rotate(${angle}deg) scale(${scale})` }}
       >
         <canvas ref={checkerRef} className={styles.checker} width={data.width} height={data.height} />
-        <canvas
-          ref={canvasRef}
-          className={styles.canvas}
-          width={data.width}
-          height={data.height}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-        />
+        <canvas ref={canvasRef} className={styles.canvas} width={data.width} height={data.height} />
       </div>
     </div>
   );
