@@ -2,11 +2,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchDrawing, updateDrawingData } from '@/lib/drawings';
 import type { DrawingData, DrawingRow, HexColor, PixelLayer } from '@/types';
+import { Button } from '@/components/Button';
+import { ReferenceImage } from '@/components/ReferenceImage';
 import { Canvas } from './Canvas';
 import type { Tool } from './Canvas';
 import { Topbar } from './Topbar';
 import styles from './Editor.module.scss';
-type OpenPanel = 'layers' | 'color' | null;
+
+interface RefImageState {
+  src: string;
+  x: number;
+  y: number;
+  scale: number;
+  naturalWidth: number;
+  naturalHeight: number;
+}
+type OpenPanel = 'layers' | 'color' | 'ref' | null;
 type Status = 'loading' | 'ready' | 'error' | 'saving';
 
 const SAVE_DELAY = 1500;
@@ -26,6 +37,9 @@ export function Editor() {
   const [showInvisibleModal, setShowInvisibleModal] = useState(false);
   const [mirrorH, setMirrorH] = useState(false);
   const [mirrorV, setMirrorV] = useState(false);
+
+  const [refImage, setRefImage] = useState<RefImageState | null>(null);
+  const canvasAreaRef = useRef<HTMLDivElement>(null);
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestDataRef = useRef<DrawingData | null>(null);
@@ -242,6 +256,39 @@ export function Editor() {
     scheduleSave();
   }, [scheduleSave, drawing, pushHistory]);
 
+  const handleRefImageImport = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const src = e.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        const containerW = canvasAreaRef.current?.clientWidth ?? 800;
+        const containerH = canvasAreaRef.current?.clientHeight ?? 600;
+        const initialScale = Math.min(containerW / img.naturalWidth, containerH / img.naturalHeight);
+        const initialX = (containerW - img.naturalWidth * initialScale) / 2;
+        const initialY = (containerH - img.naturalHeight * initialScale) / 2;
+        setRefImage({
+          src,
+          x: initialX,
+          y: initialY,
+          scale: initialScale,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+        });
+      };
+      img.src = src;
+    };
+    reader.readAsDataURL(file);
+  }, []);
+
+  const handleRefImageRemove = useCallback(() => {
+    setRefImage(null);
+  }, []);
+
+  const handleRefImageTransform = useCallback((x: number, y: number, scale: number) => {
+    setRefImage(prev => prev ? { ...prev, x, y, scale } : prev);
+  }, []);
+
   const handleColorChange = useCallback((newColor: HexColor) => {
     setColor(newColor);
     setRecentColors(prev => {
@@ -250,7 +297,7 @@ export function Editor() {
     });
   }, []);
 
-  const handlePanelToggle = useCallback((panel: 'layers' | 'color') => {
+  const handlePanelToggle = useCallback((panel: 'layers' | 'color' | 'ref') => {
     setOpenPanel(prev => prev === panel ? null : panel);
   }, []);
 
@@ -308,17 +355,14 @@ export function Editor() {
         onColorChange={handleColorChange}
         recentColors={recentColors}
         drawingColors={drawingColors}
-        mirrorH={mirrorH}
-        mirrorV={mirrorV}
-        onMirrorHToggle={() => setMirrorH(v => !v)}
-        onMirrorVToggle={() => setMirrorV(v => !v)}
         onBack={() => navigate('/gallery')}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
+        refImage={refImage ? { x: refImage.x, y: refImage.y, scale: refImage.scale, naturalWidth: refImage.naturalWidth, naturalHeight: refImage.naturalHeight } : null}
+        onRefImageImport={handleRefImageImport}
+        onRefImageRemove={handleRefImageRemove}
+        onRefImageTransform={handleRefImageTransform}
+        canvasAreaRef={canvasAreaRef}
       />
-      <div className={styles.canvasArea}>
+      <div ref={canvasAreaRef} className={styles.canvasArea}>
         <Canvas
           data={drawing.data}
           activeLayerId={activeLayerId}
@@ -331,6 +375,61 @@ export function Editor() {
           onDrawStart={handleDrawStart}
           onDrawEnd={handleDrawEnd}
         />
+        {refImage && (
+          <ReferenceImage
+            src={refImage.src}
+            x={refImage.x}
+            y={refImage.y}
+            scale={refImage.scale}
+            naturalWidth={refImage.naturalWidth}
+          />
+        )}
+        <div className={styles.sideToolbar}>
+          <div className={styles.sideGroup}>
+            <Button
+              variant={mirrorH ? 'selected' : 'selectable'}
+              size="md"
+              iconOnly
+              iconLeft="mirror"
+              title="Miroir horizontal"
+              aria-label="Miroir horizontal"
+              aria-pressed={mirrorH}
+              onClick={() => setMirrorH(v => !v)}
+            />
+            <Button
+              variant={mirrorV ? 'selected' : 'selectable'}
+              size="md"
+              iconOnly
+              iconLeft="mirror-v"
+              title="Miroir vertical"
+              aria-label="Miroir vertical"
+              aria-pressed={mirrorV}
+              onClick={() => setMirrorV(v => !v)}
+            />
+          </div>
+          <div className={styles.sideGroup}>
+            <Button
+              variant="ghost"
+              size="md"
+              iconOnly
+              iconLeft="undo"
+              title="Annuler (Ctrl+Z)"
+              aria-label="Annuler"
+              disabled={!canUndo}
+              onClick={handleUndo}
+            />
+            <Button
+              variant="ghost"
+              size="md"
+              iconOnly
+              iconLeft="redo"
+              title="Rétablir (Ctrl+Y)"
+              aria-label="Rétablir"
+              disabled={!canRedo}
+              onClick={handleRedo}
+            />
+          </div>
+        </div>
       </div>
       {status === 'saving' && (
         <div className={styles.savingBadge}>Enregistrement…</div>

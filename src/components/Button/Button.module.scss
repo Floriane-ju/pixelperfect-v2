@@ -3,10 +3,10 @@
   align-items: center;
   justify-content: center;
   gap: $space-2;
-  border-radius: $radius-md;
-  font-weight: $font-weight-medium;
+  font-family: $font-family-base;
+  font-weight: $font-weight-regular;
   transition: background-color $transition-fast, color $transition-fast,
-    border-color $transition-fast, transform $transition-fast;
+    border-color $transition-fast;
   @include no-select;
 
   &:focus-visible {
@@ -14,12 +14,8 @@
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.97);
   }
 }
 
@@ -41,20 +37,35 @@
 // Variants
 .variant-primary {
   background: $color-primary;
-  color: $color-bg;
+  color: $color-white;
 
   &:hover:not(:disabled) {
     background: $color-primary-hover;
   }
 }
 
+.variant-selectable {
+  color: $color-text;
+  background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23333' stroke-width='3' stroke-dasharray='1%2c8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+
+  &:hover:not(:disabled) {
+    background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23333' stroke-width='3' stroke-dasharray='2' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+  }
+}
+
+.variant-selected {
+  background: $color-primary;
+  color: $color-white;
+}
+
+
 .variant-secondary {
-  background: $color-surface-2;
+  background: $color-surface;
   color: $color-text;
   border: $border-width solid $color-border;
 
   &:hover:not(:disabled) {
-    border-color: $color-primary;
+    background: $color-surface-2;
   }
 }
 
@@ -69,7 +80,7 @@
 
 .variant-danger {
   background: $color-danger;
-  color: $color-text;
+  color: $color-white;
 
   &:hover:not(:disabled) {
     filter: brightness(1.1);
@@ -78,19 +89,27 @@
 
 // Sizes
 .size-sm {
-  height: 28px;
+  height: 32px;
   padding: 0 $space-3;
   font-size: $font-size-sm;
 }
 
 .size-md {
-  height: 36px;
+  height: $btn-height;
   padding: 0 $space-4;
   font-size: $font-size-md;
 }
 
 .size-lg {
-  height: 44px;
+  height: 48px;
   padding: 0 $space-5;
   font-size: $font-size-lg;
+}
+
+// Icon-only: carré, pas de padding
+.iconOnly {
+  padding: 0;
+  &.size-sm { width: 32px; }
+  &.size-md { width: $btn-height; }
+  &.size-lg { width: 48px; }
 }

@@ -1,16 +1,18 @@
 import { forwardRef } from 'react';
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes } from 'react';
 import styles from './Button.module.scss';
+import { Icons, type IconName } from '@/components/Icons';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'selected' | 'selectable';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  iconLeft?: ReactNode;
-  iconRight?: ReactNode;
+  iconLeft?: IconName;
+  iconRight?: IconName;
   fullWidth?: boolean;
+  iconOnly?: boolean;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -21,6 +23,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       iconLeft,
       iconRight,
       fullWidth = false,
+      iconOnly = false,
       className,
       children,
       type = 'button',
@@ -33,6 +36,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       styles[`variant-${variant}`],
       styles[`size-${size}`],
       fullWidth ? styles.fullWidth : '',
+      iconOnly ? styles.iconOnly : '',
       className ?? '',
     ]
       .filter(Boolean)
@@ -40,9 +44,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <button ref={ref} type={type} className={classes} {...rest}>
-        {iconLeft ? <span className={styles.icon}>{iconLeft}</span> : null}
+        {iconLeft ? <Icons className={styles.icon} icon={iconLeft} size={24} /> : null}
         {children ? <span className={styles.label}>{children}</span> : null}
-        {iconRight ? <span className={styles.icon}>{iconRight}</span> : null}
+        {iconRight ? <Icons className={styles.icon} icon={iconRight} size={24} /> : null}
       </button>
     );
   },

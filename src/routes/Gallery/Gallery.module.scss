@@ -1,12 +1,11 @@
 .gallery {
   display: flex;
   flex-direction: column;
-  gap: $space-6;
-  padding: $space-6;
-  height: 100%;
+  max-width: 800px;
+  width:80%;
   overflow-y: auto;
-  @include safe-area-top;
-  @include safe-area-bottom;
+  border: $border-basis;
+  box-shadow: $shadow-lg;
 }
 
 .header {
@@ -14,18 +13,42 @@
   align-items: center;
   justify-content: space-between;
   gap: $space-4;
+  padding: $space-2 $space-3;
+  background: $color-surface;
+  flex-shrink: 0;
 }
 
 .titleGroup {
   display: flex;
-  align-items: baseline;
-  gap: $space-2;
+  align-items: center;
+  gap: $space-3;
+  min-width: 0;
 }
 
 .title {
   margin: 0;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
+  font-family: $font-family-display;
+  font-size: $font-size-display;
+  font-weight: $font-weight-regular;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+// Lignes décoratives à côté du logo
+.titleLines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: $space-3 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.titleLine {
+  height: 4px;
+  background: $color-border;
 }
 
 .version {
@@ -35,20 +58,13 @@
 }
 
 .content {
-  display: flex;
-  flex-direction: column;
-  gap: $space-8;
-}
-
-.grid {
+  flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: $space-4;
-
-  @include tablet-up {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: $space-5;
-  }
+  grid-template-columns: repeat(auto-fill, $card-width);
+  gap: $space-3;
+  align-content: flex-start;
+  background: $color-black;
+  padding: $space-3;
 }
 
 .state {
@@ -58,6 +74,8 @@
   flex: 1;
   color: $color-text-muted;
   font-size: $font-size-md;
+  padding: $space-8;
+  background: $color-black;
 }
 
 .stateError {

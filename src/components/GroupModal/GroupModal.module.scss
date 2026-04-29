@@ -1,0 +1,93 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: $z-modal;
+}
+
+.panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  background: $color-surface;
+  border: $border-width solid $color-border;
+  width: calc(100vw - #{$space-4});
+  max-height: calc(100dvh - #{$space-4});
+  overflow: hidden;
+
+  border: $border-basis;
+  box-shadow: $shadow-lg;
+
+  @include tablet-up {
+    width: 620px;
+    max-height: 80dvh;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: stretch;
+  gap: $space-3;
+  padding: $space-2 $space-3;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  border-bottom: $border-width solid $color-border;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.title {
+  font-family: $font-family-display;
+  font-size: 40px;
+  font-weight: $font-weight-regular;
+  color: $color-text;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+  margin: 0;
+  align-self: center;
+}
+
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: $btn-height;
+  height: $btn-height;
+  font-size: 24px;
+  line-height: 1;
+  color: $color-text;
+  flex-shrink: 0;
+  align-self: center;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background: $color-surface-2;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  background: $color-black;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-3;
+  padding: $space-3;
+  align-content: flex-start;
+}
+
+.empty {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  padding: $space-4;
+}

@@ -1,0 +1,83 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: $color-border;
+  width: $card-width;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: box-shadow $transition-fast;
+
+  &:hover {
+    box-shadow: $shadow-sm;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+    outline-offset: 0;
+  }
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding: $space-2 $space-3;
+  background: $color-surface;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  white-space: nowrap;
+}
+
+.metaLabel {
+  flex-shrink: 0;
+}
+
+.metaValue {
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: $font-size-md;
+  color: $color-text;
+  font-weight: $font-weight-regular;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preview {
+  position: relative;
+  display: flex;
+  background: repeating-conic-gradient(
+      #{$color-checker-light} 0% 25%,
+      #{$color-checker-dark} 0% 50%
+    )
+    0 0 / 16px 16px;
+  padding: $space-3;
+  min-height: 140px;
+}
+
+.thumbGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $space-2;
+  width: 100%;
+  align-content: flex-start;
+}
+
+.thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}

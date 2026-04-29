@@ -3,6 +3,7 @@ import type { KeyboardEvent } from 'react';
 import type { DrawingRow } from '@/types';
 import { DrawingThumbnail } from '@/components/DrawingThumbnail';
 import { ContextMenu } from '@/components/ContextMenu';
+import { Icons } from '@/components/Icons';
 import type { ContextMenuItem } from '@/components/ContextMenu';
 import styles from './DrawingCard.module.scss';
 
@@ -15,6 +16,15 @@ interface Props {
 }
 
 type Mode = 'default' | 'renaming' | 'confirming-delete';
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
 
 export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFromGroup }: Props) {
   const [mode, setMode] = useState<Mode>('default');
@@ -73,10 +83,6 @@ export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFrom
       tabIndex={mode === 'default' ? 0 : -1}
       aria-label={drawing.title}
     >
-      <div className={styles.preview}>
-        <DrawingThumbnail data={drawing.data} size={120} />
-      </div>
-
       {mode === 'confirming-delete' ? (
         <div className={styles.confirmRow} onClick={(e) => e.stopPropagation()}>
           <span className={styles.confirmLabel}>Supprimer&nbsp;«&nbsp;{drawing.title}&nbsp;»&nbsp;?</span>
@@ -98,42 +104,47 @@ export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFrom
           </div>
         </div>
       ) : (
-        <footer className={styles.footer} onClick={(e) => e.stopPropagation()}>
-          {mode === 'renaming' ? (
-            <input
-              ref={inputRef}
-              autoFocus
-              className={styles.renameInput}
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
-              onKeyDown={handleRenameKey}
-              onBlur={commitRename}
-            />
-          ) : (
-            <>
-              <span className={styles.title}>{drawing.title}</span>
-              <span className={styles.size}>
-                {drawing.data.width}×{drawing.data.height}
-              </span>
-            </>
-          )}
-
-          {menuItems.length > 0 && mode === 'default' && (
-            <div className={styles.menuAnchor}>
-              <button
-                type="button"
-                className={styles.menuBtn}
-                aria-label="Actions"
-                onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
-              >
-                ···
-              </button>
-              {menuOpen && (
-                <ContextMenu items={menuItems} onClose={() => setMenuOpen(false)} />
-              )}
+        <>
+          <header className={styles.info} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.meta}>
+              <span className={styles.metaLabel}>Modifié le</span>
+              <span className={styles.metaValue}>{formatDate(drawing.updated_at)}</span>
             </div>
-          )}
-        </footer>
+            {mode === 'renaming' ? (
+              <input
+                ref={inputRef}
+                autoFocus
+                className={styles.renameInput}
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onKeyDown={handleRenameKey}
+                onBlur={commitRename}
+              />
+            ) : (
+              <span className={styles.title}>{drawing.title}</span>
+            )}
+          </header>
+
+          <div className={styles.preview}>
+            <DrawingThumbnail data={drawing.data} size={120} />
+
+            {menuItems.length > 0 && mode === 'default' && (
+              <div className={styles.menuAnchor} onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  className={styles.menuBtn}
+                  aria-label="Actions"
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
+                >
+                  <Icons icon="more" size={14} />
+                </button>
+                {menuOpen && (
+                  <ContextMenu items={menuItems} onClose={() => setMenuOpen(false)} />
+                )}
+              </div>
+            )}
+          </div>
+        </>
       )}
     </article>
   );

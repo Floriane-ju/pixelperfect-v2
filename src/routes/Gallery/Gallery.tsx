@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/Button';
 import { DrawingCard } from '@/components/DrawingCard';
-import { DrawingGroup } from '@/components/DrawingGroup';
+import { GroupCard } from '@/components/GroupCard';
+import { GroupModal } from '@/components/GroupModal';
 import { NewDrawingModal } from '@/components/NewDrawingModal';
 import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup } from '@/lib/drawings';
 import { groupDrawings } from '@/lib/groupDrawings';
@@ -17,6 +18,7 @@ export function Gallery() {
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
+  const [activeGroup, setActiveGroup] = useState<string | null>(null);
 
   useEffect(() => {
     setStatus('loading');
@@ -34,7 +36,6 @@ export function Gallery() {
     );
     renameDrawing(id, newTitle).catch((err: unknown) => {
       console.error('rename failed', err);
-      // revert sur erreur → refetch
       fetchDrawings().then(setDrawings).catch(() => null);
     });
   };
@@ -64,13 +65,23 @@ export function Gallery() {
 
   const { groups, ungrouped } = groupDrawings(drawings);
   const hasContent = drawings.length > 0;
+  const activeGroupData = activeGroup
+    ? (groups.find((g) => g.name === activeGroup) ?? null)
+    : null;
 
   return (
     <section className={styles.gallery}>
       <header className={styles.header}>
         <div className={styles.titleGroup}>
-          <h1 className={styles.title}>Galerie</h1>
+          <h1 className={styles.title}>Pixel perfect</h1>
           <span className={styles.version}>v{__APP_VERSION__}</span>
+        </div>
+        <div className="deco" aria-hidden="true">
+          <div/>
+          <div/>
+          <div/>
+          <div/>
+          <div/>
         </div>
         <Button variant="primary" onClick={() => setShowNewModal(true)}>
           Nouveau dessin
@@ -97,31 +108,35 @@ export function Gallery() {
       {hasContent && (
         <div className={styles.content}>
           {groups.map((g) => (
-            <DrawingGroup
+            <GroupCard
               key={g.name}
               name={g.name}
               drawings={g.drawings}
-              onCardClick={(id) => navigate(`/editor/${id}`)}
-              onRename={handleRename}
-              onDelete={handleDelete}
-              onRemoveFromGroup={handleRemoveFromGroup}
+              onOpen={() => setActiveGroup(g.name)}
             />
           ))}
-
-          {ungrouped.length > 0 && (
-            <div className={styles.grid}>
-              {ungrouped.map((d) => (
-                <DrawingCard
-                  key={d.id}
-                  drawing={d}
-                  onClick={() => navigate(`/editor/${d.id}`)}
-                  onRename={(title) => handleRename(d.id, title)}
-                  onDelete={() => handleDelete(d.id)}
-                />
-              ))}
-            </div>
-          )}
+          {ungrouped.map((d) => (
+            <DrawingCard
+              key={d.id}
+              drawing={d}
+              onClick={() => navigate(`/editor/${d.id}`)}
+              onRename={(title) => handleRename(d.id, title)}
+              onDelete={() => handleDelete(d.id)}
+            />
+          ))}
         </div>
+      )}
+
+      {activeGroupData && (
+        <GroupModal
+          name={activeGroupData.name}
+          drawings={activeGroupData.drawings}
+          onClose={() => setActiveGroup(null)}
+          onCardClick={(id) => navigate(`/editor/${id}`)}
+          onRename={handleRename}
+          onDelete={handleDelete}
+          onRemoveFromGroup={handleRemoveFromGroup}
+        />
       )}
     </section>
   );
