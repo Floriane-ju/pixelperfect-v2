@@ -1,15 +1,20 @@
 .card {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  background: $color-border;
   width: $card-width;
+  background: $accent-1-550;
   cursor: pointer;
   flex-shrink: 0;
+  box-shadow: $shadow-card, $inner-shadow-card-purple-resting;
   transition: box-shadow $transition-fast;
+  @include no-select;
 
   &:hover {
-    box-shadow: $shadow-sm;
+    box-shadow: $shadow-card-hover, $inner-shadow-card-purple-hover;
+  }
+
+  &:active {
+    box-shadow: $inner-shadow-card-purple-active;
   }
 
   &:focus-visible {
@@ -18,66 +23,70 @@
   }
 }
 
-.info {
-  display: flex;
-  flex-direction: column;
-  gap: $space-2;
-  padding: $space-2 $space-3;
-  background: $color-surface;
-}
-
-.meta {
+.header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: $space-2;
-  font-size: $font-size-sm;
-  color: $color-text-muted;
-  white-space: nowrap;
-}
-
-.metaLabel {
-  flex-shrink: 0;
-}
-
-.metaValue {
-  flex-shrink: 0;
+  padding: $space-2;
+  border-bottom: $border-width-thin solid $accent-1-600;
 }
 
 .title {
+  flex: 1;
+  min-width: 0;
   font-size: $font-size-md;
-  color: $color-text;
+  color: $accent-2-500;
   font-weight: $font-weight-regular;
-  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.preview {
-  position: relative;
+.icon {
+  flex-shrink: 0;
+  color: $accent-2-500;
   display: flex;
-  background: repeating-conic-gradient(
-      #{$color-checker-light} 0% 25%,
-      #{$color-checker-dark} 0% 50%
-    )
-    0 0 / 16px 16px;
-  padding: $space-3;
-  min-height: 140px;
+  align-items: center;
 }
 
-.thumbGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: $space-2;
-  width: 100%;
-  align-content: flex-start;
+.preview {
+  padding: 0 $space-1 $space-1;
+}
+
+.previewContent {
+  padding: $space-3;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $thumb-gap;
+  width: calc(3 * #{$thumb-size} + 2 * #{$thumb-gap});
 }
 
 .thumb {
+  width: $thumb-size;
+  height: $thumb-size;
+  flex-shrink: 0;
+  background: $accent-2-500;
+  box-shadow: $shadow-btn, $inner-shadow-cyan-resting;
+  padding: $border-width;
+}
+
+.thumbInner {
+  background: $color-white;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1 / 1;
-  overflow: hidden;
+  padding: $border-width;
+}
+
+.thumbEmpty {
+  width: $thumb-size;
+  height: $thumb-size;
+  flex-shrink: 0;
+  border: $border-width dashed $accent-1-600;
 }

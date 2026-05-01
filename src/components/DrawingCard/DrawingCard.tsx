@@ -17,15 +17,6 @@ interface Props {
 
 type Mode = 'default' | 'renaming' | 'confirming-delete';
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yyyy = d.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
-}
-
 export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFromGroup }: Props) {
   const [mode, setMode] = useState<Mode>('default');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -34,28 +25,20 @@ export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFrom
 
   const menuItems: ContextMenuItem[] = [
     ...(onRename
-      ? [
-          {
-            label: 'Renommer',
-            onClick: () => {
-              setRenameValue(drawing.title);
-              setMode('renaming');
-              setTimeout(() => inputRef.current?.select(), 0);
-            },
+      ? [{
+          label: 'Renommer',
+          onClick: () => {
+            setRenameValue(drawing.title);
+            setMode('renaming');
+            setTimeout(() => inputRef.current?.select(), 0);
           },
-        ]
+        }]
       : []),
     ...(onRemoveFromGroup
       ? [{ label: 'Retirer du groupe', onClick: () => onRemoveFromGroup() }]
       : []),
     ...(onDelete
-      ? [
-          {
-            label: 'Supprimer',
-            variant: 'danger' as const,
-            onClick: () => setMode('confirming-delete'),
-          },
-        ]
+      ? [{ label: 'Supprimer', variant: 'danger' as const, onClick: () => setMode('confirming-delete') }]
       : []),
   ];
 
@@ -70,46 +53,25 @@ export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFrom
     if (e.key === 'Escape') setMode('default');
   };
 
-  const handleCardClick = () => {
-    if (mode !== 'default') return;
-    onClick?.();
-  };
-
   return (
     <article
       className={styles.card}
-      onClick={handleCardClick}
+      onClick={() => { if (mode === 'default') onClick?.(); }}
       role="button"
       tabIndex={mode === 'default' ? 0 : -1}
       aria-label={drawing.title}
     >
       {mode === 'confirming-delete' ? (
         <div className={styles.confirmRow} onClick={(e) => e.stopPropagation()}>
-          <span className={styles.confirmLabel}>Supprimer&nbsp;«&nbsp;{drawing.title}&nbsp;»&nbsp;?</span>
+          <span className={styles.confirmLabel}>Supprimer «&nbsp;{drawing.title}&nbsp;» ?</span>
           <div className={styles.confirmActions}>
-            <button
-              type="button"
-              className={styles.confirmBtn}
-              onClick={() => { onDelete?.(); setMode('default'); }}
-            >
-              Oui
-            </button>
-            <button
-              type="button"
-              className={styles.cancelBtn}
-              onClick={() => setMode('default')}
-            >
-              Non
-            </button>
+            <button type="button" className={styles.confirmBtn} onClick={() => { onDelete?.(); setMode('default'); }}>Oui</button>
+            <button type="button" className={styles.cancelBtn} onClick={() => setMode('default')}>Non</button>
           </div>
         </div>
       ) : (
         <>
-          <header className={styles.info} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.meta}>
-              <span className={styles.metaLabel}>Modifié le</span>
-              <span className={styles.metaValue}>{formatDate(drawing.updated_at)}</span>
-            </div>
+          <header className={styles.header} onClick={(e) => e.stopPropagation()}>
             {mode === 'renaming' ? (
               <input
                 ref={inputRef}
@@ -123,26 +85,24 @@ export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFrom
             ) : (
               <span className={styles.title}>{drawing.title}</span>
             )}
-          </header>
-
-          <div className={styles.preview}>
-            <DrawingThumbnail data={drawing.data} size={120} />
-
             {menuItems.length > 0 && mode === 'default' && (
-              <div className={styles.menuAnchor} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.menuAnchor}>
                 <button
                   type="button"
                   className={styles.menuBtn}
                   aria-label="Actions"
                   onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
                 >
-                  <Icons icon="more" size={14} />
+                  <Icons icon="more" size={16} />
                 </button>
-                {menuOpen && (
-                  <ContextMenu items={menuItems} onClose={() => setMenuOpen(false)} />
-                )}
+                {menuOpen && <ContextMenu items={menuItems} onClose={() => setMenuOpen(false)} />}
               </div>
             )}
+          </header>
+          <div className={styles.preview}>
+            <div className={styles.previewInner}>
+              <DrawingThumbnail data={drawing.data} size={174} />
+            </div>
           </div>
         </>
       )}

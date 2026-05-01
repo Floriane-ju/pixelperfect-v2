@@ -1,26 +1,23 @@
 .gallery {
   display: flex;
   flex-direction: column;
-  max-width: 800px;
-  width:80%;
-  overflow-y: auto;
-  border: $border-basis;
-  box-shadow: $shadow-lg;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $space-4;
-  padding: $space-2 $space-3;
-  background: $color-surface;
+  gap: $space-6;
+  padding: $space-8 $space-10 $space-6;
   flex-shrink: 0;
 }
 
 .titleGroup {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: $space-3;
   min-width: 0;
 }
@@ -30,41 +27,28 @@
   font-family: $font-family-display;
   font-size: $font-size-display;
   font-weight: $font-weight-regular;
+  color: $accent-2-500;
   line-height: 1;
   white-space: nowrap;
   flex-shrink: 0;
-}
-
-// Lignes décoratives à côté du logo
-.titleLines {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: $space-3 0;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.titleLine {
-  height: 4px;
-  background: $color-border;
+  text-shadow: $text-shadow-title;
 }
 
 .version {
   font-size: $font-size-sm;
-  color: $color-text-muted;
+  color: $color-gold;
   font-weight: $font-weight-regular;
+  white-space: nowrap;
 }
 
 .content {
   flex: 1;
+  overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, $card-width);
-  gap: $space-3;
+  gap: $space-5;
   align-content: flex-start;
-  background: $color-black;
-  padding: $space-3;
+  padding: 0 $space-10 $space-8;
 }
 
 .state {
@@ -72,13 +56,14 @@
   align-items: center;
   justify-content: center;
   flex: 1;
-  color: $color-text-muted;
+  color: $accent-2-500;
   font-size: $font-size-md;
+  opacity: 0.6;
   padding: $space-8;
-  background: $color-black;
 }
 
 .stateError {
   @extend .state;
   color: $color-danger;
+  opacity: 1;
 }

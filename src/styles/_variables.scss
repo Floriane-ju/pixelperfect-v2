@@ -1,29 +1,51 @@
 // ─────────────────────────────────────────────
-// Palette de base
+// Palette de couleurs
+// Nomenclature : {groupe}-{teinte}
 // ─────────────────────────────────────────────
-$color-black: #000000;
-$color-white: #ffffff;
-$color-gray:  #a1a1a1;
+
+// Neutral (gris)
+$neutral-0:    #FFFFFF;
+$neutral-400:  #AEAEAE;
+$neutral-500:  #8C8C8C;
+$neutral-1000: #000000;
+
+// Aliases pour compatibilité
+$color-white: $neutral-0;
+$color-black: $neutral-1000;
+
+// Accent 1 (violet)
+$accent-1-300: #AD8EEE;
+$accent-1-400: #8968CC;
+$accent-1-550: #6748A6;
+$accent-1-500: #553692;
+$accent-1-600: #3D2271;
+
+// Accent 2 (cyan)
+$accent-2-300: #A8FCFF;
+$accent-2-400: #68FAFF;
+$accent-2-500: #08DDE4;
+$accent-2-600: #079CA1;
 
 // ─────────────────────────────────────────────
-// Couleurs sémantiques
+// Couleurs sémantiques (mappées à la palette)
 // ─────────────────────────────────────────────
-$color-bg:         $color-white;
-$color-surface:    $color-white;
-$color-surface-2:  #9D9D9D;
-$color-border:     $color-black;
-$color-text:       $color-black;
-$color-text-muted: $color-gray;
+$color-bg:         $accent-1-500;
+$color-surface:    $neutral-0;
+$color-surface-2:  $neutral-400;
+$color-border:     $neutral-1000;
+$color-text:       $neutral-1000;
+$color-text-muted: $neutral-500;
 
-$color-primary:       $color-black;
-$color-primary-hover: #333333;
+$color-primary:       $neutral-1000;
+$color-primary-hover: $neutral-500;
 $color-danger:        #cc2233;
+$color-gold:          #FFE488;
 $color-success:       #007700;
 $color-warning:       #bb7700;
 
 // Checkerboard transparence (DrawingCard preview)
 $color-checker-light: #e8e8e8;
-$color-checker-dark:  #c8c8c8;
+$color-checker-dark:  $neutral-400;
 
 // ─────────────────────────────────────────────
 // Espacements (échelle 4 px)
@@ -35,6 +57,7 @@ $space-3:  12px;
 $space-4:  16px;
 $space-5:  20px;
 $space-6:  24px;
+$space-7:  28px;
 $space-8:  32px;
 $space-10: 40px;
 $space-12: 48px;
@@ -43,7 +66,7 @@ $space-12: 48px;
 // Typographie
 // ─────────────────────────────────────────────
 $font-family-base:    'Aldrich', sans-serif;
-$font-family-display: 'Jacquard 12', sans-serif;
+$font-family-display: 'Press Start 2P', cursive;
 $font-family-mono:    'Aldrich', monospace;
 
 $font-size-xs:      11px;
@@ -51,7 +74,7 @@ $font-size-sm:      12px;
 $font-size-md:      16px;
 $font-size-lg:      18px;
 $font-size-xl:      22px;
-$font-size-display: 60px;
+$font-size-display: 40px;
 
 $font-weight-regular: 400;
 $font-weight-medium:  400;
@@ -77,6 +100,40 @@ $border-basis: $border-width solid $color-bg;
 $shadow-sm: 4px 4px 0 0 #{$color-black};
 $shadow-md: 8px 8px 0 0 #{$color-black};
 $shadow-lg: 8px 8px 0 0 #{$color-black};
+
+// Drop shadows — boutons (violet profond)
+$shadow-btn:               4px 4px 0 0 #{$accent-1-600};
+$shadow-btn-hover:         8px 8px 0 0 #{$accent-1-600};
+$shadow-btn-primary:       4px 4px 0 0 #{$accent-1-400}, 8px 8px 0 0 #{$accent-1-600};
+$shadow-btn-primary-hover: 8px 8px 0 0 #{$accent-1-400}, 16px 16px 0 0 #{$accent-1-600};
+
+// Inner shadows — boutons cyan (Default / Secondary)
+$inner-shadow-cyan-resting:        inset 2px 2px 0 0 #{$accent-2-400};
+$inner-shadow-cyan-hover:          inset 2px 2px 0 0 #{$accent-2-300};
+$inner-shadow-cyan-active:         inset -2px -2px 0 0 #{$accent-2-400}, inset 2px 2px 0 0 #{$accent-2-600};
+$inner-shadow-cyan-selected:       inset -2px -2px 0 0 #{$accent-2-400}, inset 2px 2px 0 0 #{$accent-2-600};
+$inner-shadow-cyan-selected-hover: inset -2px -2px 0 0 #{$accent-2-300}, inset 2px 2px 0 0 #{$accent-2-600};
+
+// Inner shadows — bouton primary (large CTA)
+$inner-shadow-primary-resting: inset 4px 4px 0 0 #{$accent-2-400};
+$inner-shadow-primary-hover:   inset 4px 4px 0 0 #{$accent-2-300};
+$inner-shadow-primary-active:  inset 4px 4px 0 0 #{$accent-2-600}, inset -4px -4px 0 0 #{$accent-2-400};
+
+// Text shadows — titres
+$text-shadow-title: 8px 8px 0 #{$accent-1-600}, 4px 4px 0 #{$accent-1-400};
+
+// Inner shadows — bouton violet (Selected actif)
+$inner-shadow-purple-resting: inset 2px 2px 0 0 #{$accent-1-300};
+$inner-shadow-purple-active:  inset -2px -2px 0 0 #{$accent-1-400}, inset 2px 2px 0 0 #{$accent-1-600};
+
+// Drop shadows — cards
+$shadow-card:       8px 8px 0 0 #{$accent-1-600};
+$shadow-card-hover: 12px 12px 0 0 #{$accent-1-600};
+
+// Inner shadows — card violet (GroupCard)
+$inner-shadow-card-purple-resting: inset 4px 4px 0 0 #{$accent-1-400};
+$inner-shadow-card-purple-hover:   inset 4px 4px 0 0 #{$accent-1-300};
+$inner-shadow-card-purple-active:  inset 4px 4px 0 0 #{$accent-1-600}, inset -4px -4px 0 0 #{$accent-1-400};
 
 // ─────────────────────────────────────────────
 // Z-index
@@ -104,4 +161,6 @@ $header-height: 56px;
 $toolbar-width: 64px;
 $btn-height:    40px;
 $icon-size:     24px;
-$card-width:    175px;
+$card-width:    206px;
+$thumb-size:    54px;
+$thumb-gap:     6px;

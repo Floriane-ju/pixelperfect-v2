@@ -109,10 +109,6 @@ export function Topbar({
 
       <h1 className={styles.titleText}>{title}</h1>
 
-      <div className="deco" aria-hidden="true">
-        <div/><div/><div/><div/><div/>
-      </div>
-
       <div className={styles.toolGroup}>
         <Button
           variant={tool === 'pencil' ? 'selected' : 'selectable'}

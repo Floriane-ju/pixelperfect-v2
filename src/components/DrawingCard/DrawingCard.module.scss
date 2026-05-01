@@ -1,15 +1,20 @@
 .card {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  background: $color-border;
   width: $card-width;
+  background: $accent-2-500;
   cursor: pointer;
   flex-shrink: 0;
+  box-shadow: $shadow-card, $inner-shadow-primary-resting;
   transition: box-shadow $transition-fast;
+  @include no-select;
 
   &:hover {
-    box-shadow: $shadow-sm;
+    box-shadow: $shadow-card-hover, $inner-shadow-primary-hover;
+  }
+
+  &:active {
+    box-shadow: $inner-shadow-primary-active;
   }
 
   &:focus-visible {
@@ -18,107 +23,89 @@
   }
 }
 
-.info {
-  display: flex;
-  flex-direction: column;
-  gap: $space-2;
-  padding: $space-2 $space-3;
-  background: $color-surface;
-}
-
-.meta {
+.header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: $space-2;
-  font-size: $font-size-sm;
-  color: $color-text-muted;
-  white-space: nowrap;
-}
-
-.metaLabel {
-  flex-shrink: 0;
-}
-
-.metaValue {
-  flex-shrink: 0;
+  padding: $space-2;
+  position: relative;
 }
 
 .title {
+  flex: 1;
+  min-width: 0;
   font-size: $font-size-md;
-  color: $color-text;
+  color: $accent-1-600;
   font-weight: $font-weight-regular;
-  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.preview {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: repeating-conic-gradient(
-      #{$color-checker-light} 0% 25%,
-      #{$color-checker-dark} 0% 50%
-    )
-    0 0 / 16px 16px;
-  padding: $space-4;
-  overflow: visible;
-  min-height: 140px;
-}
-
-// Rename input — placé dans le header (.info)
 .renameInput {
-  height: 26px;
+  flex: 1;
+  min-width: 0;
+  height: $space-6;
   padding: 0 $space-2;
-  background: $color-surface-2;
-  border: $border-width solid $color-primary;
+  background: $accent-2-400;
+  border: $border-width solid $accent-1-600;
   font-size: $font-size-md;
-  color: $color-text;
+  color: $accent-1-600;
+  font-family: $font-family-base;
   outline: none;
 }
 
-// Bouton kebab — carré noir en overlay coin haut-droit du preview
 .menuAnchor {
-  position: absolute;
-  top: 0;
-  right: 0;
+  position: relative;
+  flex-shrink: 0;
 }
 
 .menuBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: $color-border;
-  color: $color-white;
-  transition: background-color $transition-fast;
+  width: $space-6;
+  height: $space-6;
+  background: transparent;
+  color: $accent-1-600;
+  transition: opacity $transition-fast;
 
   &:hover {
-    background: $color-primary-hover;
+    opacity: 0.7;
   }
 
   &:focus-visible {
     @include focus-ring;
-    outline-offset: -2px;
   }
 }
 
-// Confirmation delete inline
+.preview {
+  padding: 0 $space-1 $space-1;
+}
+
+.previewInner {
+  background: $color-white;
+  padding: $space-3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Confirmation suppression
 .confirmRow {
   display: flex;
   flex-direction: column;
   gap: $space-2;
-  padding: $space-3 $space-4;
-  background: $color-surface;
+  padding: $space-3;
+  flex: 1;
+  min-height: 100px;
+  background: $accent-2-500;
 }
 
 .confirmLabel {
-  font-size: $font-size-xs;
-  color: $color-danger;
+  font-size: $font-size-sm;
+  color: $accent-1-600;
 }
 
 .confirmActions {
@@ -128,11 +115,11 @@
 
 .confirmBtn {
   flex: 1;
-  height: 28px;
+  height: $space-7;
   background: $color-danger;
   color: $color-white;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-regular;
+  font-size: $font-size-sm;
+  font-family: $font-family-base;
   transition: filter $transition-fast;
 
   &:hover {
@@ -142,14 +129,14 @@
 
 .cancelBtn {
   flex: 1;
-  height: 28px;
-  background: $color-surface-2;
-  color: $color-text-muted;
-  font-size: $font-size-xs;
-  transition: background-color $transition-fast;
+  height: $space-7;
+  background: $accent-2-400;
+  color: $accent-1-600;
+  font-size: $font-size-sm;
+  font-family: $font-family-base;
+  transition: opacity $transition-fast;
 
   &:hover {
-    background: $color-border;
-    color: $color-white;
+    opacity: 0.7;
   }
 }

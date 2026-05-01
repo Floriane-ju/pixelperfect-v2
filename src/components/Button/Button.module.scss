@@ -6,7 +6,7 @@
   font-family: $font-family-base;
   font-weight: $font-weight-regular;
   transition: background-color $transition-fast, color $transition-fast,
-    border-color $transition-fast;
+    box-shadow $transition-fast;
   @include no-select;
 
   &:focus-visible {
@@ -36,36 +36,30 @@
 
 // Variants
 .variant-primary {
-  background: $color-primary;
-  color: $color-white;
+  background: $accent-2-500;
+  color: $accent-1-600;
+  box-shadow: $shadow-btn-primary, $inner-shadow-primary-resting;
 
   &:hover:not(:disabled) {
-    background: $color-primary-hover;
+    box-shadow: $shadow-btn-primary-hover, $inner-shadow-primary-hover;
+  }
+
+  &:active:not(:disabled) {
+    box-shadow: $inner-shadow-primary-active;
   }
 }
-
-.variant-selectable {
-  color: $color-text;
-  background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23333' stroke-width='3' stroke-dasharray='1%2c8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
-
-  &:hover:not(:disabled) {
-    background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23333' stroke-width='3' stroke-dasharray='2' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
-  }
-}
-
-.variant-selected {
-  background: $color-primary;
-  color: $color-white;
-}
-
 
 .variant-secondary {
-  background: $color-surface;
-  color: $color-text;
-  border: $border-width solid $color-border;
+  background: $accent-2-500;
+  color: $accent-1-600;
+  box-shadow: $shadow-btn, $inner-shadow-cyan-resting;
 
   &:hover:not(:disabled) {
-    background: $color-surface-2;
+    box-shadow: $shadow-btn-hover, $inner-shadow-cyan-hover;
+  }
+
+  &:active:not(:disabled) {
+    box-shadow: $inner-shadow-cyan-active;
   }
 }
 
@@ -74,7 +68,35 @@
   color: $color-text;
 
   &:hover:not(:disabled) {
-    background: $color-surface-2;
+    opacity: 0.7;
+  }
+}
+
+.variant-selected {
+  background: $accent-2-500;
+  color: $accent-1-600;
+  box-shadow: $shadow-btn, $inner-shadow-purple-active;
+
+  &:hover:not(:disabled) {
+    box-shadow: $shadow-btn-hover, $inner-shadow-purple-resting;
+  }
+
+  &:active:not(:disabled) {
+    box-shadow: $inner-shadow-purple-active;
+  }
+}
+
+.variant-selectable {
+  background: $accent-1-550;
+  color: $accent-2-500;
+  box-shadow: $inner-shadow-cyan-selected;
+
+  &:hover:not(:disabled) {
+    box-shadow: $inner-shadow-cyan-selected-hover;
+  }
+
+  &:active:not(:disabled) {
+    box-shadow: $inner-shadow-cyan-active;
   }
 }
 

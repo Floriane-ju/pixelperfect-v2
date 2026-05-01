@@ -73,15 +73,8 @@ export function Gallery() {
     <section className={styles.gallery}>
       <header className={styles.header}>
         <div className={styles.titleGroup}>
-          <h1 className={styles.title}>Pixel perfect</h1>
+          <h1 className={styles.title}>Pixel Perfect</h1>
           <span className={styles.version}>v{__APP_VERSION__}</span>
-        </div>
-        <div className="deco" aria-hidden="true">
-          <div/>
-          <div/>
-          <div/>
-          <div/>
-          <div/>
         </div>
         <Button variant="primary" onClick={() => setShowNewModal(true)}>
           Nouveau dessin
