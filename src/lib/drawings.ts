@@ -32,6 +32,14 @@ export async function removeFromGroup(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function moveToGroup(id: string, group: string): Promise<void> {
+  const { error } = await supabase
+    .from('drawings')
+    .update({ group, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw error;
+}
+
 export async function fetchDrawing(id: string): Promise<DrawingRow> {
   const { data, error } = await supabase
     .from('drawings')

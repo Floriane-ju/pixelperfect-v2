@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import type { RefObject } from 'react';
 import { Button } from '@/components/Button';
 import { ColorPicker } from '@/components/ColorPicker';
 import type { HexColor, PixelLayer } from '@/types';
@@ -13,6 +12,7 @@ interface RefImageInfo {
   x: number;
   y: number;
   scale: number;
+  opacity: number;
   naturalWidth: number;
   naturalHeight: number;
 }
@@ -33,14 +33,16 @@ interface TopbarProps {
   onLayerDuplicate: (id: string) => void;
   onLayerDelete: (id: string) => void;
   onColorChange: (c: HexColor) => void;
+  onColorHover: (color: HexColor | null) => void;
   recentColors: HexColor[];
   drawingColors: HexColor[];
   onBack: () => void;
   refImage: RefImageInfo | null;
   onRefImageImport: (file: File) => void;
   onRefImageRemove: () => void;
-  onRefImageTransform: (x: number, y: number, scale: number) => void;
-  canvasAreaRef: RefObject<HTMLDivElement>;
+  onRefImageTransform: (x: number, y: number, scale: number, opacity: number) => void;
+  onRefImageCapture: () => void;
+  canvasDisplaySize: { w: number; h: number };
 }
 
 export function Topbar({
@@ -59,6 +61,7 @@ export function Topbar({
   onLayerDuplicate,
   onLayerDelete,
   onColorChange,
+  onColorHover,
   recentColors,
   drawingColors,
   onBack,
@@ -66,7 +69,8 @@ export function Topbar({
   onRefImageImport,
   onRefImageRemove,
   onRefImageTransform,
-  canvasAreaRef,
+  onRefImageCapture,
+  canvasDisplaySize,
 }: TopbarProps) {
   const topbarRef = useRef<HTMLElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -88,14 +92,12 @@ export function Topbar({
     e.target.value = '';
   };
 
-  const containerW = canvasAreaRef.current?.clientWidth ?? 800;
-  const containerH = canvasAreaRef.current?.clientHeight ?? 600;
   const displayW = refImage ? refImage.naturalWidth * refImage.scale : 0;
   const displayH = refImage ? refImage.naturalHeight * refImage.scale : 0;
   const xMin = Math.round(-displayW);
-  const xMax = Math.round(containerW);
+  const xMax = Math.round(canvasDisplaySize.w);
   const yMin = Math.round(-displayH);
-  const yMax = Math.round(containerH);
+  const yMax = Math.round(canvasDisplaySize.h);
 
   return (
     <header ref={topbarRef} className={styles.topbar}>
@@ -206,6 +208,7 @@ export function Topbar({
             <ColorPicker
               value={color}
               onChange={onColorChange}
+              onColorHover={onColorHover}
               recentColors={recentColors}
               drawingColors={drawingColors}
             />
@@ -256,7 +259,7 @@ export function Topbar({
                       step={1}
                       value={Math.round(refImage.x)}
                       onChange={e =>
-                        onRefImageTransform(Number(e.target.value), refImage.y, refImage.scale)
+                        onRefImageTransform(Number(e.target.value), refImage.y, refImage.scale, refImage.opacity)
                       }
                     />
                   </div>
@@ -274,7 +277,7 @@ export function Topbar({
                       step={1}
                       value={Math.round(refImage.y)}
                       onChange={e =>
-                        onRefImageTransform(refImage.x, Number(e.target.value), refImage.scale)
+                        onRefImageTransform(refImage.x, Number(e.target.value), refImage.scale, refImage.opacity)
                       }
                     />
                   </div>
@@ -299,10 +302,36 @@ export function Topbar({
                           cx - (refImage.naturalWidth * newScale) / 2,
                           cy - (refImage.naturalHeight * newScale) / 2,
                           newScale,
+                          refImage.opacity,
                         );
                       }}
                     />
                   </div>
+
+                  <div className={styles.sliderGroup}>
+                    <div className={styles.sliderLabel}>
+                      <span>Opacité</span>
+                      <span className={styles.sliderValue}>{Math.round(refImage.opacity * 100)} %</span>
+                    </div>
+                    <input
+                      type="range"
+                      className={styles.slider}
+                      min={0.05}
+                      max={1}
+                      step={0.01}
+                      value={refImage.opacity}
+                      onChange={e =>
+                        onRefImageTransform(refImage.x, refImage.y, refImage.scale, Number(e.target.value))
+                      }
+                    />
+                  </div>
+
+                  <button
+                    className={styles.refCaptureBtn}
+                    onClick={onRefImageCapture}
+                  >
+                    Capturer les pixels
+                  </button>
 
                   <button
                     className={styles.refRemoveBtn}

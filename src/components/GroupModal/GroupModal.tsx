@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import { DrawingCard } from '@/components/DrawingCard';
+import { Button } from '@/components/Button';
 import type { DrawingRow } from '@/types';
 import styles from './GroupModal.module.scss';
 
@@ -67,15 +68,14 @@ export function GroupModal({
             <div/>
             <div/>
           </div>
-          <button
-            type="button"
-            className={styles.closeBtn}
+          <Button
+            variant="primary"
+            iconOnly
+            iconLeft="close"
             aria-label="Fermer"
             onClick={(e) => { e.stopPropagation(); onClose(); }}
             onPointerDown={(e) => e.stopPropagation()}
-          >
-            ×
-          </button>
+          />
         </header>
         <div className={styles.content}>
           {drawings.map((d) => (

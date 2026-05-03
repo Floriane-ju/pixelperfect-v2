@@ -13,14 +13,17 @@ interface Props {
   onRename?: (newTitle: string) => void;
   onDelete?: () => void;
   onRemoveFromGroup?: () => void;
+  onDropDrawing?: (sourceId: string) => void;
 }
 
 type Mode = 'default' | 'renaming' | 'confirming-delete';
 
-export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFromGroup }: Props) {
+export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFromGroup, onDropDrawing }: Props) {
   const [mode, setMode] = useState<Mode>('default');
   const [menuOpen, setMenuOpen] = useState(false);
   const [renameValue, setRenameValue] = useState(drawing.title);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const menuItems: ContextMenuItem[] = [
@@ -53,9 +56,34 @@ export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFrom
     if (e.key === 'Escape') setMode('default');
   };
 
+  const classNames = [
+    styles.card,
+    isDragging ? styles.dragging : '',
+    isDragOver ? styles.dropTarget : '',
+  ].filter(Boolean).join(' ');
+
   return (
     <article
-      className={styles.card}
+      className={classNames}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('text/plain', drawing.id);
+        e.dataTransfer.effectAllowed = 'move';
+        setIsDragging(true);
+      }}
+      onDragEnd={() => setIsDragging(false)}
+      onDragOver={(e) => {
+        if (!onDropDrawing) return;
+        e.preventDefault();
+        setIsDragOver(true);
+      }}
+      onDragLeave={() => setIsDragOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        const sourceId = e.dataTransfer.getData('text/plain');
+        if (sourceId && sourceId !== drawing.id) onDropDrawing?.(sourceId);
+      }}
       onClick={() => { if (mode === 'default') onClick?.(); }}
       role="button"
       tabIndex={mode === 'default' ? 0 : -1}

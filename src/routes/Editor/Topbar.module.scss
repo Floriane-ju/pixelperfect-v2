@@ -157,6 +157,23 @@
   }
 }
 
+.refCaptureBtn {
+  display: block;
+  width: 100%;
+  padding: $space-2 $space-3;
+  background: none;
+  font-family: $font-family-base;
+  font-size: $font-size-sm;
+  color: $color-success;
+  cursor: pointer;
+  text-align: left;
+  transition: background $transition-fast;
+
+  &:hover {
+    background: rgba(0, 119, 0, 0.1);
+  }
+}
+
 .refRemoveBtn {
   display: block;
   width: 100%;

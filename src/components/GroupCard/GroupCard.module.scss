@@ -21,6 +21,12 @@
     @include focus-ring;
     outline-offset: 0;
   }
+
+  &.dropTarget {
+    box-shadow: $drop-shadow-interactive-hover, $inner-shadow-interactive-purple-hover;
+    outline: 2px solid $accent-2-500;
+    outline-offset: -2px;
+  }
 }
 
 .header {

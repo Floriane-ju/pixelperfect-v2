@@ -41,14 +41,14 @@
 .variant-primary {
   background: $accent-2-500;
   color: $accent-1-600;
-  //box-shadow: $shadow-btn-primary, $inner-shadow-primary-resting;
+  box-shadow: $drop-shadow-interactive,$inner-shadow-interactive-cyan;
 
   &:hover:not(:disabled) {
-    //box-shadow: $shadow-btn-primary-hover, $inner-shadow-primary-hover;
+    box-shadow: $drop-shadow-interactive-hover,$inner-shadow-interactive-cyan-hover;
   }
 
   &:active:not(:disabled) {
-    //box-shadow: $inner-shadow-primary-active;
+    box-shadow: $drop-shadow-interactive-active,$inner-shadow-interactive-cyan-active;
   }
 }
 
@@ -68,10 +68,10 @@
 
 .variant-ghost {
   background: transparent;
-  color: $color-text;
+  color: $accent-2-500;
 
   &:hover:not(:disabled) {
-    opacity: 0.7;
+    color: $accent-2-400;
   }
 }
 

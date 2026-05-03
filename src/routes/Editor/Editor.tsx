@@ -3,9 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { fetchDrawing, updateDrawingData } from '@/lib/drawings';
 import type { DrawingData, DrawingRow, HexColor, PixelLayer } from '@/types';
 import { Button } from '@/components/Button';
-import { ReferenceImage } from '@/components/ReferenceImage';
 import { Canvas } from './Canvas';
 import type { Tool } from './Canvas';
+import { mergeColors } from './colorMerge';
 import { Topbar } from './Topbar';
 import styles from './Editor.module.scss';
 
@@ -14,6 +14,7 @@ interface RefImageState {
   x: number;
   y: number;
   scale: number;
+  opacity: number;
   naturalWidth: number;
   naturalHeight: number;
 }
@@ -37,8 +38,10 @@ export function Editor() {
   const [showInvisibleModal, setShowInvisibleModal] = useState(false);
   const [mirrorH, setMirrorH] = useState(false);
   const [mirrorV, setMirrorV] = useState(false);
+  const [hoveredColor, setHoveredColor] = useState<HexColor | null>(null);
 
   const [refImage, setRefImage] = useState<RefImageState | null>(null);
+  const [canvasDisplaySize, setCanvasDisplaySize] = useState({ w: 256, h: 256 });
   const canvasAreaRef = useRef<HTMLDivElement>(null);
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -262,16 +265,17 @@ export function Editor() {
       const src = e.target?.result as string;
       const img = new Image();
       img.onload = () => {
-        const containerW = canvasAreaRef.current?.clientWidth ?? 800;
-        const containerH = canvasAreaRef.current?.clientHeight ?? 600;
-        const initialScale = Math.min(containerW / img.naturalWidth, containerH / img.naturalHeight);
-        const initialX = (containerW - img.naturalWidth * initialScale) / 2;
-        const initialY = (containerH - img.naturalHeight * initialScale) / 2;
+        const canvasW = canvasDisplaySize.w || 256;
+        const canvasH = canvasDisplaySize.h || 256;
+        const initialScale = Math.min(canvasW / img.naturalWidth, canvasH / img.naturalHeight);
+        const initialX = (canvasW - img.naturalWidth * initialScale) / 2;
+        const initialY = (canvasH - img.naturalHeight * initialScale) / 2;
         setRefImage({
           src,
           x: initialX,
           y: initialY,
           scale: initialScale,
+          opacity: 0.65,
           naturalWidth: img.naturalWidth,
           naturalHeight: img.naturalHeight,
         });
@@ -279,26 +283,85 @@ export function Editor() {
       img.src = src;
     };
     reader.readAsDataURL(file);
-  }, []);
+  }, [canvasDisplaySize]);
 
   const handleRefImageRemove = useCallback(() => {
     setRefImage(null);
   }, []);
 
-  const handleRefImageTransform = useCallback((x: number, y: number, scale: number) => {
-    setRefImage(prev => prev ? { ...prev, x, y, scale } : prev);
+  const handleRefImageTransform = useCallback((x: number, y: number, scale: number, opacity: number) => {
+    setRefImage(prev => prev ? { ...prev, x, y, scale, opacity } : prev);
   }, []);
+
+  const handleCapturePixels = useCallback(() => {
+    if (!refImage || !drawing) return;
+
+    const offscreen = document.createElement('canvas');
+    offscreen.width = refImage.naturalWidth;
+    offscreen.height = refImage.naturalHeight;
+    const ctx = offscreen.getContext('2d');
+    if (!ctx) return;
+
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0);
+      const { data: imgData } = ctx.getImageData(0, 0, refImage.naturalWidth, refImage.naturalHeight);
+
+      const { width, height } = drawing.data;
+      const dw = canvasDisplaySize.w;
+      const dh = canvasDisplaySize.h;
+      const imgDisplayW = refImage.naturalWidth * refImage.scale;
+      const imgDisplayH = refImage.naturalHeight * refImage.scale;
+
+      const newPixels: Record<string, HexColor> = {};
+
+      for (let cy = 0; cy < height; cy++) {
+        for (let cx = 0; cx < width; cx++) {
+          const displayX = (cx + 0.5) * (dw / width);
+          const displayY = (cy + 0.5) * (dh / height);
+
+          if (
+            displayX < refImage.x || displayX >= refImage.x + imgDisplayW ||
+            displayY < refImage.y || displayY >= refImage.y + imgDisplayH
+          ) continue;
+
+          const imgX = Math.min(Math.floor((displayX - refImage.x) / refImage.scale), refImage.naturalWidth - 1);
+          const imgY = Math.min(Math.floor((displayY - refImage.y) / refImage.scale), refImage.naturalHeight - 1);
+
+          const i = (imgY * refImage.naturalWidth + imgX) * 4;
+          if ((imgData[i + 3] ?? 0) < 10) continue;
+
+          const r = (imgData[i] ?? 0).toString(16).padStart(2, '0');
+          const g = (imgData[i + 1] ?? 0).toString(16).padStart(2, '0');
+          const b = (imgData[i + 2] ?? 0).toString(16).padStart(2, '0');
+          newPixels[`${cx},${cy}`] = `#${r}${g}${b}` as HexColor;
+        }
+      }
+
+      if (latestDataRef.current) pushHistory(latestDataRef.current);
+      handleLayerChange(activeLayerId, mergeColors(newPixels));
+    };
+    img.src = refImage.src;
+  }, [refImage, drawing, canvasDisplaySize, activeLayerId, handleLayerChange, pushHistory]);
+
+  const colorRef = useRef<HexColor>(color);
 
   const handleColorChange = useCallback((newColor: HexColor) => {
     setColor(newColor);
-    setRecentColors(prev => {
-      const filtered = prev.filter(c => c !== newColor);
-      return [newColor, ...filtered].slice(0, 12);
-    });
+    colorRef.current = newColor;
   }, []);
 
   const handlePanelToggle = useCallback((panel: 'layers' | 'color' | 'ref') => {
-    setOpenPanel(prev => prev === panel ? null : panel);
+    setOpenPanel(prev => {
+      if (prev === panel && panel === 'color') {
+        const c = colorRef.current;
+        setRecentColors(recents => {
+          const filtered = recents.filter(r => r !== c);
+          return [c, ...filtered].slice(0, 12);
+        });
+      }
+      return prev === panel ? null : panel;
+    });
   }, []);
 
   const drawingColors = useMemo((): HexColor[] => {
@@ -353,14 +416,16 @@ export function Editor() {
         onLayerDuplicate={handleLayerDuplicate}
         onLayerDelete={handleLayerDelete}
         onColorChange={handleColorChange}
+        onColorHover={setHoveredColor}
         recentColors={recentColors}
         drawingColors={drawingColors}
         onBack={() => navigate('/gallery')}
-        refImage={refImage ? { x: refImage.x, y: refImage.y, scale: refImage.scale, naturalWidth: refImage.naturalWidth, naturalHeight: refImage.naturalHeight } : null}
+        refImage={refImage ? { x: refImage.x, y: refImage.y, scale: refImage.scale, opacity: refImage.opacity, naturalWidth: refImage.naturalWidth, naturalHeight: refImage.naturalHeight } : null}
         onRefImageImport={handleRefImageImport}
         onRefImageRemove={handleRefImageRemove}
         onRefImageTransform={handleRefImageTransform}
-        canvasAreaRef={canvasAreaRef}
+        onRefImageCapture={handleCapturePixels}
+        canvasDisplaySize={canvasDisplaySize}
       />
       <div ref={canvasAreaRef} className={styles.canvasArea}>
         <Canvas
@@ -374,16 +439,10 @@ export function Editor() {
           onInvisibleLayerAttempt={() => setShowInvisibleModal(true)}
           onDrawStart={handleDrawStart}
           onDrawEnd={handleDrawEnd}
+          hoveredColor={hoveredColor}
+          refImage={refImage}
+          onDisplaySizeChange={setCanvasDisplaySize}
         />
-        {refImage && (
-          <ReferenceImage
-            src={refImage.src}
-            x={refImage.x}
-            y={refImage.y}
-            scale={refImage.scale}
-            naturalWidth={refImage.naturalWidth}
-          />
-        )}
         <div className={styles.sideToolbar}>
           <div className={styles.sideGroup}>
             <Button

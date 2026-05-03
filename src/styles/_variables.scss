@@ -64,9 +64,9 @@ $space-12: 48px;
 // ─────────────────────────────────────────────
 // Typographie
 // ─────────────────────────────────────────────
-$font-family-base:    'Aldrich', sans-serif;
+$font-family-base:    'Oxanium', sans-serif;
 $font-family-display: 'Press Start 2P', cursive;
-$font-family-mono:    'Aldrich', monospace;
+$font-family-mono:    'Oxanium', monospace;
 
 $font-size-xs:      11px;
 $font-size-sm:      12px;
@@ -78,6 +78,9 @@ $font-size-display: 40px;
 $font-weight-regular: 400;
 $font-weight-medium:  400;
 $font-weight-bold:    400;
+
+//Shadows modales
+$shadow-modal:8px 8px 0 0 #{$accent-1-600}, inset 4px 4px 0 0 #{$accent-1-400};
 
 //Shadows selectables
 $shadow-selectable:4px 4px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-400};

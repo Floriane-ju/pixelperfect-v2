@@ -21,6 +21,17 @@
     @include focus-ring;
     outline-offset: 0;
   }
+
+  &.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+  }
+
+  &.dropTarget {
+    box-shadow: $drop-shadow-interactive-hover, $inner-shadow-interactive-cyan-hover;
+    outline: 2px solid $accent-2-500;
+    outline-offset: -2px;
+  }
 }
 
 .header {

@@ -44,6 +44,7 @@ src/
 - Pas d'`any`. Utiliser `unknown` puis narrower.
 - Pas de `console.log` committé.
 - Montée de version du package.json aorès toute modification
+- Toujours utiliser les composants quand c'est possible (exemple : ne pas implémenter de <button> mais utiliser le composant <Button>)
 
 ## PWA
 - Manifest et service worker générés par `vite-plugin-pwa` (cf. `vite.config.ts`).

@@ -5,7 +5,8 @@ import { DrawingCard } from '@/components/DrawingCard';
 import { GroupCard } from '@/components/GroupCard';
 import { GroupModal } from '@/components/GroupModal';
 import { NewDrawingModal } from '@/components/NewDrawingModal';
-import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup } from '@/lib/drawings';
+import { NewGroupModal } from '@/components/NewGroupModal';
+import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup, moveToGroup } from '@/lib/drawings';
 import { groupDrawings } from '@/lib/groupDrawings';
 import type { DrawingRow } from '@/types';
 import styles from './Gallery.module.scss';
@@ -19,6 +20,7 @@ export function Gallery() {
   const [errorMsg, setErrorMsg] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
+  const [pendingGroup, setPendingGroup] = useState<{ sourceId: string; targetId: string } | null>(null);
 
   useEffect(() => {
     setStatus('loading');
@@ -54,6 +56,34 @@ export function Gallery() {
     );
     removeFromGroup(id).catch((err: unknown) => {
       console.error('removeFromGroup failed', err);
+      fetchDrawings().then(setDrawings).catch(() => null);
+    });
+  };
+
+  const handleCreateGroup = (groupName: string) => {
+    if (!pendingGroup) return;
+    const { sourceId, targetId } = pendingGroup;
+    setPendingGroup(null);
+    setDrawings((prev) =>
+      prev.map((d) =>
+        d.id === sourceId || d.id === targetId ? { ...d, group: groupName } : d,
+      ),
+    );
+    Promise.all([
+      moveToGroup(sourceId, groupName),
+      moveToGroup(targetId, groupName),
+    ]).catch((err: unknown) => {
+      console.error('createGroup failed', err);
+      fetchDrawings().then(setDrawings).catch(() => null);
+    });
+  };
+
+  const handleMoveToGroup = (drawingId: string, groupName: string) => {
+    setDrawings((prev) =>
+      prev.map((d) => (d.id === drawingId ? { ...d, group: groupName } : d)),
+    );
+    moveToGroup(drawingId, groupName).catch((err: unknown) => {
+      console.error('moveToGroup failed', err);
       fetchDrawings().then(setDrawings).catch(() => null);
     });
   };
@@ -109,6 +139,7 @@ export function Gallery() {
               name={g.name}
               drawings={g.drawings}
               onOpen={() => setActiveGroup(g.name)}
+              onDropDrawing={(drawingId) => handleMoveToGroup(drawingId, g.name)}
             />
           ))}
           {ungrouped.map((d) => (
@@ -118,9 +149,17 @@ export function Gallery() {
               onClick={() => navigate(`/editor/${d.id}`)}
               onRename={(title) => handleRename(d.id, title)}
               onDelete={() => handleDelete(d.id)}
+              onDropDrawing={(sourceId) => setPendingGroup({ sourceId, targetId: d.id })}
             />
           ))}
         </div>
+      )}
+
+      {pendingGroup && (
+        <NewGroupModal
+          onClose={() => setPendingGroup(null)}
+          onConfirm={handleCreateGroup}
+        />
       )}
 
       {activeGroupData && (

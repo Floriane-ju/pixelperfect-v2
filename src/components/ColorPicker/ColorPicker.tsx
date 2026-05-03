@@ -7,6 +7,7 @@ export interface ColorPickerProps {
   onChange: (color: HexColor) => void;
   recentColors: HexColor[];
   drawingColors: HexColor[];
+  onColorHover?: (color: HexColor | null) => void;
 }
 
 interface HSV {
@@ -46,7 +47,7 @@ function isValidHex(s: string): s is HexColor {
   return /^#[0-9a-fA-F]{6}$/.test(s);
 }
 
-export function ColorPicker({ value, onChange, recentColors, drawingColors }: ColorPickerProps) {
+export function ColorPicker({ value, onChange, recentColors, drawingColors, onColorHover }: ColorPickerProps) {
   const [hsv, setHsv] = useState<HSV>(() => hexToHsv(value));
   const [hexInput, setHexInput] = useState(value);
   const svRef = useRef<HTMLDivElement>(null);
@@ -177,6 +178,8 @@ export function ColorPicker({ value, onChange, recentColors, drawingColors }: Co
                 title={c}
                 aria-label={`Choisir ${c}`}
                 onClick={() => onChange(c)}
+                onMouseEnter={() => onColorHover?.(c)}
+                onMouseLeave={() => onColorHover?.(null)}
               />
             ))}
           </div>

@@ -9,6 +9,16 @@ function isShapeTool(t: Tool): t is 'circle' | 'square' | 'line' {
   return t === 'circle' || t === 'square' || t === 'line';
 }
 
+interface RefImageState {
+  src: string;
+  x: number;
+  y: number;
+  scale: number;
+  opacity: number;
+  naturalWidth: number;
+  naturalHeight: number;
+}
+
 interface CanvasProps {
   data: DrawingData;
   activeLayerId: string;
@@ -20,6 +30,9 @@ interface CanvasProps {
   onInvisibleLayerAttempt: () => void;
   onDrawStart?: () => void;
   onDrawEnd?: () => void;
+  hoveredColor?: HexColor | null;
+  refImage?: RefImageState | null;
+  onDisplaySizeChange?: (size: { w: number; h: number }) => void;
 }
 
 interface Transform { x: number; y: number; scale: number; angle: number; }
@@ -28,10 +41,11 @@ const MIN_SCALE = 0.25;
 const MAX_SCALE = 48;
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onLayerChange, onInvisibleLayerAttempt, onDrawStart, onDrawEnd }: CanvasProps) {
+export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onLayerChange, onInvisibleLayerAttempt, onDrawStart, onDrawEnd, hoveredColor, refImage, onDisplaySizeChange }: CanvasProps) {
   const checkerRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const previewRef = useRef<HTMLCanvasElement>(null);
+  const highlightRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const displaySizeRef = useRef({ w: 256, h: 256 });
@@ -97,6 +111,31 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
     ctx.globalAlpha = 1;
   }, [data]);
 
+  // Highlight pixels matching hoveredColor
+  useEffect(() => {
+    const canvas = highlightRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, data.width, data.height);
+    if (!hoveredColor) return;
+    const r = parseInt(hoveredColor.slice(1, 3), 16) / 255;
+    const g = parseInt(hoveredColor.slice(3, 5), 16) / 255;
+    const b = parseInt(hoveredColor.slice(5, 7), 16) / 255;
+    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+    ctx.fillStyle = lum > 0.5 ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)';
+    for (const layer of data.layers) {
+      if (!layer.visible) continue;
+      for (const [key, c] of Object.entries(layer.pixels)) {
+        if (c !== hoveredColor) continue;
+        const comma = key.indexOf(',');
+        const px = parseInt(key.slice(0, comma), 10);
+        const py = parseInt(key.slice(comma + 1), 10);
+        ctx.fillRect(px + 0.25, py + 0.25, 0.5, 0.5);
+      }
+    }
+  }, [hoveredColor, data]);
+
   // Responsive display size
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -107,10 +146,11 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
       const ds = { w: Math.floor(data.width * s), h: Math.floor(data.height * s) };
       displaySizeRef.current = ds;
       setDisplaySize(ds);
+      onDisplaySizeChange?.(ds);
     });
     observer.observe(wrapper);
     return () => observer.disconnect();
-  }, [data.width, data.height]);
+  }, [data.width, data.height, onDisplaySizeChange]);
 
   // Wheel: zoom toward cursor (mouse wheel) or trackpad pinch (ctrlKey)
   useEffect(() => {
@@ -368,8 +408,25 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
         style={{ ...cssSize, transform: `translate(${x}px,${y}px) rotate(${angle}deg) scale(${scale})` }}
       >
         <canvas ref={checkerRef} className={styles.checker} width={data.width} height={data.height} />
+        {refImage && (
+          <img
+            src={refImage.src}
+            alt=""
+            draggable={false}
+            style={{
+              position: 'absolute',
+              left: refImage.x,
+              top: refImage.y,
+              width: refImage.naturalWidth * refImage.scale,
+              height: 'auto',
+              opacity: refImage.opacity,
+              pointerEvents: 'none',
+            }}
+          />
+        )}
         <canvas ref={canvasRef} className={styles.canvas} width={data.width} height={data.height} />
         <canvas ref={previewRef} className={styles.preview} width={data.width} height={data.height} />
+        <canvas ref={highlightRef} className={styles.highlight} width={data.width} height={data.height} />
       </div>
     </div>
   );
