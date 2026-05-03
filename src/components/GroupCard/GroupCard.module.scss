@@ -29,7 +29,6 @@
   justify-content: space-between;
   gap: $space-2;
   padding: $space-2;
-  border-bottom: $border-width-thin solid $accent-1-600;
 }
 
 .title {
@@ -70,8 +69,6 @@
   height: $thumb-size;
   flex-shrink: 0;
   background: $accent-2-500;
-  //box-shadow: $shadow-btn, $inner-shadow-cyan-resting;
-  padding: $border-width;
 }
 
 .thumbInner {
@@ -81,12 +78,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: $border-width;
 }
 
 .thumbEmpty {
   width: $thumb-size;
   height: $thumb-size;
   flex-shrink: 0;
-  border: $border-width dashed $accent-1-600;
 }

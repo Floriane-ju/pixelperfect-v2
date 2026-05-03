@@ -10,12 +10,9 @@
 
 .modal {
   background: $color-surface;
-  border: $border-width solid $color-border;
-  border-radius: $radius-lg;
   padding: $space-6;
   max-width: 360px;
   width: calc(100% - $space-8);
-  box-shadow: $shadow-lg;
   display: flex;
   flex-direction: column;
   gap: $space-5;
@@ -42,8 +39,6 @@
 
 .input {
   background: $color-bg;
-  border: $border-width solid $color-border;
-  border-radius: $radius-md;
   color: $color-text;
   font-size: $font-size-md;
   padding: $space-2 $space-3;
@@ -67,8 +62,6 @@
 .presetBtn {
   padding: $space-2 $space-3;
   background: $color-bg;
-  border: $border-width solid $color-border;
-  border-radius: $radius-md;
   color: $color-text-muted;
   font-size: $font-size-sm;
   cursor: pointer;
@@ -108,8 +101,6 @@
 
 .dimensionInput {
   background: $color-bg;
-  border: $border-width solid $color-border;
-  border-radius: $radius-md;
   color: $color-text;
   font-size: $font-size-sm;
   padding: $space-2;

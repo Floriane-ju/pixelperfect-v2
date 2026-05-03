@@ -30,7 +30,6 @@
 
 .sideGroup {
   background: $color-surface;
-  border: $border-width solid $color-border;
   display: flex;
   flex-direction: column;
   gap: $space-1;
@@ -83,12 +82,9 @@
 
 .modal {
   background: $color-surface;
-  border: $border-width solid $color-border;
-  border-radius: $radius-lg;
   padding: $space-6;
   max-width: 320px;
   width: calc(100% - $space-8);
-  box-shadow: $shadow-lg;
   display: flex;
   flex-direction: column;
   gap: $space-5;
@@ -110,8 +106,6 @@
 .modalBtnSecondary {
   padding: $space-2 $space-4;
   background: transparent;
-  border: $border-width solid $color-border;
-  border-radius: $radius-sm;
   color: $color-text-muted;
   font-size: $font-size-sm;
   cursor: pointer;
@@ -126,8 +120,6 @@
 .modalBtnPrimary {
   padding: $space-2 $space-4;
   background: $color-primary;
-  border: none;
-  border-radius: $radius-sm;
   color: $color-white;
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
@@ -144,11 +136,8 @@
   bottom: $space-4;
   right: $space-4;
   background: $color-surface-2;
-  border: $border-width solid $color-border;
-  border-radius: $radius-pill;
   padding: $space-1 $space-3;
   font-size: $font-size-xs;
   color: $color-text-muted;
-  box-shadow: $shadow-sm;
   pointer-events: none;
 }

@@ -5,9 +5,6 @@
   z-index: $z-dropdown;
   width: 260px;
   background: $color-surface;
-  border: $border-width solid $color-border;
-  border-radius: $radius-md;
-  box-shadow: $shadow-lg;
   @include no-select;
 }
 
@@ -16,7 +13,6 @@
   align-items: center;
   justify-content: space-between;
   padding: $space-3 $space-4;
-  border-bottom: $border-width solid $color-border;
 }
 
 .addBtn {
@@ -28,7 +24,7 @@
   border: none;
   background: transparent;
   color: $color-text-muted;
-  border-radius: $radius-sm;
+
   cursor: pointer;
   transition: background $transition-fast, color $transition-fast;
 
@@ -59,7 +55,7 @@
   align-items: center;
   gap: $space-2;
   padding: $space-2 $space-2;
-  border-radius: $radius-sm;
+
   cursor: pointer;
   transition: background $transition-fast;
 
@@ -90,7 +86,7 @@
   border: none;
   background: transparent;
   color: $color-text-muted;
-  border-radius: $radius-sm;
+
   cursor: pointer;
   transition: background $transition-fast, color $transition-fast;
   flex-shrink: 0;

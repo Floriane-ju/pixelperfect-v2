@@ -22,8 +22,6 @@
   padding: 0 $space-3;
   background: $color-surface;
   color: $color-text;
-  border: $border-width solid $color-border;
-  border-radius: $radius-md;
   font-size: $font-size-md;
   transition: border-color $transition-fast;
   @include no-select;
@@ -69,16 +67,12 @@
   padding: $space-1;
   list-style: none;
   background: $color-surface;
-  border: $border-width solid $color-border;
-  border-radius: $radius-md;
-  box-shadow: $shadow-md;
   max-height: 240px;
   overflow-y: auto;
 }
 
 .option {
   padding: $space-2 $space-3;
-  border-radius: $radius-sm;
   cursor: pointer;
   font-size: $font-size-md;
 

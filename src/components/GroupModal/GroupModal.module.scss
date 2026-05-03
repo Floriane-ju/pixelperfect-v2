@@ -11,13 +11,9 @@
   display: flex;
   flex-direction: column;
   background: $color-surface;
-  border: $border-width solid $color-border;
   width: calc(100vw - #{$space-4});
   max-height: calc(100dvh - #{$space-4});
   overflow: hidden;
-
-  border: $border-basis;
-  box-shadow: $shadow-lg;
 
   @include tablet-up {
     width: 620px;
@@ -34,7 +30,6 @@
   cursor: grab;
   touch-action: none;
   user-select: none;
-  border-bottom: $border-width solid $color-border;
 
   &:active {
     cursor: grabbing;

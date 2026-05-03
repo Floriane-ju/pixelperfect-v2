@@ -5,7 +5,6 @@
   gap: $space-3;
   padding: $space-2 $space-3;
   background: $color-bg;
-  border-bottom: $border-width solid $color-border;
   flex-shrink: 0;
 }
 
@@ -39,13 +38,10 @@
 .colorSwatch {
   width: $btn-height;
   height: $btn-height;
-  border: $border-width solid $color-black;
   margin-left: $space-3;
   cursor: pointer;
   flex-shrink: 0;
   padding: 0;
-  transition: border-color $transition-fast, transform $transition-fast;
-  box-shadow: $shadow-sm;
 
   &:hover {
     border-color: $color-primary;
@@ -82,8 +78,6 @@
   top: calc(100% + $space-2);
   right: 0;
   background: $color-surface;
-  border: $border-width solid $color-border;
-  box-shadow: $shadow-sm;
   z-index: $z-dropdown;
   width: 240px;
   padding: $space-3;
@@ -97,7 +91,6 @@
   width: 100%;
   padding: $space-2 $space-3;
   background: $color-surface;
-  border: $border-width solid $color-border;
   font-family: $font-family-base;
   font-size: $font-size-sm;
   color: $color-text;
@@ -138,17 +131,13 @@
   height: 8px;
   appearance: none;
   background: $color-surface-2;
-  border: $border-width-thin solid $color-border;
   cursor: pointer;
-  border-radius: $radius-sm;
 
   &::-webkit-slider-thumb {
     appearance: none;
     width: 12px;
     height: 18px;
     background: $color-primary;
-    border: none;
-    border-radius: $radius-sm;
     cursor: grab;
 
     &:active {
@@ -160,13 +149,10 @@
     width: 12px;
     height: 18px;
     background: $color-primary;
-    border: none;
-    border-radius: $radius-sm;
     cursor: grab;
   }
 
   &:focus-visible {
-    outline: $border-width-thin solid $color-primary;
     outline-offset: 2px;
   }
 }
@@ -176,7 +162,6 @@
   width: 100%;
   padding: $space-2 $space-3;
   background: none;
-  border: $border-width-thin solid $color-danger;
   font-family: $font-family-base;
   font-size: $font-size-sm;
   color: $color-danger;
