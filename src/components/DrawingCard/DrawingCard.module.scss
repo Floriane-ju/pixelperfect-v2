@@ -5,16 +5,16 @@
   background: $accent-2-500;
   cursor: pointer;
   flex-shrink: 0;
-  box-shadow: $shadow-card, $inner-shadow-primary-resting;
+  box-shadow: $drop-shadow-interactive,$inner-shadow-interactive-cyan;
   transition: box-shadow $transition-fast;
   @include no-select;
 
   &:hover {
-    box-shadow: $shadow-card-hover, $inner-shadow-primary-hover;
+    box-shadow: $drop-shadow-interactive-hover,$inner-shadow-interactive-cyan-hover;
   }
 
   &:active {
-    box-shadow: $inner-shadow-primary-active;
+    box-shadow: $drop-shadow-interactive-active,$inner-shadow-interactive-cyan-active;
   }
 
   &:focus-visible {

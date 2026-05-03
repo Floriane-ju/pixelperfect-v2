@@ -5,16 +5,16 @@
   background: $accent-1-550;
   cursor: pointer;
   flex-shrink: 0;
-  box-shadow: $shadow-card, $inner-shadow-card-purple-resting;
+  box-shadow: $drop-shadow-interactive,$inner-shadow-interactive-purple;
   transition: box-shadow $transition-fast;
   @include no-select;
 
   &:hover {
-    box-shadow: $shadow-card-hover, $inner-shadow-card-purple-hover;
+    box-shadow: $drop-shadow-interactive-hover,$inner-shadow-interactive-purple-hover;
   }
 
   &:active {
-    box-shadow: $inner-shadow-card-purple-active;
+    box-shadow: $drop-shadow-interactive-active,$inner-shadow-interactive-purple-active;
   }
 
   &:focus-visible {
@@ -70,7 +70,7 @@
   height: $thumb-size;
   flex-shrink: 0;
   background: $accent-2-500;
-  box-shadow: $shadow-btn, $inner-shadow-cyan-resting;
+  //box-shadow: $shadow-btn, $inner-shadow-cyan-resting;
   padding: $border-width;
 }
 

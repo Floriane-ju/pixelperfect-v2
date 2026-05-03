@@ -39,7 +39,6 @@ $color-text-muted: $neutral-500;
 $color-primary:       $neutral-1000;
 $color-primary-hover: $neutral-500;
 $color-danger:        #cc2233;
-$color-gold:          #FFE488;
 $color-success:       #007700;
 $color-warning:       #bb7700;
 
@@ -80,60 +79,29 @@ $font-weight-regular: 400;
 $font-weight-medium:  400;
 $font-weight-bold:    400;
 
-// ─────────────────────────────────────────────
-// Bordures — pixel art : carré, épais
-// ─────────────────────────────────────────────
-$radius-sm:   0;
-$radius-md:   0;
-$radius-lg:   0;
-$radius-pill: 0;
+//Shadows selectables
+$shadow-selectable:4px 4px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-400};
+$shadow-selectable-hover: 6px 6px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-300};
+$shadow-selectable-active: inset -2px -2px 0 0 #{$accent-1-400}, inset 2px 2px 0 0 #{$accent-1-600};
 
-$border-width-lg:   4px;
-$border-width:      2px;
-$border-width-thin: 1px;
+$shadow-selected:inset -2px -2px 0 0 #{$accent-2-400}, inset 2px 2px 0 0 #{$accent-2-600};
+$shadow-selected-hover: inset -2px -2px 0 0 #{$accent-2-300}, inset 2px 2px 0 0 #{$accent-2-600};
+$shadow-selected-active: inset -2px -2px 0 0 #{$accent-2-300}, inset 2px 2px 0 0 #{$accent-2-600};
 
-$border-basis: $border-width solid $color-bg;
+//Inner shadows interactive purple
+$inner-shadow-interactive-purple:inset 2px 2px 0 0 #{$accent-1-400};
+$inner-shadow-interactive-purple-hover:inset 2px 2px 0 0 #{$accent-1-300};
+$inner-shadow-interactive-purple-active:inset 2px 2px 0 0 #{$accent-1-600}, inset -2px -2px 0 0 #{$accent-1-400};
 
-// ─────────────────────────────────────────────
-// Ombres — hard drop shadow pixel art
-// ─────────────────────────────────────────────
-$shadow-sm: 4px 4px 0 0 #{$color-black};
-$shadow-md: 8px 8px 0 0 #{$color-black};
-$shadow-lg: 8px 8px 0 0 #{$color-black};
+//Inner shadows interactive cyant
+$inner-shadow-interactive-cyan:inset 2px 2px 0 0 #{$accent-2-400};
+$inner-shadow-interactive-cyan-hover:inset 2px 2px 0 0 #{$accent-2-300};
+$inner-shadow-interactive-cyan-active:inset 2px 2px 0 0 #{$accent-2-600}, inset -2px -2px 0 0 #{$accent-2-400};
 
-// Drop shadows — boutons (violet profond)
-$shadow-btn:               4px 4px 0 0 #{$accent-1-600};
-$shadow-btn-hover:         8px 8px 0 0 #{$accent-1-600};
-$shadow-btn-primary:       4px 4px 0 0 #{$accent-1-400}, 8px 8px 0 0 #{$accent-1-600};
-$shadow-btn-primary-hover: 8px 8px 0 0 #{$accent-1-400}, 16px 16px 0 0 #{$accent-1-600};
-
-// Inner shadows — boutons cyan (Default / Secondary)
-$inner-shadow-cyan-resting:        inset 2px 2px 0 0 #{$accent-2-400};
-$inner-shadow-cyan-hover:          inset 2px 2px 0 0 #{$accent-2-300};
-$inner-shadow-cyan-active:         inset -2px -2px 0 0 #{$accent-2-400}, inset 2px 2px 0 0 #{$accent-2-600};
-$inner-shadow-cyan-selected:       inset -2px -2px 0 0 #{$accent-2-400}, inset 2px 2px 0 0 #{$accent-2-600};
-$inner-shadow-cyan-selected-hover: inset -2px -2px 0 0 #{$accent-2-300}, inset 2px 2px 0 0 #{$accent-2-600};
-
-// Inner shadows — bouton primary (large CTA)
-$inner-shadow-primary-resting: inset 4px 4px 0 0 #{$accent-2-400};
-$inner-shadow-primary-hover:   inset 4px 4px 0 0 #{$accent-2-300};
-$inner-shadow-primary-active:  inset 4px 4px 0 0 #{$accent-2-600}, inset -4px -4px 0 0 #{$accent-2-400};
-
-// Text shadows — titres
-$text-shadow-title: 8px 8px 0 #{$accent-1-600}, 4px 4px 0 #{$accent-1-400};
-
-// Inner shadows — bouton violet (Selected actif)
-$inner-shadow-purple-resting: inset 2px 2px 0 0 #{$accent-1-300};
-$inner-shadow-purple-active:  inset -2px -2px 0 0 #{$accent-1-400}, inset 2px 2px 0 0 #{$accent-1-600};
-
-// Drop shadows — cards
-$shadow-card:       8px 8px 0 0 #{$accent-1-600};
-$shadow-card-hover: 12px 12px 0 0 #{$accent-1-600};
-
-// Inner shadows — card violet (GroupCard)
-$inner-shadow-card-purple-resting: inset 4px 4px 0 0 #{$accent-1-400};
-$inner-shadow-card-purple-hover:   inset 4px 4px 0 0 #{$accent-1-300};
-$inner-shadow-card-purple-active:  inset 4px 4px 0 0 #{$accent-1-600}, inset -4px -4px 0 0 #{$accent-1-400};
+//Drop shadows interactive
+$drop-shadow-interactive:4px 4px 0 0 #{$accent-1-600};
+$drop-shadow-interactive-hover:8px 8px 0 0 #{$accent-1-600};
+$drop-shadow-interactive-active:0px 0px 0 0 #{$accent-1-600};
 
 // ─────────────────────────────────────────────
 // Z-index

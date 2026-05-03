@@ -71,10 +71,13 @@ export function Gallery() {
 
   return (
     <section className={styles.gallery}>
+      <div className={styles.decoLeft}>
+        <div className={styles.version}>v{__APP_VERSION__}</div>
+      </div>
       <header className={styles.header}>
         <div className={styles.titleGroup}>
           <h1 className={styles.title}>Pixel Perfect</h1>
-          <span className={styles.version}>v{__APP_VERSION__}</span>
+          
         </div>
         <Button variant="primary" onClick={() => setShowNewModal(true)}>
           Nouveau dessin

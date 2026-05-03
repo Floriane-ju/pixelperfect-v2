@@ -1,6 +1,11 @@
+$background-size: 6px;
+
 .canvas {
   display: block;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   border-radius: $radius-sm;
+  background-image: linear-gradient(45deg, $accent-1-500 25%, transparent 25%, transparent 75%, $accent-1-500 75%), linear-gradient(45deg, $accent-1-500 25%, transparent 25%, transparent 75%, $accent-1-500 75%);
+  background-size: $background-size $background-size;
+  background-position: 0 0, calc($background-size / 2) calc($background-size / 2);
 }

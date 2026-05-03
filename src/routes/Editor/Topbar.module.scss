@@ -12,7 +12,7 @@
 .titleText {
   margin: 0;
   font-family: $font-family-display;
-  font-size: 40px;
+  font-size: 16px;
   font-weight: $font-weight-regular;
   line-height: 1;
   color: $accent-2-500;
@@ -21,7 +21,7 @@
   align-self: center;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 40vw;
+  flex-grow: 1;
 }
 
 .toolGroup {
@@ -66,7 +66,6 @@
 // ── Section droite ───────────────────────────────────────────────────────────
 
 .rightSection {
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: $space-1;

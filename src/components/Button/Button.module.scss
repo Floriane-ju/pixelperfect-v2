@@ -1,3 +1,6 @@
+
+
+
 .button {
   display: inline-flex;
   align-items: center;
@@ -38,28 +41,28 @@
 .variant-primary {
   background: $accent-2-500;
   color: $accent-1-600;
-  box-shadow: $shadow-btn-primary, $inner-shadow-primary-resting;
+  //box-shadow: $shadow-btn-primary, $inner-shadow-primary-resting;
 
   &:hover:not(:disabled) {
-    box-shadow: $shadow-btn-primary-hover, $inner-shadow-primary-hover;
+    //box-shadow: $shadow-btn-primary-hover, $inner-shadow-primary-hover;
   }
 
   &:active:not(:disabled) {
-    box-shadow: $inner-shadow-primary-active;
+    //box-shadow: $inner-shadow-primary-active;
   }
 }
 
 .variant-secondary {
   background: $accent-2-500;
   color: $accent-1-600;
-  box-shadow: $shadow-btn, $inner-shadow-cyan-resting;
+  //box-shadow: $shadow-btn, $inner-shadow-cyan-resting;
 
   &:hover:not(:disabled) {
-    box-shadow: $shadow-btn-hover, $inner-shadow-cyan-hover;
+    //box-shadow: $shadow-btn-hover, $inner-shadow-cyan-hover;
   }
 
   &:active:not(:disabled) {
-    box-shadow: $inner-shadow-cyan-active;
+    //box-shadow: $inner-shadow-cyan-active;
   }
 }
 
@@ -75,28 +78,28 @@
 .variant-selected {
   background: $accent-2-500;
   color: $accent-1-600;
-  box-shadow: $shadow-btn, $inner-shadow-purple-active;
+  box-shadow: $shadow-selected;
 
   &:hover:not(:disabled) {
-    box-shadow: $shadow-btn-hover, $inner-shadow-purple-resting;
+    box-shadow: $shadow-selected-hover;
   }
 
   &:active:not(:disabled) {
-    box-shadow: $inner-shadow-purple-active;
+    box-shadow: $shadow-selected-active;
   }
 }
 
 .variant-selectable {
   background: $accent-1-550;
   color: $accent-2-500;
-  box-shadow: $inner-shadow-cyan-selected;
+  box-shadow: $drop-shadow-interactive, $inner-shadow-interactive-purple;
 
   &:hover:not(:disabled) {
-    box-shadow: $inner-shadow-cyan-selected-hover;
+    box-shadow: $drop-shadow-interactive-hover,$inner-shadow-interactive-purple-hover;
   }
 
   &:active:not(:disabled) {
-    box-shadow: $inner-shadow-cyan-active;
+    box-shadow: $drop-shadow-interactive-active, $inner-shadow-interactive-purple-active;
   }
 }
 

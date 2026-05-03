@@ -104,7 +104,6 @@ export function Topbar({
         iconOnly
         iconLeft="back"
         aria-label="Retour à la galerie"
-        onClick={onBack}
       />
 
       <h1 className={styles.titleText}>{title}</h1>

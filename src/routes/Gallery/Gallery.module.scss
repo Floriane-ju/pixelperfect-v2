@@ -2,8 +2,36 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 1200px;
   height: 100dvh;
   overflow: hidden;
+  padding:0 $space-12;
+}
+
+.decoLeft {
+  display:block;
+  position: absolute;
+  top:0;
+  left:$space-6;
+  height:100%;
+  width:$space-6;
+
+  $size:20%;
+  $deco-size:24px;
+
+  background: linear-gradient(-45deg, $accent-1-400 calc($size / 2), transparent calc($size / 2), transparent calc(50% - $size / 2), $accent-1-400 calc(50% - $size / 2), $accent-1-400 calc(50% + $size / 2), transparent calc(50% + $size / 2), transparent calc(100% - $size / 2), $accent-1-400 calc(100% - $size / 2));
+  background-size: $deco-size $deco-size;
+  background-position: calc($deco-size / 2) calc($deco-size / 2);
+  .version {
+    font-size: $font-size-sm;
+    color: $accent-1-400;
+    font-weight: $font-weight-regular;
+    white-space: nowrap;
+    transform: rotate(90deg);
+    padding:$space-8 0px;
+    position:absolute;
+    left:24px;
+  }
 }
 
 .header {
@@ -11,7 +39,7 @@
   align-items: center;
   justify-content: space-between;
   gap: $space-6;
-  padding: $space-8 $space-10 $space-6;
+  padding: $space-12 0;
   flex-shrink: 0;
 }
 
@@ -31,15 +59,10 @@
   line-height: 1;
   white-space: nowrap;
   flex-shrink: 0;
-  text-shadow: $text-shadow-title;
+  text-shadow: 4px 4px 0 #{$accent-1-400}, 8px 8px 0 #{$accent-1-600};
 }
 
-.version {
-  font-size: $font-size-sm;
-  color: $color-gold;
-  font-weight: $font-weight-regular;
-  white-space: nowrap;
-}
+
 
 .content {
   flex: 1;
@@ -48,7 +71,6 @@
   grid-template-columns: repeat(auto-fill, $card-width);
   gap: $space-5;
   align-content: flex-start;
-  padding: 0 $space-10 $space-8;
 }
 
 .state {
