@@ -1,0 +1,62 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: $space-6;
+}
+
+.card {
+  background: $color-surface;
+  border: $border-m-accent-1;
+  box-shadow: $shadow-modal;
+  padding: $space-8;
+  width: 100%;
+  max-width: 360px;
+}
+
+.title {
+  font-family: $font-family-display;
+  font-size: $font-size-sm;
+  text-align: center;
+  margin: 0 0 $space-8;
+  color: $accent-1-500;
+  text-shadow: $text-shadow-display;
+  line-height: 2;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+}
+
+.input {
+  border: $border-m-accent-1;
+  padding: $space-2 $space-3;
+  height: $touch-target;
+  background: $color-surface;
+  width: 100%;
+
+  &:focus {
+    outline: $outline-width solid $accent-1-500;
+    outline-offset: $outline-offset;
+  }
+}
+
+.error {
+  font-size: $font-size-sm;
+  color: $color-danger;
+  margin: 0;
+}

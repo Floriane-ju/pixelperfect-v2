@@ -1,0 +1,88 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  width: $card-width;
+  background: $accent-1-450;
+  border:$border-m-accent-1;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: $drop-shadow-interactive,$inner-shadow-interactive-purple;
+  transition: box-shadow $transition-fast;
+  @include no-select;
+
+  &:hover {
+    box-shadow: $drop-shadow-interactive-hover,$inner-shadow-interactive-purple-hover;
+  }
+
+  &:active:not(:has(header:active)) {
+    box-shadow: $drop-shadow-interactive-active,$inner-shadow-interactive-purple-active;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+    outline-offset: 0;
+  }
+
+  &.dropTarget {
+    box-shadow: $drop-shadow-interactive-hover, $inner-shadow-interactive-purple-hover;
+    outline: $outline-width solid $accent-2-500;
+    outline-offset: -$outline-offset;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2;
+  padding: $space-2;
+  border-bottom:$border-m-accent-1;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  font-size: $font-size-md;
+  color: $accent-2-500;
+  font-weight: $font-weight-regular;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preview {
+  padding: 0 $space-1 $space-1;
+}
+
+.previewContent {
+  padding: $space-3;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $thumb-gap;
+  width: calc(3 * #{$thumb-size} + 2 * #{$thumb-gap});
+}
+
+.thumb {
+  width: $thumb-size;
+  height: $thumb-size;
+  flex-shrink: 0;
+  background: $accent-2-500;
+}
+
+.thumbInner {
+  background: $color-white;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbEmpty {
+  width: $thumb-size;
+  height: $thumb-size;
+  flex-shrink: 0;
+}

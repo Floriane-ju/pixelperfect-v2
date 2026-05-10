@@ -1,0 +1,22 @@
+.colorSwatch {
+  width: 100%;
+  height: $btn-height;
+  border: $outline-width solid $color-white;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+
+  &:hover {
+    outline: $outline-width solid $accent-1-600;
+    outline-offset: -$outline-offset;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.colorSwatchPreview {
+  outline: $outline-width solid $accent-1-500;
+  outline-offset: -$outline-offset;
+  position: relative;
+  z-index: 1;
+}

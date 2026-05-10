@@ -1,0 +1,129 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  width: $card-width;
+  background: $accent-2-500;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: $drop-shadow-interactive,$inner-shadow-interactive-cyan;
+  transition: box-shadow $transition-fast;
+  border:$border-m-accent-1;
+  @include no-select;
+
+  &:hover {
+    box-shadow: $drop-shadow-interactive-hover,$inner-shadow-interactive-cyan-hover;
+  }
+
+  &:active:not(:has(header:active)) {
+    box-shadow: $drop-shadow-interactive-active,$inner-shadow-interactive-cyan-active;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+    outline-offset: 0;
+  }
+
+  &.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+  }
+
+  &.dropTarget {
+    box-shadow: $drop-shadow-interactive-hover, $inner-shadow-interactive-cyan-hover;
+    outline: $outline-width solid $accent-2-500;
+    outline-offset: -$outline-offset;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2;
+  padding: $space-2;
+  position: relative;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  font-size: $font-size-md;
+  color: $accent-1-600;
+  font-weight: $font-weight-regular;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.renameInput {
+  flex: 1;
+  min-width: 0;
+  height: $space-6;
+  padding: 0 $space-2;
+  background: $accent-2-400;
+  font-size: $font-size-md;
+  color: $accent-1-600;
+  font-family: $font-family-base;
+  outline: none;
+}
+
+.preview {
+  padding: 0 $space-1 $space-1;
+}
+
+.previewInner {
+  background: $color-white;
+  padding: $space-3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Confirmation suppression
+.confirmRow {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding: $space-3;
+  flex: 1;
+  min-height: 100px;
+  background: $accent-2-500;
+}
+
+.confirmLabel {
+  font-size: $font-size-sm;
+  color: $accent-1-600;
+}
+
+.confirmActions {
+  display: flex;
+  gap: $space-2;
+}
+
+.confirmBtn {
+  flex: 1;
+  height: $space-7;
+  background: $color-danger;
+  color: $color-white;
+  font-size: $font-size-sm;
+  font-family: $font-family-base;
+  transition: filter $transition-fast;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+.cancelBtn {
+  flex: 1;
+  height: $space-7;
+  background: $accent-2-400;
+  color: $accent-1-600;
+  font-size: $font-size-sm;
+  font-family: $font-family-base;
+  transition: opacity $transition-fast;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}

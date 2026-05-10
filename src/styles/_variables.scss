@@ -1,0 +1,187 @@
+// ─────────────────────────────────────────────
+// Palette de couleurs
+// Nomenclature : {groupe}-{teinte}
+// ─────────────────────────────────────────────
+
+// Neutral (gris)
+$neutral-0:    #FFFFFF;
+$neutral-400:  #AEAEAE;
+$neutral-500:  #8C8C8C;
+$neutral-1000: #000000;
+
+// Aliases pour compatibilité
+$color-white: $neutral-0;
+$color-black: $neutral-1000;
+
+// Accent 1 (violet)
+$accent-1-300: #CDC2FF;
+$accent-1-400: #A28EFD;
+$accent-1-450: #836EE4;
+$accent-1-500: #6E59CF;
+$accent-1-600: #47339D;
+
+// Accent 2 (cyan)
+$accent-2-300: #FFFEF2;
+$accent-2-400: #FFFBD4;
+$accent-2-500: #FFF8A9;
+$accent-2-600: #BDB451;
+
+// ─────────────────────────────────────────────
+// Couleurs sémantiques (mappées à la palette)
+// ─────────────────────────────────────────────
+$color-bg:         $accent-1-500;
+$color-surface:    $neutral-0;
+$color-surface-2:  $neutral-400;
+$color-border:     $neutral-1000;
+$color-text:       $neutral-1000;
+$color-text-muted: $neutral-500;
+
+$color-primary:       $neutral-1000;
+$color-primary-hover: $neutral-500;
+$color-danger:        #cc2233;
+$color-danger-light:  #FF5577;
+$color-success:       #007700;
+$color-warning:       #bb7700;
+
+// Checkerboard transparence (DrawingCard preview)
+$color-checker-light: #e8e8e8;
+$color-checker-dark:  $neutral-400;
+
+// ─────────────────────────────────────────────
+// Espacements (échelle 4 px)
+// ─────────────────────────────────────────────
+$space-0:  0;
+$space-1:  4px;
+$space-2:  8px;
+$space-3:  12px;
+$space-4:  16px;
+$space-5:  20px;
+$space-6:  24px;
+$space-7:  28px;
+$space-8:  32px;
+$space-10: 40px;
+$space-12: 48px;
+
+// ─────────────────────────────────────────────
+// Typographie
+// ─────────────────────────────────────────────
+$font-family-base:    'Oxanium', sans-serif;
+$font-family-display: 'Press Start 2P', cursive;
+$font-family-mono:    'Oxanium', monospace;
+
+$font-size-xs:      11px;
+$font-size-sm:      12px;
+$font-size-md:      16px;
+$font-size-lg:      18px;
+$font-size-xl:      22px;
+$font-size-display: 40px;
+
+$font-weight-regular: 400;
+$font-weight-medium:  500;
+$font-weight-bold:    700;
+
+// ─────────────────────────────────────────────
+// Outline
+// ─────────────────────────────────────────────
+$outline-width:      2px;
+$outline-width-thin: 1px;
+$outline-offset:     2px;
+
+// ─────────────────────────────────────────────
+// Opacity
+// ─────────────────────────────────────────────
+$opacity-overlay:     0.6;
+$opacity-drop-target: 0.4;
+$opacity-bg-tint:     0.1;
+$opacity-bg-subtle:   0.08;
+
+// ─────────────────────────────────────────────
+// Touch target
+// ─────────────────────────────────────────────
+$touch-target: 44px;
+
+// ─────────────────────────────────────────────
+// Composants
+// ─────────────────────────────────────────────
+$size-slider-thumb: 18px;
+$size-cursor-sv:    14px;
+$size-swatch:       28px;
+
+// ─────────────────────────────────────────────
+// Motif damier
+// ─────────────────────────────────────────────
+$checker-size-sm: 6px;
+$checker-size-lg: 24px;
+
+// ─────────────────────────────────────────────
+// Ombres
+// ─────────────────────────────────────────────
+
+//Shadows modales
+$shadow-modal:8px 8px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-400};
+
+//Shadows selectables
+$shadow-selectable:4px 4px 0 0 #{$accent-2-600}, inset 2px 2px 0 0 #{$accent-2-400};
+$shadow-selectable-hover: 6px 6px 0 0 #{$accent-2-600}, inset 2px 2px 0 0 #{$accent-2-300};
+$shadow-selectable-active: inset -2px -2px 0 0 #{$accent-2-400}, inset 2px 2px 0 0 #{$accent-2-600};
+
+$shadow-selected:inset -2px -2px 0 0 #{$accent-1-400}, inset 2px 2px 0 0 #{$accent-1-600};
+$shadow-selected-hover: inset -2px -2px 0 0 #{$accent-1-300}, inset 2px 2px 0 0 #{$accent-1-600};
+$shadow-selected-active: inset -2px -2px 0 0 #{$accent-1-300}, inset 2px 2px 0 0 #{$accent-1-600};
+
+//Inner shadows interactive purple
+$inner-shadow-interactive-purple:inset 2px 2px 0 0 #{$accent-1-400};
+$inner-shadow-interactive-purple-hover:inset 2px 2px 0 0 #{$accent-1-300};
+$inner-shadow-interactive-purple-active:inset 2px 2px 0 0 #{$accent-1-600}, inset -2px -2px 0 0 #{$accent-1-400};
+
+//Inner shadows interactive cyan
+$inner-shadow-interactive-cyan:inset 2px 2px 0 0 #{$accent-2-400};
+$inner-shadow-interactive-cyan-hover:inset 2px 2px 0 0 #{$accent-2-300};
+$inner-shadow-interactive-cyan-active:inset 2px 2px 0 0 #{$accent-2-600}, inset -2px -2px 0 0 #{$accent-2-400};
+
+//Drop shadows interactive
+$drop-shadow-interactive:8px 8px 0 0 #{$accent-1-600};
+$drop-shadow-interactive-hover:16px 16px 0 0 #{$accent-1-600};
+$drop-shadow-interactive-active:0px 0px 0 0 #{$accent-1-600};
+
+// Button primary shadows
+$shadow-btn-primary:        4px 4px 0 0 #{$accent-1-400}, 8px 8px 0 0 #{$accent-1-600}, inset 4px 4px 0 0 #{$accent-2-400};
+$shadow-btn-primary-hover:  8px 8px 0 0 #{$accent-1-400}, 16px 16px 0 0 #{$accent-1-600}, inset 4px 4px 0 0 #{$accent-2-300};
+$shadow-btn-primary-active: 0px 0px 0 0 #{$accent-1-400}, 0px 0px 0 0 #{$accent-1-600}, inset 4px 4px 0 0 #{$accent-2-600};
+
+// Display text shadow
+$text-shadow-display: 4px 4px 0 #{$accent-1-400}, 8px 8px 0 #{$accent-1-600};
+
+//Border
+$border-m-accent-1:2px solid $accent-1-600;
+$border-s-accent-2:1px solid $accent-2-600;
+
+// ─────────────────────────────────────────────
+// Z-index
+// ─────────────────────────────────────────────
+$z-dropdown: 100;
+$z-modal:    200;
+$z-toast:    300;
+
+// ─────────────────────────────────────────────
+// Transitions
+// ─────────────────────────────────────────────
+$transition-fast: 120ms ease;
+$transition-base: 200ms ease;
+
+// ─────────────────────────────────────────────
+// Breakpoints
+// ─────────────────────────────────────────────
+$bp-tablet:  768px;
+$bp-desktop: 1024px;
+
+// ─────────────────────────────────────────────
+// Layout
+// ─────────────────────────────────────────────
+$header-height: 56px;
+$toolbar-width: 64px;
+$btn-height:    40px;
+$icon-size:     24px;
+$card-width:    206px;
+$thumb-size:    54px;
+$thumb-gap:     6px;

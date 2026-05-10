@@ -1,0 +1,50 @@
+.root {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + #{$space-1});
+  right: 0;
+  z-index: $z-dropdown;
+  min-width: 160px;
+  margin: 0;
+  padding: $space-1;
+  list-style: none;
+  background: $accent-1-600;
+  border: $border-m-accent-1;
+}
+
+.item {
+  display: block;
+  width: 100%;
+  padding: $space-2 $space-3;
+  background: transparent;
+  border: none;
+  color: $accent-2-500;
+  font-size: $font-size-sm;
+  font-family: $font-family-base;
+  text-align: left;
+  cursor: pointer;
+  @include no-select;
+
+  &:hover {
+    background: $accent-1-500;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+    outline-offset: -2px;
+  }
+}
+
+.itemDanger {
+  color: $color-danger;
+
+  &:hover {
+    background: $accent-1-500;
+  }
+}

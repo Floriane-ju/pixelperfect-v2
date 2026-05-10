@@ -1,0 +1,101 @@
+.gallery {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  height: 100dvh;
+  overflow: hidden;
+  padding:0 $space-12;
+}
+
+.decoLeft {
+  display:block;
+  position: absolute;
+  top:0;
+  left:$space-6;
+  height:100%;
+  width:$space-6;
+
+  $size:20%;
+
+  background: linear-gradient(-45deg, $accent-1-400 calc($size / 2), transparent calc($size / 2), transparent calc(50% - $size / 2), $accent-1-400 calc(50% - $size / 2), $accent-1-400 calc(50% + $size / 2), transparent calc(50% + $size / 2), transparent calc(100% - $size / 2), $accent-1-400 calc(100% - $size / 2));
+  background-size: $checker-size-lg $checker-size-lg;
+  background-position: calc($checker-size-lg / 2) calc($checker-size-lg / 2);
+  .version {
+    font-size: $font-size-sm;
+    color: $accent-1-400;
+    font-weight: $font-weight-regular;
+    white-space: nowrap;
+    transform: rotate(90deg);
+    padding:$space-8 0px;
+    position:absolute;
+    left:$space-6;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-6;
+  padding: $space-12 0;
+  padding-top: max(#{$space-12}, env(safe-area-inset-top));
+  flex-shrink: 0;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  flex-shrink: 0;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: baseline;
+  gap: $space-3;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: $font-family-display;
+  font-size: $font-size-display;
+  font-weight: $font-weight-regular;
+  color: $accent-2-500;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-shadow: $text-shadow-display;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, $card-width);
+  gap: $space-5;
+  align-content: flex-start;
+}
+
+.contentDropTarget {
+  outline: $outline-width dashed $accent-2-500;
+  outline-offset: -$space-1;
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: $accent-2-500;
+  font-size: $font-size-md;
+  opacity: $opacity-overlay;
+  padding: $space-8;
+}
+
+.stateError {
+  @extend .state;
+  color: $color-danger;
+  opacity: 1;
+}

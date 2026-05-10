@@ -1,0 +1,137 @@
+.picker {
+  width: 260px;
+  background: $color-surface;
+  padding: $space-4;
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  @include no-select;
+}
+
+// SV gradient square
+.svSquare {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  touch-action: none;
+  cursor: crosshair;
+  background: hsl(var(--hue-deg), 100%, 50%);
+}
+
+.svWhite {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, $color-white, transparent);
+  pointer-events: none;
+}
+
+.svBlack {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, $color-black);
+  pointer-events: none;
+}
+
+.cursor {
+  position: absolute;
+  width: $size-cursor-sv;
+  height: $size-cursor-sv;
+  border-radius: 50%;
+  border: $outline-width solid $color-white;
+  box-shadow: 0 0 0 $outline-width-thin rgba($color-black, 0.5);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+// Hue slider
+.hueSlider {
+  position: relative;
+  width: 100%;
+  height: $space-4;
+  touch-action: none;
+  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    hsl(0, 100%, 50%),
+    hsl(60, 100%, 50%),
+    hsl(120, 100%, 50%),
+    hsl(180, 100%, 50%),
+    hsl(240, 100%, 50%),
+    hsl(300, 100%, 50%),
+    hsl(360, 100%, 50%)
+  );
+}
+
+.hueThumb {
+  position: absolute;
+  width: $space-5;
+  height: $space-5;
+  border-radius: 50%;
+  border: $outline-width solid $color-white;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+// Hex row
+.hexRow {
+  display: flex;
+  gap: $space-2;
+  align-items: center;
+}
+
+.preview {
+  width: $space-8;
+  height: $space-8;
+  flex-shrink: 0;
+}
+
+.hexInput {
+  flex: 1;
+  height: $space-8;
+  padding: 0 $space-3;
+  background: $color-surface-2;
+  font-family: $font-family-mono;
+  font-size: $font-size-sm;
+  color: $color-text;
+  outline: none;
+
+  &:focus {
+    border-color: $color-primary;
+  }
+}
+
+// Swatches
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.sectionLabel {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.swatch {
+  width: $touch-target;
+  height: $touch-target;
+  padding: ($touch-target - $size-swatch) * 0.5;
+  background-clip: content-box;
+  cursor: pointer;
+  transition: transform $transition-fast;
+
+  &:hover {
+    transform: scale(1.2);
+    z-index: 1;
+  }
+}

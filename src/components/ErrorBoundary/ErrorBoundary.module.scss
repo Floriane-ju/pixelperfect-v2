@@ -1,0 +1,25 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-4;
+  height: 100dvh;
+  padding: $space-6;
+  font-family: $font-family-base;
+  color: $color-text;
+  background: $color-bg;
+}
+
+.message {
+  font-size: $font-size-md;
+  color: $color-danger;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  gap: $space-3;
+  flex-wrap: wrap;
+  justify-content: center;
+}

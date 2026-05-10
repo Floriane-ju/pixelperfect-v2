@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install*)",
+      "Bash(npm run *)",
+      "Bash(npx tsc*)",
+      "Bash(npx vite*)"
+    ],
+    "deny": [
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(**/.env*)",
+      "Read(~/.gnupg/**)",
+      "Write(~/.ssh/**)",
+      "Write(~/.aws/**)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | bash)",
+      "Bash(rm -rf /*)",
+      "Bash(git push --force *)"
+    ]
+  }
+}
