@@ -39,8 +39,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $space-2;
-  padding: $space-2;
+  gap: $space-s;
+  padding: $space-s;
   position: relative;
 }
 
@@ -58,8 +58,8 @@
 .renameInput {
   flex: 1;
   min-width: 0;
-  height: $space-6;
-  padding: 0 $space-2;
+  height: $space-l;
+  padding: 0 $space-s;
   background: $accent-2-400;
   font-size: $font-size-md;
   color: $accent-1-600;
@@ -68,12 +68,12 @@
 }
 
 .preview {
-  padding: 0 $space-1 $space-1;
+  padding: 0 $space-xs $space-xs;
 }
 
 .previewInner {
   background: $color-white;
-  padding: $space-3;
+  padding: $space-sm;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -83,8 +83,8 @@
 .confirmRow {
   display: flex;
   flex-direction: column;
-  gap: $space-2;
-  padding: $space-3;
+  gap: $space-s;
+  padding: $space-sm;
   flex: 1;
   min-height: 100px;
   background: $accent-2-500;
@@ -97,12 +97,12 @@
 
 .confirmActions {
   display: flex;
-  gap: $space-2;
+  gap: $space-s;
 }
 
 .confirmBtn {
   flex: 1;
-  height: $space-7;
+  height: $space-xl;
   background: $color-danger;
   color: $color-white;
   font-size: $font-size-sm;
@@ -116,7 +116,7 @@
 
 .cancelBtn {
   flex: 1;
-  height: $space-7;
+  height: $space-xl;
   background: $accent-2-400;
   color: $accent-1-600;
   font-size: $font-size-sm;

@@ -10,12 +10,12 @@
 
 .modal {
   background: $color-surface;
-  padding: $space-6;
+  padding: $space-l;
   max-width: 360px;
-  width: calc(100% - #{$space-8});
+  width: calc(100% - #{$space-2xl});
   display: flex;
   flex-direction: column;
-  gap: $space-5;
+  gap: $space-l;
 }
 
 .heading {
@@ -28,7 +28,7 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: $space-2;
+  gap: $space-s;
 }
 
 .label {
@@ -42,7 +42,7 @@
   color: $color-text;
   font-size: $font-size-md;
   font-family: $font-family-base;
-  padding: $space-2 $space-3;
+  padding: $space-s $space-sm;
   width: 100%;
   box-sizing: border-box;
   transition: border-color $transition-fast;
@@ -56,6 +56,6 @@
 
 .actions {
   display: flex;
-  gap: $space-2;
+  gap: $space-s;
   justify-content: flex-end;
 }

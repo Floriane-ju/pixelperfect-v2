@@ -25,9 +25,9 @@
 }
 
 @mixin safe-area-top {
-  padding-top: max(#{$space-2}, env(safe-area-inset-top));
+  padding-top: max(#{$space-s}, env(safe-area-inset-top));
 }
 
 @mixin safe-area-bottom {
-  padding-bottom: max(#{$space-2}, env(safe-area-inset-bottom));
+  padding-bottom: max(#{$space-s}, env(safe-area-inset-bottom));
 }

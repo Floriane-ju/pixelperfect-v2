@@ -5,16 +5,16 @@
   max-width: 1200px;
   height: 100dvh;
   overflow: hidden;
-  padding:0 $space-12;
+  padding:0 $space-4xl;
 }
 
 .decoLeft {
   display:block;
   position: absolute;
   top:0;
-  left:$space-6;
+  left:$space-l;
   height:100%;
-  width:$space-6;
+  width:$space-l;
 
   $size:20%;
 
@@ -27,9 +27,9 @@
     font-weight: $font-weight-regular;
     white-space: nowrap;
     transform: rotate(90deg);
-    padding:$space-8 0px;
+    padding:$space-2xl 0px;
     position:absolute;
-    left:$space-6;
+    left:$space-l;
   }
 }
 
@@ -37,23 +37,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $space-6;
-  padding: $space-12 0;
-  padding-top: max(#{$space-12}, env(safe-area-inset-top));
+  gap: $space-l;
+  padding: $space-4xl 0;
+  padding-top: max(#{$space-4xl}, env(safe-area-inset-top));
   flex-shrink: 0;
 }
 
 .headerActions {
   display: flex;
   align-items: center;
-  gap: $space-3;
+  gap: $space-sm;
   flex-shrink: 0;
 }
 
 .titleGroup {
   display: flex;
   align-items: baseline;
-  gap: $space-3;
+  gap: $space-sm;
   min-width: 0;
 }
 
@@ -74,13 +74,13 @@
   overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, $card-width);
-  gap: $space-5;
+  gap: $space-l;
   align-content: flex-start;
 }
 
 .contentDropTarget {
   outline: $outline-width dashed $accent-2-500;
-  outline-offset: -$space-1;
+  outline-offset: -$space-xs;
 }
 
 .state {
@@ -91,7 +91,7 @@
   color: $accent-2-500;
   font-size: $font-size-md;
   opacity: $opacity-overlay;
-  padding: $space-8;
+  padding: $space-2xl;
 }
 
 .stateError {

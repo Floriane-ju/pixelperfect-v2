@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchDrawing } from '@/lib/drawings';
 import type { DrawingRow, HexColor } from '@/types';
-import { Button } from '@/components/Button';
 import { ColorSwatch } from '@/components/ColorSwatch';
 import { ColorPicker } from './ColorPicker/ColorPicker';
 import { ContextMenu } from './ContextMenu/ContextMenu';
@@ -112,6 +111,12 @@ export function Editor() {
 
   const editorCtx: EditorContextValue = {
     title: drawing.title,
+    tool,
+    onToolChange: setTool,
+    canUndo,
+    canRedo,
+    onUndo: handleUndo,
+    onRedo: handleRedo,
     mirrorH,
     mirrorV,
     onMirrorHChange: setMirrorH,
@@ -138,26 +143,11 @@ export function Editor() {
 
   return (
     <EditorContext.Provider value={editorCtx}>
-      <main className={`${styles.editor} accent2`}>
+      <main className={`${styles.editor}`}>
         <a className="skip-link" href="#canvas">Aller au canvas</a>
         <Topbar />
 
         <div className={styles.body}>
-          <aside className={styles.leftSidebar}>
-            <div className={styles.toolGroup}>
-              <Button variant={tool === 'pencil' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="pen" title="Crayon" aria-label="Crayon" aria-pressed={tool === 'pencil'} onClick={() => setTool('pencil')} />
-              <Button variant={tool === 'eraser' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="erase" title="Gomme" aria-label="Gomme" aria-pressed={tool === 'eraser'} onClick={() => setTool('eraser')} />
-              <Button variant={tool === 'fill' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="fill" title="Pot de peinture" aria-label="Pot de peinture" aria-pressed={tool === 'fill'} onClick={() => setTool('fill')} />
-              <Button variant={tool === 'line' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="line" title="Ligne" aria-label="Ligne" aria-pressed={tool === 'line'} onClick={() => setTool('line')} />
-              <Button variant={tool === 'square' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="rect" title="Rectangle" aria-label="Rectangle" aria-pressed={tool === 'square'} onClick={() => setTool('square')} />
-              <Button variant={tool === 'circle' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="circle" title="Ellipse" aria-label="Ellipse" aria-pressed={tool === 'circle'} onClick={() => setTool('circle')} />
-            </div>
-            <div className={styles.historyGroup}>
-              <Button variant="ghost" size="md" iconOnly iconLeft="undo" title="Annuler (Ctrl+Z)" aria-label="Annuler" disabled={!canUndo} onClick={handleUndo} />
-              <Button variant="ghost" size="md" iconOnly iconLeft="redo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir" disabled={!canRedo} onClick={handleRedo} />
-            </div>
-          </aside>
-
           <div ref={canvasAreaRef} id="canvas" className={styles.canvasArea}>
             <Canvas
               data={drawing.data}

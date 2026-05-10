@@ -3,14 +3,14 @@
   align-items: center;
   justify-content: center;
   min-height: 100dvh;
-  padding: $space-6;
+  padding: $space-l;
 }
 
 .card {
   background: $color-surface;
   border: $border-m-accent-1;
   box-shadow: $shadow-modal;
-  padding: $space-8;
+  padding: $space-2xl;
   width: 100%;
   max-width: 360px;
 }
@@ -19,7 +19,7 @@
   font-family: $font-family-display;
   font-size: $font-size-sm;
   text-align: center;
-  margin: 0 0 $space-8;
+  margin: 0 0 $space-2xl;
   color: $accent-1-500;
   text-shadow: $text-shadow-display;
   line-height: 2;
@@ -28,13 +28,13 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: $space-5;
+  gap: $space-l;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: $space-2;
+  gap: $space-s;
 }
 
 .label {
@@ -44,7 +44,7 @@
 
 .input {
   border: $border-m-accent-1;
-  padding: $space-2 $space-3;
+  padding: $space-s $space-sm;
   height: $touch-target;
   background: $color-surface;
   width: 100%;

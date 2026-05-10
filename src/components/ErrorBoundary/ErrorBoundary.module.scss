@@ -3,9 +3,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: $space-4;
+  gap: $space-m;
   height: 100dvh;
-  padding: $space-6;
+  padding: $space-l;
   font-family: $font-family-base;
   color: $color-text;
   background: $color-bg;
@@ -19,7 +19,7 @@
 
 .actions {
   display: flex;
-  gap: $space-3;
+  gap: $space-sm;
   flex-wrap: wrap;
   justify-content: center;
 }

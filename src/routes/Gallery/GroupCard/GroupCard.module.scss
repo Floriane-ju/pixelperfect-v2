@@ -34,8 +34,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $space-2;
-  padding: $space-2;
+  gap: $space-s;
+  padding: $space-s;
   border-bottom:$border-m-accent-1;
 }
 
@@ -51,11 +51,11 @@
 }
 
 .preview {
-  padding: 0 $space-1 $space-1;
+  padding: 0 $space-xs $space-xs;
 }
 
 .previewContent {
-  padding: $space-3;
+  padding: $space-sm;
 }
 
 .grid {

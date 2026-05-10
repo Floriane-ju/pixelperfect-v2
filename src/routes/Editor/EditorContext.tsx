@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { PixelLayer } from '@/types';
 import type { OpenPanel } from './hooks/useColorPalette';
+import type { Tool } from './Canvas/Canvas';
 
 export interface RefImageInfo {
   x: number;
@@ -13,6 +14,12 @@ export interface RefImageInfo {
 
 export interface EditorContextValue {
   title: string;
+  tool: Tool;
+  onToolChange: (t: Tool) => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
   mirrorH: boolean;
   mirrorV: boolean;
   onMirrorHChange: (v: boolean) => void;

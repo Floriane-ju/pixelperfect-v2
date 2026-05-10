@@ -17,8 +17,8 @@
   display: flex;
   flex-direction: column;
   background: $accent-1-500;
-  width: calc(100vw - #{$space-4});
-  max-height: calc(100dvh - #{$space-4});
+  width: calc(100vw - #{$space-m});
+  max-height: calc(100dvh - #{$space-m});
   overflow: hidden;
   box-shadow: $shadow-modal;
   border:$border-m-accent-1;
@@ -32,8 +32,8 @@
 .header {
   display: flex;
   align-items: stretch;
-  gap: $space-3;
-  padding: $space-2 $space-2 $space-3 $space-2;
+  gap: $space-sm;
+  padding: $space-s $space-s $space-sm $space-s;
   flex-shrink: 0;
   cursor: grab;
   touch-action: none;
@@ -62,13 +62,13 @@
   overflow-y: auto;
   display: flex;
   flex-wrap: wrap;
-  gap: $space-3;
-  padding: $space-3;
+  gap: $space-sm;
+  padding: $space-sm;
   align-content: flex-start;
 }
 
 .empty {
   color: $color-text-muted;
   font-size: $font-size-sm;
-  padding: $space-4;
+  padding: $space-m;
 }

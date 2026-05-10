@@ -46,7 +46,7 @@ function renderIcon(icon: IconName): React.ReactNode {
     case 'more':
       return (
         <>
-          <path d="M3 0L4 0L4 1L3 1zM3 3L4 3L4 4L3 4zM3 6L4 6L4 7L3 7zM4 1L5 1L5 2L4 2zM4 4L5 4L5 5L4 5zM4 7L5 7L5 8L4 8z"/>
+          <path d="M3 5L5 5L5 6L3 6ZM3 3L5 3L5 4L3 4ZM2 2L3 2L3 3L2 3ZM5 2L6 2L6 3L5 3ZM2 4L3 4L3 5L2 5ZM5 4L6 4L6 5L5 5Z"/>
         </>
       );
     case 'circle':

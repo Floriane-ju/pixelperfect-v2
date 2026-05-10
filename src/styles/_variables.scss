@@ -50,17 +50,17 @@ $color-checker-dark:  $neutral-400;
 // ─────────────────────────────────────────────
 // Espacements (échelle 4 px)
 // ─────────────────────────────────────────────
-$space-0:  0;
-$space-1:  4px;
-$space-2:  8px;
-$space-3:  12px;
-$space-4:  16px;
-$space-5:  20px;
-$space-6:  24px;
-$space-7:  28px;
-$space-8:  32px;
-$space-10: 40px;
-$space-12: 48px;
+$space-0:   0;
+$space-xxs:  2px;
+$space-xs:  4px;
+$space-s:   8px;
+$space-sm:  12px;
+$space-m:   16px;
+$space-l:   24px;
+$space-xl:  28px;
+$space-2xl: 32px;
+$space-3xl: 40px;
+$space-4xl: 48px;
 
 // ─────────────────────────────────────────────
 // Typographie
@@ -121,13 +121,13 @@ $checker-size-lg: 24px;
 $shadow-modal:8px 8px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-400};
 
 //Shadows selectables
-$shadow-selectable:4px 4px 0 0 #{$accent-2-600}, inset 2px 2px 0 0 #{$accent-2-400};
-$shadow-selectable-hover: 6px 6px 0 0 #{$accent-2-600}, inset 2px 2px 0 0 #{$accent-2-300};
-$shadow-selectable-active: inset -2px -2px 0 0 #{$accent-2-400}, inset 2px 2px 0 0 #{$accent-2-600};
+$shadow-selectable:4px 4px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-400};
+$shadow-selectable-hover: 6px 6px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-300};
+$shadow-selectable-active: inset -2px -2px 0 0 #{$accent-1-400}, inset 2px 2px 0 0 #{$accent-1-600};
 
-$shadow-selected:inset -2px -2px 0 0 #{$accent-1-400}, inset 2px 2px 0 0 #{$accent-1-600};
-$shadow-selected-hover: inset -2px -2px 0 0 #{$accent-1-300}, inset 2px 2px 0 0 #{$accent-1-600};
-$shadow-selected-active: inset -2px -2px 0 0 #{$accent-1-300}, inset 2px 2px 0 0 #{$accent-1-600};
+$shadow-selected:inset -2px -2px 0 0 #{$accent-2-400}, inset 2px 2px 0 0 #{$accent-2-600};
+$shadow-selected-hover: inset -2px -2px 0 0 #{$accent-2-300}, inset 2px 2px 0 0 #{$accent-2-600};
+$shadow-selected-active: inset -2px -2px 0 0 #{$accent-2-300}, inset 2px 2px 0 0 #{$accent-2-600};
 
 //Inner shadows interactive purple
 $inner-shadow-interactive-purple:inset 2px 2px 0 0 #{$accent-1-400};
@@ -154,6 +154,8 @@ $text-shadow-display: 4px 4px 0 #{$accent-1-400}, 8px 8px 0 #{$accent-1-600};
 
 //Border
 $border-m-accent-1:2px solid $accent-1-600;
+$border-s-accent-1:1px solid $accent-1-600;
+$border-m-accent-2:2px solid $accent-2-600;
 $border-s-accent-2:1px solid $accent-2-600;
 
 // ─────────────────────────────────────────────

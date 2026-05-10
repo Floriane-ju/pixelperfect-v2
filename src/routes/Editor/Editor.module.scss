@@ -11,29 +11,8 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
-}
-
-.leftSidebar {
-  display: flex;
-  flex-direction: column;
-  gap: $space-6;
-  align-items: flex-start;
-  justify-content: center;
-  padding: $space-3;
-  background: $accent-2-500;
-  flex-shrink: 0;
-}
-
-.toolGroup {
-  display: flex;
-  flex-direction: column;
-  gap: $space-1;
-}
-
-.historyGroup {
-  display: flex;
-  flex-direction: column;
-  gap: $space-1;
+  gap:$space-sm;
+  padding:0 $space-sm $space-sm $space-sm;
 }
 
 .canvasArea {
@@ -43,19 +22,23 @@
   justify-content: center;
   overflow: hidden;
   touch-action: none;
-  background: $accent-2-500;
   min-width: 0;
+  background:$neutral-0;
+  box-shadow:8px 8px 0 0 #{$accent-1-600};
+  border:$border-m-accent-1;
 }
 
 .rightSidebar {
   display: flex;
   flex-direction: column;
-  gap: $space-6;
-  padding: $space-3;
-  background: $accent-2-500;
+  gap: $space-l;
+  padding: $space-sm;
   flex-shrink: 0;
   align-items: flex-start;
   position: relative;
+  background:$neutral-0;
+  box-shadow:8px 8px 0 0 #{$accent-1-600};
+  border:$border-m-accent-1;
 }
 
 .colorWheelContainer {
@@ -92,14 +75,14 @@
 .colorPanel {
   position: absolute;
   top: 0;
-  right: calc(100% + $space-2);
+  right: calc(100% + $space-s);
   z-index: $z-dropdown;
 }
 
 .colorDivider {
   width: $btn-height;
-  height: $space-1;
-  background: $accent-2-600;
+  height: $space-xxs;
+  background: $accent-1-600;
   flex-shrink: 0;
 }
 
@@ -123,7 +106,7 @@
 
 .editColorPanel {
   position: fixed;
-  right: calc(#{$toolbar-width} + #{$space-2});
+  right: calc(#{$toolbar-width} + #{$space-s});
   z-index: $z-dropdown;
   transform: translateY(-50%);
 }
@@ -145,7 +128,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: $space-4;
+  gap: $space-m;
 }
 
 .muted {
@@ -165,7 +148,7 @@
   color: $color-primary;
   cursor: pointer;
   font-size: $font-size-sm;
-  padding: $space-2;
+  padding: $space-s;
 
   &:hover {
     text-decoration: underline;
@@ -186,12 +169,12 @@
 
 .modal {
   background: $color-surface;
-  padding: $space-6;
+  padding: $space-l;
   max-width: 320px;
-  width: calc(100% - $space-8);
+  width: calc(100% - $space-2xl);
   display: flex;
   flex-direction: column;
-  gap: $space-5;
+  gap: $space-l;
 }
 
 .modalText {
@@ -203,12 +186,12 @@
 
 .modalActions {
   display: flex;
-  gap: $space-2;
+  gap: $space-s;
   justify-content: flex-end;
 }
 
 .modalBtnSecondary {
-  padding: $space-2 $space-4;
+  padding: $space-s $space-m;
   background: transparent;
   color: $color-text-muted;
   font-size: $font-size-sm;
@@ -222,7 +205,7 @@
 }
 
 .modalBtnPrimary {
-  padding: $space-2 $space-4;
+  padding: $space-s $space-m;
   background: $color-primary;
   color: $color-white;
   font-size: $font-size-sm;
@@ -237,10 +220,10 @@
 
 .savingBadge {
   position: fixed;
-  bottom: $space-4;
-  right: $space-4;
+  bottom: $space-m;
+  right: $space-m;
   background: $color-surface-2;
-  padding: $space-1 $space-3;
+  padding: $space-xs $space-sm;
   font-size: $font-size-xs;
   color: $color-text-muted;
   pointer-events: none;

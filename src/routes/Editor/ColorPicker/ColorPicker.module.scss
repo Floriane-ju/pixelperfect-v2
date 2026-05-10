@@ -1,10 +1,10 @@
 .picker {
   width: 260px;
   background: $color-surface;
-  padding: $space-4;
+  padding: $space-m;
   display: flex;
   flex-direction: column;
-  gap: $space-4;
+  gap: $space-m;
   @include no-select;
 }
 
@@ -48,7 +48,7 @@
 .hueSlider {
   position: relative;
   width: 100%;
-  height: $space-4;
+  height: $space-m;
   touch-action: none;
   cursor: pointer;
   background: linear-gradient(
@@ -65,8 +65,8 @@
 
 .hueThumb {
   position: absolute;
-  width: $space-5;
-  height: $space-5;
+  width: $space-l;
+  height: $space-l;
   border-radius: 50%;
   border: $outline-width solid $color-white;
   top: 50%;
@@ -77,20 +77,20 @@
 // Hex row
 .hexRow {
   display: flex;
-  gap: $space-2;
+  gap: $space-s;
   align-items: center;
 }
 
 .preview {
-  width: $space-8;
-  height: $space-8;
+  width: $space-2xl;
+  height: $space-2xl;
   flex-shrink: 0;
 }
 
 .hexInput {
   flex: 1;
-  height: $space-8;
-  padding: 0 $space-3;
+  height: $space-2xl;
+  padding: 0 $space-sm;
   background: $color-surface-2;
   font-family: $font-family-mono;
   font-size: $font-size-sm;
@@ -106,7 +106,7 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: $space-2;
+  gap: $space-s;
 }
 
 .sectionLabel {

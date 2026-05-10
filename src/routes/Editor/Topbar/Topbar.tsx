@@ -6,7 +6,8 @@ import styles from './Topbar.module.scss';
 
 export function Topbar() {
   const {
-    title, mirrorH, mirrorV, onMirrorHChange, onMirrorVChange,
+    title, tool, onToolChange, canUndo, canRedo, onUndo, onRedo,
+    mirrorH, mirrorV, onMirrorHChange, onMirrorVChange,
     activeLayerId, layers, openPanel, onPanelToggle, onPanelClose,
     onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete,
     onBack, refImage, onRefImageImport, onRefImageRemove, onRefImageTransform, onRefImageCapture,
@@ -55,6 +56,11 @@ export function Topbar() {
       </div>
 
       <div className={styles.rightSection}>
+        <div className={styles.buttonGroup}>
+          <Button variant="ghost" size="md" iconOnly iconLeft="undo" title="Annuler (Ctrl+Z)" aria-label="Annuler" disabled={!canUndo} onClick={onUndo} />
+          <Button variant="ghost" size="md" iconOnly iconLeft="redo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir" disabled={!canRedo} onClick={onRedo} />
+        </div>
+
         <div className={styles.buttonGroup}>
           <div className={styles.layersContainer}>
             <Button
@@ -245,6 +251,15 @@ export function Topbar() {
             aria-pressed={mirrorV}
             onClick={() => onMirrorVChange(!mirrorV)}
           />
+        </div>
+
+        <div className={styles.buttonGroup}>
+          <Button variant={tool === 'pencil' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="pen" title="Crayon" aria-label="Crayon" aria-pressed={tool === 'pencil'} onClick={() => onToolChange('pencil')} />
+          <Button variant={tool === 'eraser' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="erase" title="Gomme" aria-label="Gomme" aria-pressed={tool === 'eraser'} onClick={() => onToolChange('eraser')} />
+          <Button variant={tool === 'fill' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="fill" title="Pot de peinture" aria-label="Pot de peinture" aria-pressed={tool === 'fill'} onClick={() => onToolChange('fill')} />
+          <Button variant={tool === 'line' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="line" title="Ligne" aria-label="Ligne" aria-pressed={tool === 'line'} onClick={() => onToolChange('line')} />
+          <Button variant={tool === 'square' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="rect" title="Rectangle" aria-label="Rectangle" aria-pressed={tool === 'square'} onClick={() => onToolChange('square')} />
+          <Button variant={tool === 'circle' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="circle" title="Ellipse" aria-label="Ellipse" aria-pressed={tool === 'circle'} onClick={() => onToolChange('circle')} />
         </div>
       </div>
     </header>

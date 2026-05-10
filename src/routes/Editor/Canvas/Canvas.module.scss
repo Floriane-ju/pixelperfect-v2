@@ -5,11 +5,13 @@
   align-items: center;
   justify-content: center;
   touch-action: none;
+  
 }
 
 .stack {
   position: relative;
   overflow: hidden;
+  border:2px solid black;
 }
 
 .checker {

@@ -3,7 +3,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: $space-2;
+  gap: $space-s;
   font-family: $font-family-base;
   font-weight: $font-weight-bold;
   transition: background-color $transition-fast, color $transition-fast,
@@ -73,8 +73,8 @@
 }
 
 .variant-selected {
-  background: $accent-1-500;
-  color: $accent-2-500;
+  background: $accent-2-500;
+  color: $accent-1-500;
   box-shadow: $shadow-selected;
 
   &:hover:not(:disabled) {
@@ -87,10 +87,10 @@
 }
 
 .variant-selectable {
-  background: $accent-2-500;
-  color: $accent-1-500;
+  background: $accent-1-500;
+  color: $accent-2-500;
   box-shadow: $shadow-selectable;
-  border:$border-s-accent-2;
+  border:$border-s-accent-1;
 
   &:hover:not(:disabled) {
     box-shadow: $shadow-selectable-hover;
@@ -112,27 +112,27 @@
 
 // Sizes
 .size-sm {
-  height: $space-8;
-  padding: 0 $space-3;
+  height: $space-2xl;
+  padding: 0 $space-sm;
   font-size: $font-size-sm;
 }
 
 .size-md {
   height: $btn-height;
-  padding: 0 $space-4;
+  padding: 0 $space-m;
   font-size: $font-size-md;
 }
 
 .size-lg {
-  height: $space-12;
-  padding: 0 $space-5;
+  height: $space-4xl;
+  padding: 0 $space-l;
   font-size: $font-size-lg;
 }
 
 // Icon-only: carré, pas de padding
 .iconOnly {
   padding: 0;
-  &.size-sm { width: $space-8; }
+  &.size-sm { width: $space-2xl; }
   &.size-md { width: $btn-height; }
-  &.size-lg { width: $space-12; }
+  &.size-lg { width: $space-4xl; }
 }
