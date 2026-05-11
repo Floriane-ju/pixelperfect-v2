@@ -31,3 +31,6 @@ dev-dist/
 
 # Audits
 audits/
+
+# Supabase migrations (local only)
+supabase/migrations/
