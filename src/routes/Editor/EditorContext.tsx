@@ -39,7 +39,9 @@ export interface EditorContextValue {
   onLayerReorder: (fromId: string, toId: string, position: 'before' | 'after') => void;
   onBack: () => void;
   refImage: RefImageInfo | null;
+  refImageError: string | null;
   onRefImageImport: (file: File) => void;
+  onRefImageErrorClear: () => void;
   onRefImageRemove: () => void;
   onRefImageTransform: (x: number, y: number, scale: number, opacity: number) => void;
   onRefImageCapture: () => void;

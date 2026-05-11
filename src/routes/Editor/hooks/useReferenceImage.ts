@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DrawingData, DrawingRow, HexColor } from '@/types';
 import { mergeColors } from '../colorMerge';
 
@@ -21,26 +21,65 @@ interface UseReferenceImageParams {
   latestDataRef: React.MutableRefObject<DrawingData | null>;
 }
 
+const MAX_REF_IMAGE_BYTES = 5_000_000;
+const MAX_REF_IMAGE_PIXELS = 25_000_000;
+const ERROR_CLEAR_MS = 5000;
+
 export function useReferenceImage({ canvasDisplaySize, activeLayerId, drawing, handleLayerChange, pushHistory, latestDataRef }: UseReferenceImageParams) {
   const [refImage, setRefImage] = useState<RefImageState | null>(null);
+  const [refImageError, setRefImageError] = useState<string | null>(null);
+  const errorTimerRef = useRef<number | null>(null);
+
+  const reportError = useCallback((msg: string) => {
+    setRefImageError(msg);
+    if (errorTimerRef.current !== null) window.clearTimeout(errorTimerRef.current);
+    errorTimerRef.current = window.setTimeout(() => {
+      setRefImageError(null);
+      errorTimerRef.current = null;
+    }, ERROR_CLEAR_MS);
+  }, []);
+
+  const clearRefImageError = useCallback(() => {
+    if (errorTimerRef.current !== null) {
+      window.clearTimeout(errorTimerRef.current);
+      errorTimerRef.current = null;
+    }
+    setRefImageError(null);
+  }, []);
+
+  useEffect(() => () => {
+    if (errorTimerRef.current !== null) window.clearTimeout(errorTimerRef.current);
+  }, []);
 
   const handleRefImageImport = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) {
-      console.error('Ref image import rejected: not an image type', file.type);
+      reportError('Format non supporté. Choisis une image (PNG, JPG, WebP…).');
       return;
     }
-    if (file.size > 5_000_000) {
-      console.error('Ref image import rejected: file too large', file.size);
+    if (file.size > MAX_REF_IMAGE_BYTES) {
+      reportError(`Image trop lourde (${(file.size / 1_000_000).toFixed(1)} Mo). Limite : 5 Mo.`);
       return;
     }
     const reader = new FileReader();
+    reader.onerror = () => reportError('Lecture du fichier impossible.');
     reader.onload = (e) => {
-      const src = e.target?.result as string;
+      const src = e.target?.result;
+      if (typeof src !== 'string') {
+        reportError('Lecture du fichier impossible.');
+        return;
+      }
       const img = new Image();
+      img.onerror = () => reportError('Image corrompue ou illisible.');
       img.onload = () => {
+        const pixels = img.naturalWidth * img.naturalHeight;
+        if (pixels > MAX_REF_IMAGE_PIXELS) {
+          reportError(`Image trop grande (${img.naturalWidth}×${img.naturalHeight}). Limite : 25 Mpx.`);
+          return;
+        }
         const canvasW = canvasDisplaySize.w || 256;
         const canvasH = canvasDisplaySize.h || 256;
         const initialScale = Math.min(canvasW / img.naturalWidth, canvasH / img.naturalHeight);
+        clearRefImageError();
         setRefImage({
           src,
           x: (canvasW - img.naturalWidth * initialScale) / 2,
@@ -54,7 +93,7 @@ export function useReferenceImage({ canvasDisplaySize, activeLayerId, drawing, h
       img.src = src;
     };
     reader.readAsDataURL(file);
-  }, [canvasDisplaySize]);
+  }, [canvasDisplaySize, reportError, clearRefImageError]);
 
   const handleRefImageRemove = useCallback(() => setRefImage(null), []);
 
@@ -101,5 +140,5 @@ export function useReferenceImage({ canvasDisplaySize, activeLayerId, drawing, h
     img.src = refImage.src;
   }, [refImage, drawing, canvasDisplaySize, activeLayerId, handleLayerChange, pushHistory, latestDataRef]);
 
-  return { refImage, handleRefImageImport, handleRefImageRemove, handleRefImageTransform, handleCapturePixels };
+  return { refImage, refImageError, clearRefImageError, handleRefImageImport, handleRefImageRemove, handleRefImageTransform, handleCapturePixels };
 }

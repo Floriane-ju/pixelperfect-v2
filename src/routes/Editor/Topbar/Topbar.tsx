@@ -10,7 +10,7 @@ export function Topbar() {
     mirrorH, mirrorV, onMirrorHChange, onMirrorVChange,
     activeLayerId, layers, canvasWidth, canvasHeight, openPanel, onPanelToggle, onPanelClose,
     onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete, onLayerReorder,
-    onBack, refImage, onRefImageImport, onRefImageRemove, onRefImageTransform, onRefImageCapture,
+    onBack, refImage, refImageError, onRefImageImport, onRefImageErrorClear, onRefImageRemove, onRefImageTransform, onRefImageCapture,
     canvasDisplaySize, onCopySvg,
   } = useEditorContext();
 
@@ -114,6 +114,12 @@ export function Topbar() {
                 >
                   Importer une image
                 </button>
+
+                {refImageError && (
+                  <div className={styles.refError} role="alert" onClick={onRefImageErrorClear}>
+                    {refImageError}
+                  </div>
+                )}
 
                 {refImage && (
                   <>

@@ -91,7 +91,7 @@ export function Editor() {
   const { scheduleSave, latestDataRef } = useSave({ id, drawing, setStatus });
   const { canUndo, canRedo, pushHistory, handleDrawStart, handleDrawEnd, handleUndo, handleRedo } = useUndoRedo({ latestDataRef, setDrawing, scheduleSave });
   const { handleLayerChange, handleLayerVisibilityToggle, handleLayerDuplicate, handleLayerAdd, handleLayerDelete, handleLayerReorder } = useLayers({ drawing, setDrawing, activeLayerId, setActiveLayerId, scheduleSave, pushHistory, latestDataRef });
-  const { refImage, handleRefImageImport, handleRefImageRemove, handleRefImageTransform, handleCapturePixels } = useReferenceImage({ canvasDisplaySize, activeLayerId, drawing, handleLayerChange, pushHistory, latestDataRef });
+  const { refImage, refImageError, clearRefImageError, handleRefImageImport, handleRefImageRemove, handleRefImageTransform, handleCapturePixels } = useReferenceImage({ canvasDisplaySize, activeLayerId, drawing, handleLayerChange, pushHistory, latestDataRef });
   const {
     color, drawingColors, openPanel, setOpenPanel, hoveredColor, setHoveredColor,
     contextMenu, setContextMenu, editColorMode, editColorPanelRef,
@@ -196,7 +196,9 @@ export function Editor() {
     onLayerReorder: handleLayerReorder,
     onBack: handleBack,
     refImage: topbarRefImage,
+    refImageError,
     onRefImageImport: handleRefImageImport,
+    onRefImageErrorClear: clearRefImageError,
     onRefImageRemove: handleRefImageRemove,
     onRefImageTransform: handleRefImageTransform,
     onRefImageCapture: handleCapturePixels,

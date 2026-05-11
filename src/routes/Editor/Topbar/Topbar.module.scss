@@ -86,6 +86,16 @@
   }
 }
 
+.refError {
+  padding: $space-s $space-sm;
+  background: rgba($color-danger, $opacity-bg-tint);
+  color: $color-danger;
+  font-family: $font-family-base;
+  font-size: $font-size-xs;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
 .sliderGroup {
   display: flex;
   flex-direction: column;
