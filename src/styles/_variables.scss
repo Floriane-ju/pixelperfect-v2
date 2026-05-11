@@ -74,11 +74,13 @@ $font-size-sm:      12px;
 $font-size-md:      16px;
 $font-size-lg:      18px;
 $font-size-xl:      22px;
+$font-size-2xl:     24px;
 $font-size-display: 40px;
 
-$font-weight-regular: 400;
-$font-weight-medium:  500;
-$font-weight-bold:    700;
+$font-weight-regular:  400;
+$font-weight-medium:   500;
+$font-weight-semibold: 600;
+$font-weight-bold:     700;
 
 // ─────────────────────────────────────────────
 // Outline
@@ -187,3 +189,7 @@ $icon-size:     24px;
 $card-width:    206px;
 $thumb-size:    54px;
 $thumb-gap:     6px;
+$layer-panel-width:    360px;
+$layer-thumb-size:     40px;
+$layer-row-max-height: 320px;
+$drop-indicator-height: 3px;

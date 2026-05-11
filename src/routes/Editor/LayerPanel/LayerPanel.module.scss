@@ -3,103 +3,110 @@
   top: calc(100% + $space-s);
   right: 0;
   z-index: $z-dropdown;
-  width: 260px;
-  background: $color-surface;
+  width: $layer-panel-width;
+  padding: $space-xxs;
+  background: $accent-1-500;
+  border: $border-m-accent-1;
+  box-shadow: $shadow-modal;
   @include no-select;
 }
 
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: $space-sm $space-m;
-}
-
-.addBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: $touch-target;
-  min-height: $touch-target;
-  border: none;
-  background: transparent;
-  color: $color-text-muted;
-  cursor: pointer;
-  transition: background $transition-fast, color $transition-fast;
-
-  &:hover {
-    background: $color-surface-2;
-    color: $color-primary;
-  }
+  gap: $space-s;
+  padding: $space-sm $space-sm $space-sm $space-l;
+  border-bottom: $border-m-accent-1;
 }
 
 .title {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $color-text-muted;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  flex: 1;
+  margin: 0;
+  font-family: $font-family-base;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-2xl;
+  color: $accent-2-500;
 }
 
 .list {
   list-style: none;
   margin: 0;
-  padding: $space-xs;
-  max-height: 320px;
+  padding: 0;
+  max-height: $layer-row-max-height;
   overflow-y: auto;
 }
 
 .item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: $space-s;
-  padding: $space-s $space-s;
+  padding: $space-l $space-sm;
   cursor: pointer;
-  transition: background $transition-fast;
+  background: transparent;
+  transition: background-color $transition-fast;
+
+  &:not(:last-child) {
+    border-bottom: $border-s-accent-1;
+  }
 
   &:hover {
-    background: $color-surface-2;
+    background: $accent-1-450;
   }
 }
 
 .itemActive {
-  background: $color-surface-2;
+  background: $accent-1-450;
+}
+
+.itemDragging {
+  opacity: $opacity-drop-target;
+}
+
+.itemDropBefore::before,
+.itemDropAfter::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: $drop-indicator-height;
+  background: $accent-2-500;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.itemDropBefore::before {
+  top: calc(#{$drop-indicator-height} * -0.5);
+}
+
+.itemDropAfter::after {
+  bottom: calc(#{$drop-indicator-height} * -0.5);
+}
+
+.handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: $btn-height;
+  height: $btn-height;
+  color: $accent-2-500;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+
+  &:active {
+    cursor: grabbing;
+  }
 }
 
 .layerName {
   flex: 1;
-  font-size: $font-size-sm;
-  color: $color-text;
+  min-width: 0;
+  font-family: $font-family-base;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-md;
+  color: $accent-2-500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.iconBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: $touch-target;
-  min-height: $touch-target;
-  border: none;
-  background: transparent;
-  color: $color-text-muted;
-  cursor: pointer;
-  transition: background $transition-fast, color $transition-fast;
-  flex-shrink: 0;
-
-  &:hover {
-    background: $color-border;
-    color: $color-text;
-  }
-
-  &:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-}
-
-.iconBtnDanger:not(:disabled):hover {
-  background: rgba($color-danger-light, $opacity-bg-tint);
-  color: $color-danger;
 }

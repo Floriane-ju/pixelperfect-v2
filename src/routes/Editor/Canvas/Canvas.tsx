@@ -91,14 +91,16 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
     ctx.globalAlpha = 1;
   }, [data]);
 
-  // Highlight pixels matching hoveredColor
+  // Highlight pixels matching hoveredColor (circle 40% of pixel size)
   useEffect(() => {
     const canvas = highlightRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    ctx.clearRect(0, 0, data.width, data.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (!hoveredColor) return;
+    const pxSize = displaySize.w / data.width;
+    const radius = pxSize * 0.1;
     const r = parseInt(hoveredColor.slice(1, 3), 16) / 255;
     const g = parseInt(hoveredColor.slice(3, 5), 16) / 255;
     const b = parseInt(hoveredColor.slice(5, 7), 16) / 255;
@@ -109,10 +111,14 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
       for (const [key, c] of Object.entries(layer.pixels)) {
         if (c !== hoveredColor) continue;
         const comma = key.indexOf(',');
-        ctx.fillRect(parseInt(key.slice(0, comma), 10) + 0.25, parseInt(key.slice(comma + 1), 10) + 0.25, 0.5, 0.5);
+        const px = parseInt(key.slice(0, comma), 10);
+        const py = parseInt(key.slice(comma + 1), 10);
+        ctx.beginPath();
+        ctx.arc((px + 0.5) * pxSize, (py + 0.5) * pxSize, radius, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
-  }, [hoveredColor, data]);
+  }, [hoveredColor, data, displaySize]);
 
   // Responsive display size
   useEffect(() => {
@@ -302,7 +308,7 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
         )}
         <canvas ref={canvasRef} className={styles.canvas} width={data.width} height={data.height} />
         <canvas ref={previewRef} className={styles.preview} width={data.width} height={data.height} />
-        <canvas ref={highlightRef} className={styles.highlight} width={data.width} height={data.height} />
+        <canvas ref={highlightRef} className={styles.highlight} width={displaySize.w} height={displaySize.h} />
       </div>
     </div>
   );

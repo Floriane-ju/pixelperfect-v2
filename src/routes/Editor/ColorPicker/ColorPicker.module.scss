@@ -1,10 +1,12 @@
 .picker {
-  width: 260px;
+  width: 316px;
   background: $color-surface;
-  padding: $space-m;
+  border: $border-m-accent-1;
+  padding: $space-sm;
   display: flex;
   flex-direction: column;
-  gap: $space-m;
+  gap: $space-sm;
+  box-shadow: $drop-shadow-interactive;
   @include no-select;
 }
 
@@ -12,10 +14,11 @@
 .svSquare {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
+  height: 216px;
   overflow: hidden;
   touch-action: none;
   cursor: crosshair;
+  border: $outline-width solid $color-black;
   background: hsl(var(--hue-deg), 100%, 50%);
 }
 
@@ -48,9 +51,10 @@
 .hueSlider {
   position: relative;
   width: 100%;
-  height: $space-m;
+  height: $space-sm;
   touch-action: none;
   cursor: pointer;
+  border: $outline-width solid $color-black;
   background: linear-gradient(
     to right,
     hsl(0, 100%, 50%),
@@ -65,10 +69,9 @@
 
 .hueThumb {
   position: absolute;
-  width: $space-l;
-  height: $space-l;
-  border-radius: 50%;
-  border: $outline-width solid $color-white;
+  width: $space-m;
+  height: $space-m;
+  border: $outline-width solid $color-black;
   top: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
@@ -82,23 +85,26 @@
 }
 
 .preview {
-  width: $space-2xl;
-  height: $space-2xl;
+  width: $space-3xl;
+  height: $space-3xl;
   flex-shrink: 0;
+  border: $outline-width solid $color-black;
 }
 
 .hexInput {
   flex: 1;
-  height: $space-2xl;
-  padding: 0 $space-sm;
-  background: $color-surface-2;
-  font-family: $font-family-mono;
-  font-size: $font-size-sm;
-  color: $color-text;
+  height: $space-3xl;
+  padding: 0 $space-s;
+  background: $color-surface;
+  border: $outline-width solid $color-black;
+  font-family: $font-family-base;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $accent-1-600;
   outline: none;
 
   &:focus {
-    border-color: $color-primary;
+    border-color: $accent-1-600;
   }
 }
 
@@ -106,32 +112,34 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: $space-s;
+  gap: $space-xs;
 }
 
 .sectionLabel {
-  font-size: $font-size-xs;
-  color: $color-text-muted;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-family: $font-family-base;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $accent-1-600;
 }
 
 .swatches {
   display: flex;
   flex-wrap: wrap;
-  gap: 0;
+  gap: 6px;
+  width: 100%;
 }
 
 .swatch {
-  width: $touch-target;
-  height: $touch-target;
-  padding: ($touch-target - $size-swatch) * 0.5;
-  background-clip: content-box;
+  width: $space-3xl;
+  height: $space-3xl;
+  padding: 0;
+  border: $outline-width solid $color-black;
+  background-clip: padding-box;
   cursor: pointer;
   transition: transform $transition-fast;
 
   &:hover {
-    transform: scale(1.2);
+    transform: scale(1.1);
     z-index: 1;
   }
 }

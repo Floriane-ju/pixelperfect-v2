@@ -26,6 +26,8 @@ export interface EditorContextValue {
   onMirrorVChange: (v: boolean) => void;
   activeLayerId: string;
   layers: PixelLayer[];
+  canvasWidth: number;
+  canvasHeight: number;
   openPanel: OpenPanel;
   onPanelToggle: (p: 'layers' | 'color' | 'ref') => void;
   onPanelClose: () => void;
@@ -34,6 +36,7 @@ export interface EditorContextValue {
   onLayerVisibilityToggle: (id: string) => void;
   onLayerDuplicate: (id: string) => void;
   onLayerDelete: (id: string) => void;
+  onLayerReorder: (fromId: string, toId: string, position: 'before' | 'after') => void;
   onBack: () => void;
   refImage: RefImageInfo | null;
   onRefImageImport: (file: File) => void;

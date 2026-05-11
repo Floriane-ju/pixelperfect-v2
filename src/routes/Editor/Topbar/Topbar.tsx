@@ -8,8 +8,8 @@ export function Topbar() {
   const {
     title, tool, onToolChange, canUndo, canRedo, onUndo, onRedo,
     mirrorH, mirrorV, onMirrorHChange, onMirrorVChange,
-    activeLayerId, layers, openPanel, onPanelToggle, onPanelClose,
-    onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete,
+    activeLayerId, layers, canvasWidth, canvasHeight, openPanel, onPanelToggle, onPanelClose,
+    onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete, onLayerReorder,
     onBack, refImage, onRefImageImport, onRefImageRemove, onRefImageTransform, onRefImageCapture,
     canvasDisplaySize, onCopySvg,
   } = useEditorContext();
@@ -76,11 +76,14 @@ export function Topbar() {
               <LayerPanel
                 layers={layers}
                 activeLayerId={activeLayerId}
+                canvasWidth={canvasWidth}
+                canvasHeight={canvasHeight}
                 onAdd={onLayerAdd}
                 onSelect={id => { onLayerSelect(id); }}
                 onVisibilityToggle={onLayerVisibilityToggle}
                 onDuplicate={onLayerDuplicate}
                 onDelete={onLayerDelete}
+                onReorder={onLayerReorder}
               />
             )}
           </div>

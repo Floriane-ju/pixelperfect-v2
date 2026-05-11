@@ -72,6 +72,26 @@ export function useLayers({ drawing, setDrawing, activeLayerId, setActiveLayerId
     scheduleSave();
   }, [activeLayerId, latestDataRef, pushHistory, setDrawing, setActiveLayerId, scheduleSave]);
 
+  const handleLayerReorder = useCallback((fromId: string, toId: string, position: 'before' | 'after') => {
+    if (fromId === toId) return;
+    if (latestDataRef.current) pushHistory(latestDataRef.current);
+    setDrawing(prev => {
+      if (!prev) return prev;
+      const layers = [...prev.data.layers];
+      const fromIdx = layers.findIndex(l => l.id === fromId);
+      const toIdx = layers.findIndex(l => l.id === toId);
+      if (fromIdx < 0 || toIdx < 0) return prev;
+      const [moved] = layers.splice(fromIdx, 1);
+      if (!moved) return prev;
+      let insertIdx = layers.findIndex(l => l.id === toId);
+      if (insertIdx < 0) insertIdx = layers.length;
+      if (position === 'after') insertIdx += 1;
+      layers.splice(insertIdx, 0, moved);
+      return { ...prev, data: { ...prev.data, layers } };
+    });
+    scheduleSave();
+  }, [latestDataRef, pushHistory, setDrawing, scheduleSave]);
+
   const handleLayerDelete = useCallback((layerId: string) => {
     if (latestDataRef.current) pushHistory(latestDataRef.current);
     setDrawing(prev => {
@@ -92,5 +112,6 @@ export function useLayers({ drawing, setDrawing, activeLayerId, setActiveLayerId
     handleLayerDuplicate,
     handleLayerAdd,
     handleLayerDelete,
+    handleLayerReorder,
   };
 }

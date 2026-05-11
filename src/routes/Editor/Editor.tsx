@@ -52,7 +52,7 @@ export function Editor() {
 
   const { scheduleSave, latestDataRef } = useSave({ id, drawing, setStatus });
   const { canUndo, canRedo, pushHistory, handleDrawStart, handleDrawEnd, handleUndo, handleRedo } = useUndoRedo({ latestDataRef, setDrawing, scheduleSave });
-  const { handleLayerChange, handleLayerVisibilityToggle, handleLayerDuplicate, handleLayerAdd, handleLayerDelete } = useLayers({ drawing, setDrawing, activeLayerId, setActiveLayerId, scheduleSave, pushHistory, latestDataRef });
+  const { handleLayerChange, handleLayerVisibilityToggle, handleLayerDuplicate, handleLayerAdd, handleLayerDelete, handleLayerReorder } = useLayers({ drawing, setDrawing, activeLayerId, setActiveLayerId, scheduleSave, pushHistory, latestDataRef });
   const { refImage, handleRefImageImport, handleRefImageRemove, handleRefImageTransform, handleCapturePixels } = useReferenceImage({ canvasDisplaySize, activeLayerId, drawing, handleLayerChange, pushHistory, latestDataRef });
   const {
     color, drawingColors, openPanel, setOpenPanel, hoveredColor, setHoveredColor,
@@ -123,6 +123,8 @@ export function Editor() {
     onMirrorVChange: setMirrorV,
     activeLayerId,
     layers: drawing.data.layers,
+    canvasWidth: drawing.data.width,
+    canvasHeight: drawing.data.height,
     openPanel,
     onPanelToggle: handlePanelToggle,
     onPanelClose: handlePanelClose,
@@ -131,6 +133,7 @@ export function Editor() {
     onLayerVisibilityToggle: handleLayerVisibilityToggle,
     onLayerDuplicate: handleLayerDuplicate,
     onLayerDelete: handleLayerDelete,
+    onLayerReorder: handleLayerReorder,
     onBack: handleBack,
     refImage: topbarRefImage,
     onRefImageImport: handleRefImageImport,
