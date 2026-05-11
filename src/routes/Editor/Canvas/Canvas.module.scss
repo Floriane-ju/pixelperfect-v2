@@ -1,11 +1,42 @@
 .wrapper {
+  position: relative;
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   touch-action: none;
-  
+}
+
+.pickerIndicator {
+  position: absolute;
+  width: $pipette-indicator-size;
+  height: $pipette-indicator-size;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  overflow: visible;
+}
+
+.pickerIndicatorBg {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.35);
+  stroke-width: $pipette-indicator-stroke;
+}
+
+.pickerIndicatorFg {
+  fill: none;
+  stroke: $color-white;
+  stroke-width: $pipette-indicator-stroke;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  stroke-dasharray: 113.097;
+  animation: pickerProgress $pipette-indicator-duration linear forwards;
+}
+
+@keyframes pickerProgress {
+  from { stroke-dashoffset: 113.097; }
+  to   { stroke-dashoffset: 0; }
 }
 
 .stack {

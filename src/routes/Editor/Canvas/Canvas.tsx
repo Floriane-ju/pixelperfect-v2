@@ -8,6 +8,9 @@ import styles from './Canvas.module.scss';
 
 export type { Tool };
 
+const PIPETTE_HOLD_MS = 500;
+const PIPETTE_INDICATOR_DELAY_MS = 200;
+
 interface RefImageState {
   src: string;
   x: number;
@@ -59,6 +62,7 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
 
   const displaySizeRef = useRef({ w: 256, h: 256 });
   const [displaySize, setDisplaySize] = useState({ w: 256, h: 256 });
+  const [pickerIndicator, setPickerIndicator] = useState<{ x: number; y: number } | null>(null);
 
   const { transform, transformRef, onNavPointerDown, onNavPointerMove, onNavPointerUp } = useCanvasNavigation(wrapperRef);
 
@@ -70,13 +74,20 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
   const longPressTimerRef = useRef<number | null>(null);
   const longPressFiredRef = useRef(false);
   const pressOriginRef = useRef<{ sx: number; sy: number } | null>(null);
+  const indicatorTimerRef = useRef<number | null>(null);
+  const pendingStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const clearLongPress = useCallback(() => {
     if (longPressTimerRef.current !== null) {
       window.clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
+    if (indicatorTimerRef.current !== null) {
+      window.clearTimeout(indicatorTimerRef.current);
+      indicatorTimerRef.current = null;
+    }
     pressOriginRef.current = null;
+    setPickerIndicator(null);
   }, []);
 
   const pickColorAt = useCallback((px: { x: number; y: number }) => {
@@ -297,6 +308,7 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
       isDrawing.current = false;
       lastPixel.current = null;
       drawSessionSnapshot.current = null;
+      pendingStartRef.current = null;
       return;
     }
 
@@ -328,6 +340,13 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
     const scheduleLongPress = () => {
       longPressFiredRef.current = false;
       pressOriginRef.current = { sx: e.clientX, sy: e.clientY };
+      const sx = e.clientX;
+      const sy = e.clientY;
+      indicatorTimerRef.current = window.setTimeout(() => {
+        const wr = wrapperRef.current?.getBoundingClientRect();
+        if (wr) setPickerIndicator({ x: sx - wr.left, y: sy - wr.top });
+        indicatorTimerRef.current = null;
+      }, PIPETTE_INDICATOR_DELAY_MS);
       longPressTimerRef.current = window.setTimeout(() => {
         const snapshot = drawSessionSnapshot.current;
         if (snapshot !== null) {
@@ -356,7 +375,8 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
         longPressFiredRef.current = true;
         longPressTimerRef.current = null;
         pressOriginRef.current = null;
-      }, 500);
+        setPickerIndicator(null);
+      }, PIPETTE_HOLD_MS);
     };
 
     if (isShapeTool(tool)) {
@@ -376,9 +396,9 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
     if (activeEntry) activeEntry.pixelsRef = layerPixelsRef.current;
     isDrawing.current = true;
     lastPixel.current = px;
-    paint([px]);
+    pendingStartRef.current = px;
     scheduleLongPress();
-  }, [data.layers, data.width, data.height, activeLayerId, tool, color, onInvisibleLayerAttempt, pickColorAt, screenToCanvas, paint, onLayerChange, drawPreview, clearPreview, onDrawStart, onDrawEnd, onNavPointerDown, onNavPointerUp, recompositeMain, clearLongPress]);
+  }, [data.layers, data.width, data.height, activeLayerId, tool, color, onInvisibleLayerAttempt, pickColorAt, screenToCanvas, onLayerChange, drawPreview, clearPreview, onDrawStart, onDrawEnd, onNavPointerDown, onNavPointerUp, recompositeMain, clearLongPress]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (onNavPointerMove(e.pointerId, e.clientX, e.clientY)) return;
@@ -394,8 +414,14 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
       drawPreview(getShapePixels(tool, shapeStartRef.current, px));
       return;
     }
+    const pending = pendingStartRef.current;
     const last = lastPixel.current;
-    paint(last ? bresenham(last.x, last.y, px.x, px.y) : [px]);
+    if (pending) {
+      paint(bresenham(pending.x, pending.y, px.x, px.y));
+      pendingStartRef.current = null;
+    } else {
+      paint(last ? bresenham(last.x, last.y, px.x, px.y) : [px]);
+    }
     lastPixel.current = px;
   }, [onNavPointerMove, screenToCanvas, paint, tool, drawPreview, clearLongPress]);
 
@@ -409,6 +435,7 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
       isDrawing.current = false;
       lastPixel.current = null;
       drawSessionSnapshot.current = null;
+      pendingStartRef.current = null;
       return;
     }
 
@@ -423,7 +450,7 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
       shapeStartRef.current = null;
       onDrawEnd?.();
     } else if (wasDrawing) {
-      // Commit pencil/eraser stroke once at the end. Offscreen + main canvas already reflect the mutation.
+      if (pendingStartRef.current) paint([pendingStartRef.current]);
       onLayerChange(activeLayerId, layerPixelsRef.current);
       onDrawEnd?.();
     }
@@ -431,7 +458,8 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
     isDrawing.current = false;
     lastPixel.current = null;
     drawSessionSnapshot.current = null;
-  }, [tool, screenToCanvas, data.width, data.height, color, activeLayerId, onLayerChange, clearPreview, mirrorH, mirrorV, onDrawEnd, onNavPointerUp, clearLongPress]);
+    pendingStartRef.current = null;
+  }, [tool, screenToCanvas, data.width, data.height, color, activeLayerId, onLayerChange, paint, clearPreview, mirrorH, mirrorV, onDrawEnd, onNavPointerUp, clearLongPress]);
 
   const cssSize = { width: displaySize.w, height: displaySize.h };
   const { x, y, scale, angle } = transform;
@@ -470,6 +498,18 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
         <canvas ref={previewRef} className={styles.preview} width={data.width} height={data.height} />
         <canvas ref={highlightRef} className={styles.highlight} width={displaySize.w} height={displaySize.h} />
       </div>
+      {pickerIndicator && (
+        <svg
+          key={`${pickerIndicator.x},${pickerIndicator.y}`}
+          className={styles.pickerIndicator}
+          style={{ left: pickerIndicator.x, top: pickerIndicator.y }}
+          viewBox="0 0 40 40"
+          aria-hidden="true"
+        >
+          <circle className={styles.pickerIndicatorBg} cx="20" cy="20" r="18" />
+          <circle className={styles.pickerIndicatorFg} cx="20" cy="20" r="18" />
+        </svg>
+      )}
     </div>
   );
 }

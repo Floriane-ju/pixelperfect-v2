@@ -109,6 +109,13 @@ $size-slider-thumb: 18px;
 $size-cursor-sv:    14px;
 $size-swatch:       28px;
 
+// Pipette long-press
+$pipette-hold-duration:      500ms;
+$pipette-indicator-delay:    200ms;
+$pipette-indicator-duration: 300ms; // hold - delay
+$pipette-indicator-size:     40px;
+$pipette-indicator-stroke:   3px;
+
 // ─────────────────────────────────────────────
 // Motif damier
 // ─────────────────────────────────────────────
