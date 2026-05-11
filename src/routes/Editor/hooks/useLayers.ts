@@ -11,7 +11,7 @@ interface UseLayersParams {
   latestDataRef: React.MutableRefObject<DrawingData | null>;
 }
 
-export function useLayers({ drawing, setDrawing, activeLayerId, setActiveLayerId, scheduleSave, pushHistory, latestDataRef }: UseLayersParams) {
+export function useLayers({ drawing, setDrawing, setActiveLayerId, scheduleSave, pushHistory, latestDataRef }: UseLayersParams) {
   const handleLayerChange = useCallback(
     (layerId: string, pixels: Record<string, HexColor>) => {
       setDrawing(prev => {
@@ -63,14 +63,12 @@ export function useLayers({ drawing, setDrawing, activeLayerId, setActiveLayerId
         opacity: 1,
         visible: true,
       };
-      const activeIdx = prev.data.layers.findIndex(l => l.id === activeLayerId);
-      const insertAt = activeIdx >= 0 ? activeIdx + 1 : prev.data.layers.length;
-      const layers = [...prev.data.layers.slice(0, insertAt), newLayer, ...prev.data.layers.slice(insertAt)];
+      const layers = [...prev.data.layers, newLayer];
       setActiveLayerId(newLayer.id);
       return { ...prev, data: { ...prev.data, layers } };
     });
     scheduleSave();
-  }, [activeLayerId, latestDataRef, pushHistory, setDrawing, setActiveLayerId, scheduleSave]);
+  }, [latestDataRef, pushHistory, setDrawing, setActiveLayerId, scheduleSave]);
 
   const handleLayerReorder = useCallback((fromId: string, toId: string, position: 'before' | 'after') => {
     if (fromId === toId) return;

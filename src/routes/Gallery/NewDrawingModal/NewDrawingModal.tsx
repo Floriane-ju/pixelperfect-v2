@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/Button';
+import { Input } from '@/components/Input';
+import { useModalA11y } from '@/hooks/useModalA11y';
 import styles from './NewDrawingModal.module.scss';
-
-const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 interface Preset {
   label: string;
@@ -32,34 +32,8 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
   const [isCreating, setIsCreating] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
-  const focusBeforeRef = useRef<Element | null>(null);
 
-  useEffect(() => {
-    focusBeforeRef.current = document.activeElement;
-    nameRef.current?.select();
-    return () => {
-      if (focusBeforeRef.current instanceof HTMLElement) focusBeforeRef.current.focus();
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { onClose(); return; }
-      if (e.key !== 'Tab') return;
-      const modal = modalRef.current;
-      if (!modal) return;
-      const focusable = Array.from(modal.querySelectorAll<HTMLElement>(FOCUSABLE));
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey) {
-        if (document.activeElement === first) { e.preventDefault(); last?.focus(); }
-      } else {
-        if (document.activeElement === last) { e.preventDefault(); first?.focus(); }
-      }
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [onClose]);
+  useModalA11y({ modalRef, onClose, initialFocusRef: nameRef });
 
   const parseDimension = (value: string, fallback: number): number => {
     const n = parseInt(value, 10);
@@ -103,21 +77,15 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
           Nouveau dessin
         </h2>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="drawing-name">
-            Nom
-          </label>
-          <input
-            ref={nameRef}
-            id="drawing-name"
-            className={styles.input}
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={80}
-            onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmit(); }}
-          />
-        </div>
+        <Input
+          ref={nameRef}
+          id="drawing-name"
+          label="Nom"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={80}
+          onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmit(); }}
+        />
 
         <div className={styles.field}>
           <span className={styles.label}>Taille</span>

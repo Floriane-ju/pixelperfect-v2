@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { fetchDrawing } from '@/lib/drawings';
 import type { DrawingRow, HexColor } from '@/types';
 import { ColorSwatch } from '@/components/ColorSwatch';
+import { ColorWheelIcon } from '@/components/ColorWheelIcon';
+import { BrushSizeSlider } from '@/components/BrushSizeSlider';
 import { ColorPicker } from './ColorPicker/ColorPicker';
 import { ContextMenu } from './ContextMenu/ContextMenu';
 import { Canvas } from './Canvas/Canvas';
@@ -15,9 +17,44 @@ import { useLayers } from './hooks/useLayers';
 import { useReferenceImage } from './hooks/useReferenceImage';
 import { useColorPalette } from './hooks/useColorPalette';
 import { useEditorShortcuts } from './hooks/useEditorShortcuts';
+import { useModalA11y } from '@/hooks/useModalA11y';
 import { EditorContext } from './EditorContext';
 import type { EditorContextValue } from './EditorContext';
 import styles from './Editor.module.scss';
+
+interface InvisibleLayerModalProps {
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+function InvisibleLayerModal({ onCancel, onConfirm }: InvisibleLayerModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  useModalA11y({ modalRef, onClose: onCancel });
+  return (
+    <div className={styles.modalOverlay} onClick={onCancel}>
+      <div
+        ref={modalRef}
+        className={styles.modal}
+        onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="invisible-layer-text"
+      >
+        <p id="invisible-layer-text" className={styles.modalText}>
+          Ce calque est masqué. Voulez-vous l'afficher pour pouvoir dessiner dessus ?
+        </p>
+        <div className={styles.modalActions}>
+          <button className={styles.modalBtnSecondary} onClick={onCancel}>
+            Annuler
+          </button>
+          <button className={styles.modalBtnPrimary} onClick={onConfirm}>
+            Afficher le calque
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type Status = 'loading' | 'ready' | 'error' | 'saving';
 
@@ -28,6 +65,7 @@ export function Editor() {
   const [drawing, setDrawing] = useState<DrawingRow | null>(null);
   const [status, setStatus] = useState<Status>('loading');
   const [tool, setTool] = useState<Tool>('pencil');
+  const [brushSize, setBrushSize] = useState<number>(1);
   const [activeLayerId, setActiveLayerId] = useState<string>('');
   const [showInvisibleModal, setShowInvisibleModal] = useState(false);
   const [mirrorH, setMirrorH] = useState(false);
@@ -58,7 +96,7 @@ export function Editor() {
     color, drawingColors, openPanel, setOpenPanel, hoveredColor, setHoveredColor,
     contextMenu, setContextMenu, editColorMode, editColorPanelRef,
     isNormalPick, displayedRecentColors,
-    handleColorChange, handlePanelToggle, handleEditDrawingColor,
+    handleColorChange, commitRecentColor, handlePanelToggle, handleEditDrawingColor,
   } = useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory, latestDataRef, rightSidebarRef });
 
   useEditorShortcuts({ handleUndo, handleRedo });
@@ -69,6 +107,28 @@ export function Editor() {
   );
 
   const handleSwatchColorChange = useCallback((c: string) => handleColorChange(c as HexColor), [handleColorChange]);
+
+  const handlePickColor = useCallback((c: HexColor) => {
+    handleColorChange(c);
+    commitRecentColor(c);
+    setTool('pencil');
+  }, [handleColorChange, commitRecentColor]);
+
+  useEffect(() => {
+    const handler = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+      const text = e.clipboardData?.getData('text') ?? '';
+      const raw = text.trim().replace(/^#/, '');
+      if (!/^[0-9a-fA-F]{6}$/.test(raw)) return;
+      e.preventDefault();
+      const hex = `#${raw.toUpperCase()}` as HexColor;
+      handleColorChange(hex);
+      commitRecentColor(hex);
+    };
+    document.addEventListener('paste', handler);
+    return () => document.removeEventListener('paste', handler);
+  }, [handleColorChange, commitRecentColor]);
 
   const handleSwatchContextMenu = useCallback((c: string, x: number, y: number) => {
     setContextMenu({ color: c as HexColor, x, y });
@@ -90,7 +150,7 @@ export function Editor() {
     return (
       <main className={styles.editor}>
         <div className={styles.centered}>
-          <span className={styles.muted}>Chargement…</span>
+          <span className={styles.muted} role="status" aria-live="polite">Chargement…</span>
         </div>
       </main>
     );
@@ -100,7 +160,7 @@ export function Editor() {
     return (
       <main className={styles.editor}>
         <div className={styles.centered}>
-          <span className={styles.danger}>Impossible de charger le dessin.</span>
+          <span className={styles.danger} role="alert">Impossible de charger le dessin.</span>
           <button className={styles.linkBtn} onClick={() => navigate('/')}>
             ← Retour à la galerie
           </button>
@@ -151,18 +211,27 @@ export function Editor() {
         <Topbar />
 
         <div className={styles.body}>
-          <div ref={canvasAreaRef} id="canvas" className={styles.canvasArea}>
+          <aside className={styles.leftSidebar} aria-label="Taille de brosse">
+            <BrushSizeSlider value={brushSize} onChange={setBrushSize} min={1} max={16} />
+          </aside>
+          <div
+            ref={canvasAreaRef}
+            id="canvas"
+            className={styles.canvasArea}
+          >
             <Canvas
               data={drawing.data}
               activeLayerId={activeLayerId}
               tool={tool}
               color={color}
+              brushSize={brushSize}
               mirrorH={mirrorH}
               mirrorV={mirrorV}
               onLayerChange={handleLayerChange}
               onInvisibleLayerAttempt={() => setShowInvisibleModal(true)}
               onDrawStart={handleDrawStart}
               onDrawEnd={handleDrawEnd}
+              onPickColor={handlePickColor}
               hoveredColor={hoveredColor}
               refImage={refImage}
               onDisplaySizeChange={setCanvasDisplaySize}
@@ -177,7 +246,9 @@ export function Editor() {
                 aria-label="Choisir une couleur"
                 aria-expanded={openPanel === 'color' && !editColorMode}
                 onClick={() => handlePanelToggle('color')}
-              />
+              >
+                <ColorWheelIcon size={32} />
+              </button>
               {openPanel === 'color' && !editColorMode && (
                 <div className={styles.colorPanel}>
                   <ColorPicker value={color} onChange={handleColorChange} onColorHover={setHoveredColor} recentColors={displayedRecentColors} drawingColors={drawingColors} />
@@ -238,24 +309,10 @@ export function Editor() {
         {status === 'saving' && <div className={styles.savingBadge} aria-live="polite">Enregistrement…</div>}
 
         {showInvisibleModal && (
-          <div className={styles.modalOverlay} onClick={() => setShowInvisibleModal(false)}>
-            <div className={styles.modal} onClick={e => e.stopPropagation()}>
-              <p className={styles.modalText}>
-                Ce calque est masqué. Voulez-vous l'afficher pour pouvoir dessiner dessus ?
-              </p>
-              <div className={styles.modalActions}>
-                <button className={styles.modalBtnSecondary} onClick={() => setShowInvisibleModal(false)}>
-                  Annuler
-                </button>
-                <button
-                  className={styles.modalBtnPrimary}
-                  onClick={() => { handleLayerVisibilityToggle(activeLayerId); setShowInvisibleModal(false); }}
-                >
-                  Afficher le calque
-                </button>
-              </div>
-            </div>
-          </div>
+          <InvisibleLayerModal
+            onCancel={() => setShowInvisibleModal(false)}
+            onConfirm={() => { handleLayerVisibilityToggle(activeLayerId); setShowInvisibleModal(false); }}
+          />
         )}
       </main>
     </EditorContext.Provider>

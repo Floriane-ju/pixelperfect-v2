@@ -3,7 +3,14 @@ import type { ButtonHTMLAttributes } from 'react';
 import styles from './Button.module.scss';
 import { Icons, type IconName } from '@/components/Icons';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'selected' | 'selectable';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'ghost'
+  | 'ghost-accent-1'
+  | 'danger'
+  | 'selected'
+  | 'selectable';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

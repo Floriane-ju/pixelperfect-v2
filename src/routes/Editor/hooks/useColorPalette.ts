@@ -82,6 +82,13 @@ export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory
     }
   }, [setDrawing]);
 
+  const commitRecentColor = useCallback((c: HexColor) => {
+    setRecentColors(recents => {
+      const filtered = recents.filter(r => r !== c);
+      return [c, ...filtered].slice(0, MAX_RECENT_COLORS);
+    });
+  }, []);
+
   const closeColorPanel = useCallback(() => {
     const editMode = editColorModeRef.current;
     if (editMode) {
@@ -152,6 +159,7 @@ export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory
     isNormalPick,
     displayedRecentColors,
     handleColorChange,
+    commitRecentColor,
     closeColorPanel,
     handlePanelToggle,
     handleEditDrawingColor,

@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/Button';
+import { Input } from '@/components/Input';
+import { useModalA11y } from '@/hooks/useModalA11y';
 import styles from './NewGroupModal.module.scss';
 
 interface Props {
@@ -10,18 +12,9 @@ interface Props {
 export function NewGroupModal({ onClose, onConfirm }: Props) {
   const [name, setName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [onClose]);
+  useModalA11y({ modalRef, onClose, initialFocusRef: inputRef });
 
   const handleSubmit = () => {
     const trimmed = name.trim();
@@ -32,6 +25,7 @@ export function NewGroupModal({ onClose, onConfirm }: Props) {
   return (
     <div className={styles.overlay} onPointerDown={onClose}>
       <div
+        ref={modalRef}
         className={styles.modal}
         onPointerDown={(e) => e.stopPropagation()}
         role="dialog"
@@ -42,21 +36,15 @@ export function NewGroupModal({ onClose, onConfirm }: Props) {
           Nouveau groupe
         </h2>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="group-name">
-            Nom du groupe
-          </label>
-          <input
-            ref={inputRef}
-            id="group-name"
-            className={styles.input}
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={80}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
-          />
-        </div>
+        <Input
+          ref={inputRef}
+          id="group-name"
+          label="Nom du groupe"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={80}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
+        />
 
         <div className={styles.actions}>
           <Button variant="secondary" size="sm" onClick={onClose}>

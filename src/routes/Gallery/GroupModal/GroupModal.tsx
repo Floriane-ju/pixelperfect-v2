@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import { DrawingCard } from '@/routes/Gallery/DrawingCard/DrawingCard';
 import { Button } from '@/components/Button';
+import { useModalA11y } from '@/hooks/useModalA11y';
 import type { DrawingRow } from '@/types';
 import styles from './GroupModal.module.scss';
 
@@ -27,6 +28,10 @@ export function GroupModal({
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isOverlayDragOver, setIsOverlayDragOver] = useState(false);
   const drag = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const titleId = `group-modal-title-${name.replace(/\s+/g, '-')}`;
+
+  useModalA11y({ modalRef: panelRef, onClose });
 
   const onDragStart = (e: PointerEvent<HTMLElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -59,11 +64,15 @@ export function GroupModal({
       }}
     >
       <div
+        ref={panelRef}
         className={styles.panel}
         style={{ transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))` }}
         onClick={(e) => e.stopPropagation()}
         onDragOver={(e) => e.stopPropagation()}
         onDrop={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
       >
         <header
           className={styles.header}
@@ -76,7 +85,7 @@ export function GroupModal({
             <div/>
             <div/>
           </div>
-          <h2 className={styles.title}>{name}</h2>
+          <h2 id={titleId} className={styles.title}>{name}</h2>
           <div className="deco" aria-hidden="true">
             <div/>
             <div/>

@@ -13,15 +13,15 @@
   padding: $space-2xl;
   width: 100%;
   max-width: 360px;
+  background:$accent-1-450;
 }
 
 .title {
   font-family: $font-family-display;
-  font-size: $font-size-sm;
+  font-size: $font-size-md;
   text-align: center;
   margin: 0 0 $space-2xl;
-  color: $accent-1-500;
-  text-shadow: $text-shadow-display;
+  color: $accent-2-500;
   line-height: 2;
 }
 
@@ -29,30 +29,6 @@
   display: flex;
   flex-direction: column;
   gap: $space-l;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: $space-s;
-}
-
-.label {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-}
-
-.input {
-  border: $border-m-accent-1;
-  padding: $space-s $space-sm;
-  height: $touch-target;
-  background: $color-surface;
-  width: 100%;
-
-  &:focus {
-    outline: $outline-width solid $accent-1-500;
-    outline-offset: $outline-offset;
-  }
 }
 
 .error {

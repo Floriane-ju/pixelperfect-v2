@@ -25,35 +25,6 @@
   color: $color-text;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: $space-s;
-}
-
-.label {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $color-text-muted;
-}
-
-.input {
-  background: $color-bg;
-  color: $color-text;
-  font-size: $font-size-md;
-  font-family: $font-family-base;
-  padding: $space-s $space-sm;
-  width: 100%;
-  box-sizing: border-box;
-  transition: border-color $transition-fast;
-  min-height: 44px;
-
-  &:focus {
-    outline: none;
-    border-color: $color-primary;
-  }
-}
-
 .actions {
   display: flex;
   gap: $space-s;

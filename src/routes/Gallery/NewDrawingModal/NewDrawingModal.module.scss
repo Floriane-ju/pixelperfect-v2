@@ -37,22 +37,6 @@
   color: $color-text-muted;
 }
 
-.input {
-  background: $color-bg;
-  color: $color-text;
-  font-size: $font-size-md;
-  padding: $space-s $space-sm;
-  width: 100%;
-  box-sizing: border-box;
-  transition: border-color $transition-fast;
-  min-height: 44px;
-
-  &:focus {
-    outline: none;
-    border-color: $color-primary;
-  }
-}
-
 .presets {
   display: flex;
   flex-wrap: wrap;

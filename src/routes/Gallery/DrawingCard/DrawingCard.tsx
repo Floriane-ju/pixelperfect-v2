@@ -28,6 +28,7 @@ export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFrom
     ...(onRename
       ? [{
           label: 'Renommer',
+          icon: 'edit' as const,
           onClick: () => {
             setRenameValue(drawing.title);
             setMode('renaming');
@@ -36,10 +37,10 @@ export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFrom
         }]
       : []),
     ...(onRemoveFromGroup
-      ? [{ label: 'Retirer du groupe', onClick: () => onRemoveFromGroup() }]
+      ? [{ label: 'Retirer du groupe', icon: 'back' as const, onClick: () => onRemoveFromGroup() }]
       : []),
     ...(onDelete
-      ? [{ label: 'Supprimer', variant: 'danger' as const, onClick: () => setMode('confirming-delete') }]
+      ? [{ label: 'Supprimer', icon: 'trash' as const, variant: 'danger' as const, onClick: () => setMode('confirming-delete') }]
       : []),
   ];
 

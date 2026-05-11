@@ -1,7 +1,7 @@
 import type { HexColor } from '@/types';
 import { getShapePixels, expandMirror } from '@/routes/Editor/shapePixels';
 
-export type Tool = 'pencil' | 'eraser' | 'fill' | 'circle' | 'square' | 'line';
+export type Tool = 'pencil' | 'eraser' | 'fill' | 'eyedropper' | 'circle' | 'square' | 'line';
 export type ShapeTool = 'circle' | 'square' | 'line';
 
 export function isShapeTool(t: Tool): t is ShapeTool {

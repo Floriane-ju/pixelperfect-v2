@@ -1,0 +1,42 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color:$accent-2-500;
+}
+
+.input {
+  font-family: $font-family-base;
+  font-size: $font-size-md;
+  color: $accent-1-600;
+  border: $border-m-accent-1;
+  padding: $space-s $space-sm;
+  height: $touch-target;
+  background: $color-surface;
+  width: 100%;
+
+  &:focus {
+    outline: $outline-width solid $accent-2-500;
+    outline-offset: $outline-offset;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.error {
+  font-size: $font-size-sm;
+  color: $color-danger;
+  margin: 0;
+}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/Button';
+import { Input } from '@/components/Input';
 import { signIn } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import styles from './Login.module.scss';
@@ -40,30 +41,24 @@ export function Login() {
       <div className={styles.card}>
         <h1 className={styles.title}>Pixel Perfect</h1>
         <form className={styles.form} onSubmit={(e) => void handleSubmit(e)}>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="email">Email</label>
-            <input
-              id="email"
-              className={styles.input}
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="password">Mot de passe</label>
-            <input
-              id="password"
-              className={styles.input}
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+          <Input
+            id="email"
+            label="Email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Input
+            id="password"
+            label="Mot de passe"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
           {error && <p className={styles.error} role="alert">{error}</p>}
           <Button type="submit" variant="primary" fullWidth disabled={loading}>
             {loading ? 'Connexion…' : 'Se connecter'}

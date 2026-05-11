@@ -50,6 +50,18 @@
   text-overflow: ellipsis;
 }
 
+.renameInput {
+  flex: 1;
+  min-width: 0;
+  height: $space-l;
+  padding: 0 $space-s;
+  background: $accent-1-300;
+  font-size: $font-size-md;
+  color: $accent-2-500;
+  font-family: $font-family-base;
+  outline: none;
+}
+
 .preview {
   padding: 0 $space-xs $space-xs;
 }

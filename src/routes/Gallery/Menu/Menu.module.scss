@@ -6,27 +6,39 @@
 }
 
 .menu {
-  position: absolute;
-  top: calc(100% + #{$space-xs});
-  right: 0;
-  z-index: $z-dropdown;
-  min-width: 160px;
+  position: fixed;
+  z-index: $z-popover;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
   margin: 0;
-  padding: $space-xs;
+  padding: $space-xxs;
   list-style: none;
-  background: $accent-1-600;
+  background: $accent-1-450;
   border: $border-m-accent-1;
+  box-shadow:
+    $inner-shadow-interactive-purple;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 .item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: $space-l;
   width: 100%;
-  padding: $space-s $space-sm;
+  padding: $space-l $space-sm $space-l $space-l;
   background: transparent;
   border: none;
   color: $accent-2-500;
-  font-size: $font-size-sm;
   font-family: $font-family-base;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  padding:$space-l;
   text-align: left;
   cursor: pointer;
   @include no-select;
@@ -37,14 +49,35 @@
 
   &:focus-visible {
     @include focus-ring;
-    outline-offset: -2px;
+    outline-offset: -$outline-offset;
   }
 }
 
+.icon {
+  flex-shrink: 0;
+  color: $accent-2-500;
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+}
+
 .itemDanger {
-  color: $color-danger;
+  color: $color-danger-light;
+
+  .icon {
+    color: $color-danger-light;
+  }
 
   &:hover {
     background: $accent-1-500;
   }
+}
+
+.divider {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: $accent-1-600;
 }

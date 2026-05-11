@@ -27,7 +27,8 @@ export type IconName =
   | 'layers'
   | 'reference'
   | 'fill'
-  | 'erase';
+  | 'erase'
+  | 'pipette';
 
 export interface IconsProps {
   icon: IconName;
@@ -198,6 +199,12 @@ function renderIcon(icon: IconName): React.ReactNode {
       return (
         <>
           <path d="M1 4L2 4L2 5L1 5zM1 6L2 6L2 5L3 5L3 6L4 6L4 5L5 5L5 6L6 6L6 7L1 7zM2 3L3 3L3 4L2 4zM3 2L4 2L4 3L3 3zM4 1L5 1L5 2L4 2zM5 2L6 2L6 3L5 3zM5 4L6 4L6 5L5 5zM6 3L7 3L7 4L6 4z"/>
+        </>
+      );
+    case 'pipette':
+      return (
+        <>
+          <path d="M1 6L2 6L2 7L1 7zM2 5L3 5L3 6L2 6zM3 4L4 4L4 5L3 5zM4 3L5 3L5 4L4 4zM5 2L6 2L6 3L5 3zM5 4L6 4L6 5L5 5zM4 5L5 5L5 6L4 6zM6 1L7 1L7 2L6 2zM6 3L7 3L7 4L6 4zM7 2L8 2L8 3L7 3z"/>
         </>
       );
     default:

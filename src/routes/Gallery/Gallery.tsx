@@ -6,7 +6,7 @@ import { GroupCard } from './GroupCard/GroupCard';
 import { GroupModal } from './GroupModal/GroupModal';
 import { NewDrawingModal } from './NewDrawingModal/NewDrawingModal';
 import { NewGroupModal } from './NewGroupModal/NewGroupModal';
-import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup, moveToGroup } from '@/lib/drawings';
+import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup, moveToGroup, renameGroup } from '@/lib/drawings';
 import { signOut } from '@/lib/auth';
 import { groupDrawings } from '@/lib/groupDrawings';
 import type { DrawingRow } from '@/types';
@@ -34,32 +34,27 @@ export function Gallery() {
       });
   }, []);
 
+  const refetchSilent = () => {
+    fetchDrawings().then(setDrawings).catch(() => {});
+  };
+
   const handleRename = (id: string, newTitle: string) => {
     setDrawings((prev) =>
       prev.map((d) => (d.id === id ? { ...d, title: newTitle } : d)),
     );
-    renameDrawing(id, newTitle).catch((err: unknown) => {
-      console.error('rename failed', err);
-      fetchDrawings().then(setDrawings).catch((e: unknown) => console.error('refetch failed', e));
-    });
+    renameDrawing(id, newTitle).catch(refetchSilent);
   };
 
   const handleDelete = (id: string) => {
     setDrawings((prev) => prev.filter((d) => d.id !== id));
-    deleteDrawing(id).catch((err: unknown) => {
-      console.error('delete failed', err);
-      fetchDrawings().then(setDrawings).catch((e: unknown) => console.error('refetch failed', e));
-    });
+    deleteDrawing(id).catch(refetchSilent);
   };
 
   const handleRemoveFromGroup = (id: string) => {
     setDrawings((prev) =>
       prev.map((d) => (d.id === id ? { ...d, group: null } : d)),
     );
-    removeFromGroup(id).catch((err: unknown) => {
-      console.error('removeFromGroup failed', err);
-      fetchDrawings().then(setDrawings).catch((e: unknown) => console.error('refetch failed', e));
-    });
+    removeFromGroup(id).catch(refetchSilent);
   };
 
   const handleCreateGroup = (groupName: string) => {
@@ -74,38 +69,36 @@ export function Gallery() {
     Promise.all([
       moveToGroup(sourceId, groupName),
       moveToGroup(targetId, groupName),
-    ]).catch((err: unknown) => {
-      console.error('createGroup failed', err);
-      fetchDrawings().then(setDrawings).catch((e: unknown) => console.error('refetch failed', e));
-    });
+    ]).catch(refetchSilent);
   };
 
   const handleUngroupAll = (groupName: string) => {
     const ids = drawings.filter((d) => d.group === groupName).map((d) => d.id);
     setDrawings((prev) => prev.map((d) => d.group === groupName ? { ...d, group: null } : d));
-    Promise.all(ids.map((id) => removeFromGroup(id))).catch((err: unknown) => {
-      console.error('ungroupAll failed', err);
-      fetchDrawings().then(setDrawings).catch((e: unknown) => console.error('refetch failed', e));
-    });
+    Promise.all(ids.map((id) => removeFromGroup(id))).catch(refetchSilent);
+  };
+
+  const handleRenameGroup = (oldName: string, newName: string) => {
+    if (!newName || newName === oldName) return;
+    if (drawings.some((d) => d.group === newName)) return;
+    setDrawings((prev) =>
+      prev.map((d) => (d.group === oldName ? { ...d, group: newName } : d)),
+    );
+    setActiveGroup((g) => (g === oldName ? newName : g));
+    renameGroup(oldName, newName).catch(refetchSilent);
   };
 
   const handleDeleteGroup = (groupName: string) => {
     const ids = drawings.filter((d) => d.group === groupName).map((d) => d.id);
     setDrawings((prev) => prev.filter((d) => d.group !== groupName));
-    Promise.all(ids.map((id) => deleteDrawing(id))).catch((err: unknown) => {
-      console.error('deleteGroup failed', err);
-      fetchDrawings().then(setDrawings).catch((e: unknown) => console.error('refetch failed', e));
-    });
+    Promise.all(ids.map((id) => deleteDrawing(id))).catch(refetchSilent);
   };
 
   const handleMoveToGroup = (drawingId: string, groupName: string) => {
     setDrawings((prev) =>
       prev.map((d) => (d.id === drawingId ? { ...d, group: groupName } : d)),
     );
-    moveToGroup(drawingId, groupName).catch((err: unknown) => {
-      console.error('moveToGroup failed', err);
-      fetchDrawings().then(setDrawings).catch((e: unknown) => console.error('refetch failed', e));
-    });
+    moveToGroup(drawingId, groupName).catch(refetchSilent);
   };
 
   const handleCreate = async (name: string, width: number, height: number) => {
@@ -149,10 +142,10 @@ export function Gallery() {
       )}
 
       {status === 'loading' && (
-        <div className={styles.state}>Chargement…</div>
+        <div className={styles.state} role="status" aria-live="polite">Chargement…</div>
       )}
       {status === 'error' && (
-        <div className={styles.stateError}>{errorMsg}</div>
+        <div className={styles.stateError} role="alert">{errorMsg}</div>
       )}
       {status === 'idle' && !hasContent && (
         <div className={styles.state}>Aucun dessin pour le moment.</div>
@@ -179,8 +172,10 @@ export function Gallery() {
               drawings={g.drawings}
               onOpen={() => setActiveGroup(g.name)}
               onDropDrawing={(drawingId) => handleMoveToGroup(drawingId, g.name)}
+              onRename={(newName) => handleRenameGroup(g.name, newName)}
               onUngroup={() => handleUngroupAll(g.name)}
               onDelete={() => handleDeleteGroup(g.name)}
+              existingGroupNames={groups.map((x) => x.name)}
             />
           ))}
           {ungrouped.map((d) => (

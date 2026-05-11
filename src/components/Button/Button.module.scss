@@ -72,6 +72,15 @@
   }
 }
 
+.variant-ghost-accent-1 {
+  background: transparent;
+  color: $accent-1-500;
+
+  &:hover:not(:disabled) {
+    color: $accent-1-400;
+  }
+}
+
 .variant-selected {
   background: $accent-2-500;
   color: $accent-1-500;

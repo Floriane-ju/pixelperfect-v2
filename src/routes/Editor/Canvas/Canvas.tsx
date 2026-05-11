@@ -23,18 +23,34 @@ interface CanvasProps {
   activeLayerId: string;
   tool: Tool;
   color: HexColor;
+  brushSize?: number;
   mirrorH: boolean;
   mirrorV: boolean;
   onLayerChange: (layerId: string, pixels: Record<string, HexColor>) => void;
   onInvisibleLayerAttempt: () => void;
   onDrawStart?: () => void;
   onDrawEnd?: () => void;
+  onPickColor?: (color: HexColor) => void;
   hoveredColor?: HexColor | null;
   refImage?: RefImageState | null;
   onDisplaySizeChange?: (size: { w: number; h: number }) => void;
 }
 
-export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onLayerChange, onInvisibleLayerAttempt, onDrawStart, onDrawEnd, hoveredColor, refImage, onDisplaySizeChange }: CanvasProps) {
+function stampBrush(pixels: Array<{ x: number; y: number }>, size: number): Array<{ x: number; y: number }> {
+  if (size <= 1) return pixels;
+  const offset = Math.floor((size - 1) / 2);
+  const out: Array<{ x: number; y: number }> = [];
+  for (const { x, y } of pixels) {
+    for (let dy = 0; dy < size; dy++) {
+      for (let dx = 0; dx < size; dx++) {
+        out.push({ x: x + dx - offset, y: y + dy - offset });
+      }
+    }
+  }
+  return out;
+}
+
+export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirrorH, mirrorV, onLayerChange, onInvisibleLayerAttempt, onDrawStart, onDrawEnd, onPickColor, hoveredColor, refImage, onDisplaySizeChange }: CanvasProps) {
   const checkerRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const previewRef = useRef<HTMLCanvasElement>(null);
@@ -51,6 +67,35 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
   const layerPixelsRef = useRef<Record<string, HexColor>>({});
   const drawSessionSnapshot = useRef<Record<string, HexColor> | null>(null);
   const shapeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressFiredRef = useRef(false);
+  const pressOriginRef = useRef<{ sx: number; sy: number } | null>(null);
+
+  const clearLongPress = useCallback(() => {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    pressOriginRef.current = null;
+  }, []);
+
+  const pickColorAt = useCallback((px: { x: number; y: number }) => {
+    if (px.x < 0 || px.y < 0 || px.x >= data.width || px.y >= data.height) return;
+    const key = `${px.x},${px.y}`;
+    for (let i = data.layers.length - 1; i >= 0; i--) {
+      const layer = data.layers[i];
+      if (!layer || !layer.visible) continue;
+      const picked = layer.pixels[key];
+      if (picked) {
+        onPickColor?.(picked);
+        return;
+      }
+    }
+  }, [data.layers, data.width, data.height, onPickColor]);
+
+  // Per-layer offscreen cache. Each layer's pixel map is rasterised once into its own canvas.
+  // Composite step just stacks the cached canvases. Strokes mutate the active layer's offscreen incrementally.
+  const layerCanvasesRef = useRef<Map<string, { canvas: HTMLCanvasElement; pixelsRef: Record<string, HexColor> }>>(new Map());
 
   // Checkerboard (redrawn only when dimensions change)
   useEffect(() => {
@@ -72,24 +117,55 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
     layerPixelsRef.current = layer ? { ...layer.pixels } : {};
   }, [data, activeLayerId]);
 
-  // Composite render
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+  const recompositeMain = useCallback(() => {
+    const ctx = canvasRef.current?.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, data.width, data.height);
     for (const layer of data.layers) {
       if (!layer.visible) continue;
+      const entry = layerCanvasesRef.current.get(layer.id);
+      if (!entry) continue;
       ctx.globalAlpha = layer.opacity;
+      ctx.drawImage(entry.canvas, 0, 0);
+    }
+    ctx.globalAlpha = 1;
+  }, [data]);
+
+  // Sync per-layer offscreen cache and composite main canvas.
+  // Each layer is rasterised only when its pixels reference changes.
+  useEffect(() => {
+    const cache = layerCanvasesRef.current;
+    const seen = new Set<string>();
+    for (const layer of data.layers) {
+      seen.add(layer.id);
+      let entry = cache.get(layer.id);
+      const needsResize = entry && (entry.canvas.width !== data.width || entry.canvas.height !== data.height);
+      if (entry && entry.pixelsRef === layer.pixels && !needsResize) continue;
+      if (!entry) {
+        const c = document.createElement('canvas');
+        c.width = data.width;
+        c.height = data.height;
+        entry = { canvas: c, pixelsRef: layer.pixels };
+        cache.set(layer.id, entry);
+      } else if (needsResize) {
+        entry.canvas.width = data.width;
+        entry.canvas.height = data.height;
+      }
+      const ctx = entry.canvas.getContext('2d');
+      if (!ctx) continue;
+      ctx.clearRect(0, 0, data.width, data.height);
       for (const [key, c] of Object.entries(layer.pixels)) {
         const comma = key.indexOf(',');
         ctx.fillStyle = c;
         ctx.fillRect(parseInt(key.slice(0, comma), 10), parseInt(key.slice(comma + 1), 10), 1, 1);
       }
+      entry.pixelsRef = layer.pixels;
     }
-    ctx.globalAlpha = 1;
-  }, [data]);
+    for (const id of Array.from(cache.keys())) {
+      if (!seen.has(id)) cache.delete(id);
+    }
+    recompositeMain();
+  }, [data, recompositeMain]);
 
   // Highlight pixels matching hoveredColor (circle 40% of pixel size)
   useEffect(() => {
@@ -170,28 +246,51 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
   }, [data.width, data.height]);
 
   const paint = useCallback((pixels: Array<{ x: number; y: number }>) => {
-    const expanded = expandMirror(pixels, data.width, data.height, mirrorH, mirrorV);
-    const next = { ...layerPixelsRef.current };
+    const stamped = stampBrush(pixels, brushSize);
+    const expanded = expandMirror(stamped, data.width, data.height, mirrorH, mirrorV);
+    const active = layerCanvasesRef.current.get(activeLayerId);
+    const lctx = active?.canvas.getContext('2d') ?? null;
+    const map = layerPixelsRef.current;
     let changed = false;
     for (const { x, y } of expanded) {
       if (x < 0 || y < 0 || x >= data.width || y >= data.height) continue;
       const key = `${x},${y}`;
-      if (tool === 'pencil') { next[key] = color; changed = true; }
-      else if (tool === 'eraser' && key in next) { delete next[key]; changed = true; }
+      if (tool === 'pencil') {
+        map[key] = color;
+        if (lctx) { lctx.fillStyle = color; lctx.fillRect(x, y, 1, 1); }
+        changed = true;
+      } else if (tool === 'eraser' && key in map) {
+        delete map[key];
+        if (lctx) lctx.clearRect(x, y, 1, 1);
+        changed = true;
+      }
     }
     if (!changed) return;
-    layerPixelsRef.current = next;
-    onLayerChange(activeLayerId, next);
-  }, [tool, color, activeLayerId, data.width, data.height, onLayerChange, mirrorH, mirrorV]);
+    recompositeMain();
+  }, [tool, color, brushSize, activeLayerId, data.width, data.height, mirrorH, mirrorV, recompositeMain]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     wrapperRef.current?.setPointerCapture(e.pointerId);
     const navResult = onNavPointerDown(e.pointerId, e.clientX, e.clientY, e.button, e.target === canvasRef.current);
 
     if (navResult === 'cancel') {
+      clearLongPress();
       if (isDrawing.current && drawSessionSnapshot.current !== null) {
         layerPixelsRef.current = drawSessionSnapshot.current;
-        onLayerChange(activeLayerId, drawSessionSnapshot.current);
+        const active = layerCanvasesRef.current.get(activeLayerId);
+        if (active) {
+          active.pixelsRef = layerPixelsRef.current;
+          const ctx = active.canvas.getContext('2d');
+          if (ctx) {
+            ctx.clearRect(0, 0, data.width, data.height);
+            for (const [key, c] of Object.entries(drawSessionSnapshot.current)) {
+              const comma = key.indexOf(',');
+              ctx.fillStyle = c;
+              ctx.fillRect(parseInt(key.slice(0, comma), 10), parseInt(key.slice(comma + 1), 10), 1, 1);
+            }
+          }
+        }
+        recompositeMain();
       }
       clearPreview();
       shapeStartRef.current = null;
@@ -203,6 +302,13 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
 
     if (navResult !== 'draw') return;
 
+    const px = screenToCanvas(e.clientX, e.clientY);
+
+    if (tool === 'eyedropper') {
+      pickColorAt(px);
+      return;
+    }
+
     const activeLayer = data.layers.find(l => l.id === activeLayerId);
     if (activeLayer && !activeLayer.visible) {
       onInvisibleLayerAttempt();
@@ -210,8 +316,6 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
       wrapperRef.current?.releasePointerCapture(e.pointerId);
       return;
     }
-
-    const px = screenToCanvas(e.clientX, e.clientY);
 
     if (tool === 'fill') {
       onDrawStart?.();
@@ -221,25 +325,70 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
       return;
     }
 
+    const scheduleLongPress = () => {
+      longPressFiredRef.current = false;
+      pressOriginRef.current = { sx: e.clientX, sy: e.clientY };
+      longPressTimerRef.current = window.setTimeout(() => {
+        const snapshot = drawSessionSnapshot.current;
+        if (snapshot !== null) {
+          layerPixelsRef.current = snapshot;
+          const active = layerCanvasesRef.current.get(activeLayerId);
+          if (active) {
+            active.pixelsRef = layerPixelsRef.current;
+            const ctx = active.canvas.getContext('2d');
+            if (ctx) {
+              ctx.clearRect(0, 0, data.width, data.height);
+              for (const [key, c] of Object.entries(snapshot)) {
+                const comma = key.indexOf(',');
+                ctx.fillStyle = c;
+                ctx.fillRect(parseInt(key.slice(0, comma), 10), parseInt(key.slice(comma + 1), 10), 1, 1);
+              }
+            }
+          }
+          recompositeMain();
+        }
+        clearPreview();
+        pickColorAt(px);
+        isDrawing.current = false;
+        lastPixel.current = null;
+        drawSessionSnapshot.current = null;
+        shapeStartRef.current = null;
+        longPressFiredRef.current = true;
+        longPressTimerRef.current = null;
+        pressOriginRef.current = null;
+      }, 500);
+    };
+
     if (isShapeTool(tool)) {
       onDrawStart?.();
       drawSessionSnapshot.current = { ...layerPixelsRef.current };
       isDrawing.current = true;
       shapeStartRef.current = px;
       drawPreview([px]);
+      scheduleLongPress();
       return;
     }
 
     onDrawStart?.();
     drawSessionSnapshot.current = { ...layerPixelsRef.current };
+    // Bind cache to mutable ref so the post-commit sync identity check (pixelsRef === layer.pixels) is true and skips redraw.
+    const activeEntry = layerCanvasesRef.current.get(activeLayerId);
+    if (activeEntry) activeEntry.pixelsRef = layerPixelsRef.current;
     isDrawing.current = true;
     lastPixel.current = px;
     paint([px]);
-  }, [data.layers, data.width, data.height, activeLayerId, tool, color, onInvisibleLayerAttempt, screenToCanvas, paint, onLayerChange, drawPreview, clearPreview, onDrawStart, onDrawEnd, onNavPointerDown, onNavPointerUp]);
+    scheduleLongPress();
+  }, [data.layers, data.width, data.height, activeLayerId, tool, color, onInvisibleLayerAttempt, pickColorAt, screenToCanvas, paint, onLayerChange, drawPreview, clearPreview, onDrawStart, onDrawEnd, onNavPointerDown, onNavPointerUp, recompositeMain, clearLongPress]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (onNavPointerMove(e.pointerId, e.clientX, e.clientY)) return;
     if (!isDrawing.current) return;
+    const origin = pressOriginRef.current;
+    if (origin) {
+      const dx = e.clientX - origin.sx;
+      const dy = e.clientY - origin.sy;
+      if (dx * dx + dy * dy > 36) clearLongPress();
+    }
     const px = screenToCanvas(e.clientX, e.clientY);
     if (isShapeTool(tool) && shapeStartRef.current) {
       drawPreview(getShapePixels(tool, shapeStartRef.current, px));
@@ -248,11 +397,20 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
     const last = lastPixel.current;
     paint(last ? bresenham(last.x, last.y, px.x, px.y) : [px]);
     lastPixel.current = px;
-  }, [onNavPointerMove, screenToCanvas, paint, tool, drawPreview]);
+  }, [onNavPointerMove, screenToCanvas, paint, tool, drawPreview, clearLongPress]);
 
   const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     wrapperRef.current?.releasePointerCapture(e.pointerId);
     onNavPointerUp(e.pointerId);
+    clearLongPress();
+
+    if (longPressFiredRef.current) {
+      longPressFiredRef.current = false;
+      isDrawing.current = false;
+      lastPixel.current = null;
+      drawSessionSnapshot.current = null;
+      return;
+    }
 
     const wasDrawing = isDrawing.current;
 
@@ -265,13 +423,15 @@ export function Canvas({ data, activeLayerId, tool, color, mirrorH, mirrorV, onL
       shapeStartRef.current = null;
       onDrawEnd?.();
     } else if (wasDrawing) {
+      // Commit pencil/eraser stroke once at the end. Offscreen + main canvas already reflect the mutation.
+      onLayerChange(activeLayerId, layerPixelsRef.current);
       onDrawEnd?.();
     }
 
     isDrawing.current = false;
     lastPixel.current = null;
     drawSessionSnapshot.current = null;
-  }, [tool, screenToCanvas, data.width, data.height, color, activeLayerId, onLayerChange, clearPreview, mirrorH, mirrorV, onDrawEnd, onNavPointerUp]);
+  }, [tool, screenToCanvas, data.width, data.height, color, activeLayerId, onLayerChange, clearPreview, mirrorH, mirrorV, onDrawEnd, onNavPointerUp, clearLongPress]);
 
   const cssSize = { width: displaySize.w, height: displaySize.h };
   const { x, y, scale, angle } = transform;

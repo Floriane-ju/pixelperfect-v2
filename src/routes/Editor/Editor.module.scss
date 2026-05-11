@@ -28,6 +28,16 @@
   border:$border-m-accent-1;
 }
 
+.leftSidebar {
+  display: flex;
+  flex-direction: column;
+  padding: $space-sm;
+  flex-shrink: 0;
+  background: $neutral-0;
+  box-shadow: 8px 8px 0 0 #{$accent-1-600};
+  border: $border-m-accent-1;
+}
+
 .rightSidebar {
   display: flex;
   flex-direction: column;
@@ -47,26 +57,13 @@
 }
 
 .colorWheelBtn {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: $btn-height;
   height: $btn-height;
-  border-radius: 50%;
   cursor: pointer;
-  background: conic-gradient(
-    hsl(0, 100%, 50%),
-    hsl(30, 100%, 50%),
-    hsl(60, 100%, 50%),
-    hsl(90, 100%, 50%),
-    hsl(120, 100%, 50%),
-    hsl(150, 100%, 50%),
-    hsl(180, 100%, 50%),
-    hsl(210, 100%, 50%),
-    hsl(240, 100%, 50%),
-    hsl(270, 100%, 50%),
-    hsl(300, 100%, 50%),
-    hsl(330, 100%, 50%),
-    hsl(360, 100%, 50%)
-  );
+  background: transparent;
   padding: 0;
   border: none;
   flex-shrink: 0;
@@ -91,6 +88,7 @@
   flex-direction: column;
   width: $btn-height;
   flex-shrink: 0;
+  gap:$space-xs;
 }
 
 .drawingColors {
@@ -100,8 +98,8 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  gap:$space-xs;
 }
-
 // ── Edit color panel (fixed, positioned at swatch level) ─────────────────────
 
 .editColorPanel {

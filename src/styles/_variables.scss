@@ -131,6 +131,11 @@ $shadow-selected:inset -2px -2px 0 0 #{$accent-2-400}, inset 2px 2px 0 0 #{$acce
 $shadow-selected-hover: inset -2px -2px 0 0 #{$accent-2-300}, inset 2px 2px 0 0 #{$accent-2-600};
 $shadow-selected-active: inset -2px -2px 0 0 #{$accent-2-300}, inset 2px 2px 0 0 #{$accent-2-600};
 
+// Rows (layer panel, list rows)
+$shadow-row-selected: inset 4px 4px 0 0 #{$accent-2-600}, inset -4px -4px 0 0 #{$accent-2-400};
+$color-row-selected-bg:   $accent-2-500;
+$color-row-selected-text: $accent-1-600;
+
 //Inner shadows interactive purple
 $inner-shadow-interactive-purple:inset 2px 2px 0 0 #{$accent-1-400};
 $inner-shadow-interactive-purple-hover:inset 2px 2px 0 0 #{$accent-1-300};
@@ -165,6 +170,7 @@ $border-s-accent-2:1px solid $accent-2-600;
 // ─────────────────────────────────────────────
 $z-dropdown: 100;
 $z-modal:    200;
+$z-popover:  250;
 $z-toast:    300;
 
 // ─────────────────────────────────────────────

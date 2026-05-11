@@ -56,7 +56,16 @@
 }
 
 .itemActive {
-  background: $accent-1-450;
+  background: $color-row-selected-bg;
+  box-shadow: $shadow-row-selected;
+
+  &:hover {
+    background: $color-row-selected-bg;
+  }
+
+  .layerName {
+    color: $color-row-selected-text;
+  }
 }
 
 .itemDragging {
