@@ -30,6 +30,7 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
   const [customWidth, setCustomWidth] = useState('32');
   const [customHeight, setCustomHeight] = useState('32');
   const [isCreating, setIsCreating] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const nameRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -56,9 +57,11 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
     }
 
     setIsCreating(true);
+    setErrorMsg('');
     try {
       await onConfirm(trimmed, width, height);
-    } finally {
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Erreur lors de la création');
       setIsCreating(false);
     }
   };
@@ -146,6 +149,10 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
             </div>
           )}
         </div>
+
+        {errorMsg && (
+          <div className={styles.error} role="alert">{errorMsg}</div>
+        )}
 
         <div className={styles.actions}>
           <Button variant="secondary" size="sm" onClick={onClose} disabled={isCreating}>

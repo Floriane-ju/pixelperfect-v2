@@ -115,6 +115,13 @@
   font-size: $font-size-xs;
 }
 
+.error {
+  color: $color-danger;
+  font-size: $font-size-sm;
+  background: rgba($color-danger, $opacity-bg-subtle);
+  padding: $space-s;
+}
+
 .actions {
   display: flex;
   gap: $space-s;

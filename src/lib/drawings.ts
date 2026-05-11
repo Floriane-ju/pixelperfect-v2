@@ -114,6 +114,10 @@ export async function fetchDrawing(id: string): Promise<DrawingRow> {
 }
 
 export async function createDrawing(title: string, width: number, height: number): Promise<DrawingRow> {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!userData.user) throw new Error('Utilisateur non authentifié');
+
   const layer: PixelLayer = {
     id: crypto.randomUUID(),
     name: 'Calque 1',
@@ -123,14 +127,15 @@ export async function createDrawing(title: string, width: number, height: number
   };
   const drawingData: DrawingData = { width, height, layers: [layer] };
 
-  const { data, error } = await supabase
+  const id = crypto.randomUUID();
+  const { error } = await supabase
     .from('drawings')
-    .insert({ title, data: drawingData })
-    .select('id, title, data, created_at, updated_at, group')
-    .single();
+    .insert({ id, title, data: drawingData });
 
-  if (error) throw error;
-  return parseDrawingRow(data);
+  if (error) {
+    throw new Error(`${error.message}${error.details ? ` — ${error.details}` : ''}${error.hint ? ` (${error.hint})` : ''}`);
+  }
+  return fetchDrawing(id);
 }
 
 export async function updateDrawingData(id: string, drawingData: DrawingData): Promise<void> {
