@@ -186,7 +186,7 @@ function renderIcon(icon: IconName): React.ReactNode {
     case 'reference':
       return (
         <>
-          <path d="M0 0L7 0L7 1L5 1L5 2L6 2L6 3L2 3L2 1L1 1L1 7L2 7L2 5L6 5L6 7L7 7L7 1L8 1L8 8L0 8z"/>
+          <path d="M1 1L7 1L7 7L1 7ZM2 2L2 5L3 5L3 6L6 6L6 5L5 5L5 4L6 4L6 2ZM3 4L4 4L4 5L3 5ZM4 3L5 3L5 4L4 4Z"/>
         </>
       );
     case 'fill':
