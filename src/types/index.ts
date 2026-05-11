@@ -21,4 +21,5 @@ export interface DrawingRow {
   created_at: string;
   updated_at: string;
   group: string | null;
+  collaborator_count: number;
 }

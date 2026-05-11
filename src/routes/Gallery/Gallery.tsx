@@ -6,6 +6,7 @@ import { GroupCard } from './GroupCard/GroupCard';
 import { GroupModal } from './GroupModal/GroupModal';
 import { NewDrawingModal } from './NewDrawingModal/NewDrawingModal';
 import { NewGroupModal } from './NewGroupModal/NewGroupModal';
+import { InviteCollaboratorModal } from './InviteCollaboratorModal/InviteCollaboratorModal';
 import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup, moveToGroup, renameGroup } from '@/lib/drawings';
 import { signOut } from '@/lib/auth';
 import { groupDrawings } from '@/lib/groupDrawings';
@@ -23,6 +24,7 @@ export function Gallery() {
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [pendingGroup, setPendingGroup] = useState<{ sourceId: string; targetId: string } | null>(null);
   const [isContentDragOver, setIsContentDragOver] = useState(false);
+  const [inviteTarget, setInviteTarget] = useState<DrawingRow | null>(null);
 
   useEffect(() => {
     setStatus('loading');
@@ -185,6 +187,7 @@ export function Gallery() {
               onClick={() => navigate(`/editor/${d.id}`)}
               onRename={(title) => handleRename(d.id, title)}
               onDelete={() => handleDelete(d.id)}
+              onInvite={() => setInviteTarget(d)}
               onDropDrawing={(sourceId) => setPendingGroup({ sourceId, targetId: d.id })}
             />
           ))}
@@ -207,6 +210,15 @@ export function Gallery() {
           onRename={handleRename}
           onDelete={handleDelete}
           onRemoveFromGroup={handleRemoveFromGroup}
+          onInvite={(d) => setInviteTarget(d)}
+        />
+      )}
+
+      {inviteTarget && (
+        <InviteCollaboratorModal
+          drawingId={inviteTarget.id}
+          drawingTitle={inviteTarget.title}
+          onClose={() => setInviteTarget(null)}
         />
       )}
     </main>

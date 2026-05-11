@@ -17,6 +17,7 @@ const makeRow = (data: DrawingData): DrawingRow => ({
   created_at: '',
   updated_at: '',
   group: null,
+  collaborator_count: 1,
 });
 
 function setup(initial: DrawingData) {

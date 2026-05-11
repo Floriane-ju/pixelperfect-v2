@@ -1,0 +1,44 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: $z-modal;
+}
+
+.modal {
+  background: $color-surface;
+  padding: $space-l;
+  max-width: 360px;
+  width: calc(100% - #{$space-2xl});
+  display: flex;
+  flex-direction: column;
+  gap: $space-l;
+}
+
+.heading {
+  margin: 0;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text;
+}
+
+.actions {
+  display: flex;
+  gap: $space-s;
+  justify-content: flex-end;
+}
+
+.error {
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $color-danger;
+}
+
+.success {
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $color-text;
+}

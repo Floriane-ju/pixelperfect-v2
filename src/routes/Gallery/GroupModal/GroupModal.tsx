@@ -14,6 +14,7 @@ interface Props {
   onRename?: (id: string, title: string) => void;
   onDelete?: (id: string) => void;
   onRemoveFromGroup?: (id: string) => void;
+  onInvite?: (drawing: DrawingRow) => void;
 }
 
 export function GroupModal({
@@ -24,6 +25,7 @@ export function GroupModal({
   onRename,
   onDelete,
   onRemoveFromGroup,
+  onInvite,
 }: Props) {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isOverlayDragOver, setIsOverlayDragOver] = useState(false);
@@ -109,6 +111,7 @@ export function GroupModal({
               onRename={onRename ? (title) => onRename(d.id, title) : undefined}
               onDelete={onDelete ? () => onDelete(d.id) : undefined}
               onRemoveFromGroup={onRemoveFromGroup ? () => onRemoveFromGroup(d.id) : undefined}
+              onInvite={onInvite ? () => onInvite(d) : undefined}
             />
           ))}
           {drawings.length === 0 && (

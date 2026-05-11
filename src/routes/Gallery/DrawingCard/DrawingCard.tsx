@@ -4,6 +4,7 @@ import type { DrawingRow } from '@/types';
 import { DrawingThumbnail } from '@/routes/Gallery/DrawingThumbnail/DrawingThumbnail';
 import { Menu } from '@/routes/Gallery/Menu/Menu';
 import type { MenuItem } from '@/routes/Gallery/Menu/Menu';
+import { CollaboratorsButton } from './CollaboratorsButton';
 import styles from './DrawingCard.module.scss';
 
 interface Props {
@@ -12,12 +13,13 @@ interface Props {
   onRename?: (newTitle: string) => void;
   onDelete?: () => void;
   onRemoveFromGroup?: () => void;
+  onInvite?: () => void;
   onDropDrawing?: (sourceId: string) => void;
 }
 
 type Mode = 'default' | 'renaming' | 'confirming-delete';
 
-export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFromGroup, onDropDrawing }: Props) {
+export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFromGroup, onInvite, onDropDrawing }: Props) {
   const [mode, setMode] = useState<Mode>('default');
   const [renameValue, setRenameValue] = useState(drawing.title);
   const [isDragging, setIsDragging] = useState(false);
@@ -38,6 +40,9 @@ export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFrom
       : []),
     ...(onRemoveFromGroup
       ? [{ label: 'Retirer du groupe', icon: 'back' as const, onClick: () => onRemoveFromGroup() }]
+      : []),
+    ...(onInvite
+      ? [{ label: 'Inviter…', icon: 'add' as const, onClick: () => onInvite() }]
       : []),
     ...(onDelete
       ? [{ label: 'Supprimer', icon: 'trash' as const, variant: 'danger' as const, onClick: () => setMode('confirming-delete') }]
@@ -119,6 +124,9 @@ export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFrom
               />
             ) : (
               <span className={styles.title}>{drawing.title}</span>
+            )}
+            {mode === 'default' && drawing.collaborator_count >= 2 && (
+              <CollaboratorsButton drawingId={drawing.id} count={drawing.collaborator_count} />
             )}
             {menuItems.length > 0 && mode === 'default' && (
               <Menu items={menuItems} ariaLabel="Actions" />

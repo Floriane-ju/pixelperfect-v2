@@ -2,6 +2,7 @@ import styles from './Icons.module.scss';
 
 export type IconName =
   | 'pen'
+  | 'collaborators'
   | 'more'
   | 'circle'
   | 'rect'
@@ -42,6 +43,12 @@ function renderIcon(icon: IconName): React.ReactNode {
       return (
         <>
           <path d="M1 4L2 4L2 6L4 6L4 7L1 7zM2 3L3 3L3 4L2 4zM3 2L4 2L4 3L3 3zM4 1L5 1L5 2L4 2zM4 5L5 5L5 6L4 6zM5 2L6 2L6 3L5 3zM5 4L6 4L6 5L5 5zM6 3L7 3L7 4L6 4z"/>
+        </>
+      );
+    case 'collaborators':
+      return (
+        <>
+          <path d="M5 4L5 6L3 6L3 4ZM6 3L8 3L8 5L6 5ZM0 5L0 3L2 3L2 5ZM3 1L5 1L5 3L3 3ZM2 7L6 7L6 8L2 8ZM6 6L8 6L8 7L6 7ZM2 6L2 7L0 7L0 6Z"/>
         </>
       );
     case 'more':

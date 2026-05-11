@@ -24,6 +24,7 @@ const row = (d: DrawingData): DrawingRow => ({
   created_at: '',
   updated_at: '',
   group: null,
+  collaborator_count: 1,
 });
 
 const QUEUE_KEY = 'pp_offline_d1';

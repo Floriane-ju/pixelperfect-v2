@@ -45,21 +45,36 @@ function parseDrawingData(raw: unknown): DrawingData {
   return { width, height, layers: layers.map(parsePixelLayer) };
 }
 
+function parseCollaboratorCount(raw: unknown): number {
+  if (!Array.isArray(raw) || raw.length === 0) return 0;
+  const first = raw[0];
+  if (!isRecord(first) || typeof first.count !== 'number') return 0;
+  return first.count;
+}
+
 function parseDrawingRow(raw: unknown): DrawingRow {
   if (!isRecord(raw)) throw new Error('Invalid DrawingRow: row must be object');
-  const { id, title, data, created_at, updated_at, group } = raw;
+  const { id, title, data, created_at, updated_at, group, drawing_users } = raw;
   if (typeof id !== 'string') throw new Error('Invalid DrawingRow: id');
   if (typeof title !== 'string') throw new Error('Invalid DrawingRow: title');
   if (typeof created_at !== 'string') throw new Error('Invalid DrawingRow: created_at');
   if (typeof updated_at !== 'string') throw new Error('Invalid DrawingRow: updated_at');
   if (group !== null && typeof group !== 'string') throw new Error('Invalid DrawingRow: group');
-  return { id, title, data: parseDrawingData(data), created_at, updated_at, group };
+  return {
+    id,
+    title,
+    data: parseDrawingData(data),
+    created_at,
+    updated_at,
+    group,
+    collaborator_count: parseCollaboratorCount(drawing_users),
+  };
 }
 
 export async function fetchDrawings(): Promise<DrawingRow[]> {
   const { data, error } = await supabase
     .from('drawings')
-    .select('id, title, data, created_at, updated_at, group')
+    .select('id, title, data, created_at, updated_at, group, drawing_users(count)')
     .order('updated_at', { ascending: false });
 
   if (error) throw error;
@@ -106,7 +121,7 @@ export async function renameGroup(oldName: string, newName: string): Promise<voi
 export async function fetchDrawing(id: string): Promise<DrawingRow> {
   const { data, error } = await supabase
     .from('drawings')
-    .select('id, title, data, created_at, updated_at, group')
+    .select('id, title, data, created_at, updated_at, group, drawing_users(count)')
     .eq('id', id)
     .single();
   if (error) throw error;
@@ -144,4 +159,65 @@ export async function updateDrawingData(id: string, drawingData: DrawingData): P
     .update({ data: drawingData, updated_at: new Date().toISOString() })
     .eq('id', id);
   if (error) throw error;
+}
+
+export async function listCollaborators(drawingId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('drawing_users')
+    .select('user_id')
+    .eq('drawing_id', drawingId);
+  if (error) throw error;
+  return (data ?? []).map((row) => {
+    if (!isRecord(row) || typeof row.user_id !== 'string') {
+      throw new Error('Invalid collaborator row');
+    }
+    return row.user_id;
+  });
+}
+
+export async function addCollaborator(drawingId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('drawing_users')
+    .insert({ drawing_id: drawingId, user_id: userId });
+  if (error) throw error;
+}
+
+export async function removeCollaborator(drawingId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('drawing_users')
+    .delete()
+    .eq('drawing_id', drawingId)
+    .eq('user_id', userId);
+  if (error) throw error;
+}
+
+export interface CollaboratorInfo {
+  user_id: string;
+  email: string;
+}
+
+export async function listCollaboratorsWithEmail(drawingId: string): Promise<CollaboratorInfo[]> {
+  const { data, error } = await supabase.rpc('list_collaborators', { d_id: drawingId });
+  if (error) throw error;
+  if (!Array.isArray(data)) throw new Error('Réponse invalide du serveur.');
+  return data.map((row) => {
+    if (!isRecord(row) || typeof row.user_id !== 'string' || typeof row.email !== 'string') {
+      throw new Error('Invalid collaborator row');
+    }
+    return { user_id: row.user_id, email: row.email };
+  });
+}
+
+export async function addCollaboratorByEmail(drawingId: string, email: string): Promise<string> {
+  const { data, error } = await supabase.rpc('add_collaborator_by_email', {
+    d_id: drawingId,
+    email_in: email,
+  });
+  if (error) {
+    if (error.code === 'P0002') throw new Error("Aucun utilisateur trouvé avec cet email.");
+    if (error.code === '42501') throw new Error("Action non autorisée.");
+    throw new Error(error.message);
+  }
+  if (typeof data !== 'string') throw new Error('Réponse invalide du serveur.');
+  return data;
 }
