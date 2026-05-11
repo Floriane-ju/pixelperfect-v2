@@ -47,6 +47,8 @@ export interface EditorContextValue {
   onRefImageCapture: () => void;
   canvasDisplaySize: { w: number; h: number };
   onCopySvg: () => void;
+  showGrid: boolean;
+  onShowGridToggle: () => void;
 }
 
 const EditorContext = createContext<EditorContextValue | null>(null);

@@ -4,6 +4,16 @@ import { bresenham, expandMirror, floodFill, getShapePixels } from '@/routes/Edi
 import { isShapeTool, applyShape } from './shapes';
 import type { Tool } from './shapes';
 import { useCanvasNavigation } from './useCanvasNavigation';
+import { useCheckerboard } from './useCheckerboard';
+import { useHighlightOverlay } from './useHighlightOverlay';
+import { useSelectionPreview } from './useSelectionPreview';
+import { useResponsiveDisplaySize } from './useResponsiveDisplaySize';
+import { useLayerComposite } from './useLayerComposite';
+import { computeSelectionRect } from './selectionRect';
+import { stampBrush, restoreLayerFromSnapshot, pickColorAt as pickColorFrom } from './drawUtils';
+import { CanvasStack } from './CanvasStack';
+import { PickerIndicator } from './PickerIndicator';
+import type { UseSelectionApi } from '@/routes/Editor/hooks/useSelection';
 import styles from './Canvas.module.scss';
 
 export type { Tool };
@@ -37,38 +47,47 @@ interface CanvasProps {
   hoveredColor?: HexColor | null;
   refImage?: RefImageState | null;
   onDisplaySizeChange?: (size: { w: number; h: number }) => void;
+  showGrid?: boolean;
+  selection?: UseSelectionApi;
 }
 
-function stampBrush(pixels: Array<{ x: number; y: number }>, size: number): Array<{ x: number; y: number }> {
-  if (size <= 1) return pixels;
-  const offset = Math.floor((size - 1) / 2);
-  const out: Array<{ x: number; y: number }> = [];
-  for (const { x, y } of pixels) {
-    for (let dy = 0; dy < size; dy++) {
-      for (let dx = 0; dx < size; dx++) {
-        out.push({ x: x + dx - offset, y: y + dy - offset });
-      }
-    }
-  }
-  return out;
-}
-
-export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirrorH, mirrorV, onLayerChange, onInvisibleLayerAttempt, onDrawStart, onDrawEnd, onPickColor, hoveredColor, refImage, onDisplaySizeChange }: CanvasProps) {
+export function Canvas({
+  data,
+  activeLayerId,
+  tool,
+  color,
+  brushSize = 1,
+  mirrorH,
+  mirrorV,
+  onLayerChange,
+  onInvisibleLayerAttempt,
+  onDrawStart,
+  onDrawEnd,
+  onPickColor,
+  hoveredColor,
+  refImage,
+  onDisplaySizeChange,
+  showGrid = false,
+  selection,
+}: CanvasProps) {
   const checkerRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const previewRef = useRef<HTMLCanvasElement>(null);
   const highlightRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  const displaySizeRef = useRef({ w: 256, h: 256 });
-  const [displaySize, setDisplaySize] = useState({ w: 256, h: 256 });
   const [pickerIndicator, setPickerIndicator] = useState<{ x: number; y: number } | null>(null);
 
+  const { displaySize, displaySizeRef } = useResponsiveDisplaySize(wrapperRef, data.width, data.height, onDisplaySizeChange);
   const { transform, transformRef, onNavPointerDown, onNavPointerMove, onNavPointerUp } = useCanvasNavigation(wrapperRef);
+  const { layerCanvasesRef, layerPixelsRef, recompositeMain } = useLayerComposite({ mainCanvasRef: canvasRef, data, activeLayerId });
+
+  useCheckerboard(checkerRef, data.width, data.height);
+  useHighlightOverlay({ canvasRef: highlightRef, hoveredColor, data, displaySize });
+  useSelectionPreview({ canvasRef: previewRef, state: selection?.state, dataWidth: data.width, dataHeight: data.height });
 
   const isDrawing = useRef(false);
   const lastPixel = useRef<{ x: number; y: number } | null>(null);
-  const layerPixelsRef = useRef<Record<string, HexColor>>({});
   const drawSessionSnapshot = useRef<Record<string, HexColor> | null>(null);
   const shapeStartRef = useRef<{ x: number; y: number } | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
@@ -91,138 +110,28 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
   }, []);
 
   const pickColorAt = useCallback((px: { x: number; y: number }) => {
-    if (px.x < 0 || px.y < 0 || px.x >= data.width || px.y >= data.height) return;
-    const key = `${px.x},${px.y}`;
-    for (let i = data.layers.length - 1; i >= 0; i--) {
-      const layer = data.layers[i];
-      if (!layer || !layer.visible) continue;
-      const picked = layer.pixels[key];
-      if (picked) {
-        onPickColor?.(picked);
-        return;
-      }
-    }
-  }, [data.layers, data.width, data.height, onPickColor]);
+    const c = pickColorFrom(data, px);
+    if (c) onPickColor?.(c);
+  }, [data, onPickColor]);
 
-  // Per-layer offscreen cache. Each layer's pixel map is rasterised once into its own canvas.
-  // Composite step just stacks the cached canvases. Strokes mutate the active layer's offscreen incrementally.
-  const layerCanvasesRef = useRef<Map<string, { canvas: HTMLCanvasElement; pixelsRef: Record<string, HexColor> }>>(new Map());
-
-  // Checkerboard (redrawn only when dimensions change)
-  useEffect(() => {
-    const canvas = checkerRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    for (let y = 0; y < data.height; y++) {
-      for (let x = 0; x < data.width; x++) {
-        ctx.fillStyle = (x + y) % 2 === 0 ? '#747474' : '#979797';
-        ctx.fillRect(x, y, 1, 1);
-      }
-    }
-  }, [data.width, data.height]);
-
-  // Sync active layer pixels into ref to avoid stale closures
-  useEffect(() => {
-    const layer = data.layers.find(l => l.id === activeLayerId);
-    layerPixelsRef.current = layer ? { ...layer.pixels } : {};
-  }, [data, activeLayerId]);
-
-  const recompositeMain = useCallback(() => {
-    const ctx = canvasRef.current?.getContext('2d');
-    if (!ctx) return;
-    ctx.clearRect(0, 0, data.width, data.height);
-    for (const layer of data.layers) {
-      if (!layer.visible) continue;
-      const entry = layerCanvasesRef.current.get(layer.id);
-      if (!entry) continue;
-      ctx.globalAlpha = layer.opacity;
-      ctx.drawImage(entry.canvas, 0, 0);
-    }
-    ctx.globalAlpha = 1;
-  }, [data]);
-
-  // Sync per-layer offscreen cache and composite main canvas.
-  // Each layer is rasterised only when its pixels reference changes.
-  useEffect(() => {
-    const cache = layerCanvasesRef.current;
-    const seen = new Set<string>();
-    for (const layer of data.layers) {
-      seen.add(layer.id);
-      let entry = cache.get(layer.id);
-      const needsResize = entry && (entry.canvas.width !== data.width || entry.canvas.height !== data.height);
-      if (entry && entry.pixelsRef === layer.pixels && !needsResize) continue;
-      if (!entry) {
-        const c = document.createElement('canvas');
-        c.width = data.width;
-        c.height = data.height;
-        entry = { canvas: c, pixelsRef: layer.pixels };
-        cache.set(layer.id, entry);
-      } else if (needsResize) {
-        entry.canvas.width = data.width;
-        entry.canvas.height = data.height;
-      }
-      const ctx = entry.canvas.getContext('2d');
-      if (!ctx) continue;
-      ctx.clearRect(0, 0, data.width, data.height);
-      for (const [key, c] of Object.entries(layer.pixels)) {
-        const comma = key.indexOf(',');
-        ctx.fillStyle = c;
-        ctx.fillRect(parseInt(key.slice(0, comma), 10), parseInt(key.slice(comma + 1), 10), 1, 1);
-      }
-      entry.pixelsRef = layer.pixels;
-    }
-    for (const id of Array.from(cache.keys())) {
-      if (!seen.has(id)) cache.delete(id);
+  const restoreDrawSession = useCallback(() => {
+    const snapshot = drawSessionSnapshot.current;
+    if (!snapshot) return;
+    layerPixelsRef.current = snapshot;
+    const active = layerCanvasesRef.current.get(activeLayerId);
+    if (active) {
+      active.pixelsRef = layerPixelsRef.current;
+      restoreLayerFromSnapshot(snapshot, active.canvas, data.width, data.height);
     }
     recompositeMain();
-  }, [data, recompositeMain]);
+  }, [activeLayerId, data.width, data.height, layerCanvasesRef, layerPixelsRef, recompositeMain]);
 
-  // Highlight pixels matching hoveredColor (circle 40% of pixel size)
+  // Listen to data prop change to keep layerPixelsRef in sync with active layer.
   useEffect(() => {
-    const canvas = highlightRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (!hoveredColor) return;
-    const pxSize = displaySize.w / data.width;
-    const radius = pxSize * 0.1;
-    const r = parseInt(hoveredColor.slice(1, 3), 16) / 255;
-    const g = parseInt(hoveredColor.slice(3, 5), 16) / 255;
-    const b = parseInt(hoveredColor.slice(5, 7), 16) / 255;
-    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-    ctx.fillStyle = lum > 0.5 ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)';
-    for (const layer of data.layers) {
-      if (!layer.visible) continue;
-      for (const [key, c] of Object.entries(layer.pixels)) {
-        if (c !== hoveredColor) continue;
-        const comma = key.indexOf(',');
-        const px = parseInt(key.slice(0, comma), 10);
-        const py = parseInt(key.slice(comma + 1), 10);
-        ctx.beginPath();
-        ctx.arc((px + 0.5) * pxSize, (py + 0.5) * pxSize, radius, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-  }, [hoveredColor, data, displaySize]);
-
-  // Responsive display size
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-    const observer = new ResizeObserver(entries => {
-      const rect = entries[0]?.contentRect;
-      if (!rect) return;
-      const s = Math.min((rect.width * 0.9) / data.width, (rect.height * 0.9) / data.height);
-      const ds = { w: Math.floor(data.width * s), h: Math.floor(data.height * s) };
-      displaySizeRef.current = ds;
-      setDisplaySize(ds);
-      onDisplaySizeChange?.(ds);
-    });
-    observer.observe(wrapper);
-    return () => observer.disconnect();
-  }, [data.width, data.height, onDisplaySizeChange]);
+    if (isDrawing.current) return;
+    const layer = data.layers.find(l => l.id === activeLayerId);
+    layerPixelsRef.current = layer ? { ...layer.pixels } : {};
+  }, [data, activeLayerId, layerPixelsRef]);
 
   const screenToCanvas = useCallback((sx: number, sy: number): { x: number; y: number } => {
     const wr = wrapperRef.current?.getBoundingClientRect();
@@ -238,12 +147,10 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
       x: Math.floor((usx + ds.w / 2) * (data.width / ds.w)),
       y: Math.floor((usy + ds.h / 2) * (data.height / ds.h)),
     };
-  }, [data.width, data.height, transformRef]);
+  }, [data.width, data.height, displaySizeRef, transformRef]);
 
   const drawPreview = useCallback((pts: Array<{ x: number; y: number }>) => {
-    const canvas = previewRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = previewRef.current?.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, data.width, data.height);
     ctx.fillStyle = color;
@@ -276,9 +183,31 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
         changed = true;
       }
     }
-    if (!changed) return;
-    recompositeMain();
-  }, [tool, color, brushSize, activeLayerId, data.width, data.height, mirrorH, mirrorV, recompositeMain]);
+    if (changed) recompositeMain();
+  }, [tool, color, brushSize, activeLayerId, data.width, data.height, mirrorH, mirrorV, layerCanvasesRef, layerPixelsRef, recompositeMain]);
+
+  const schedulePipetteLongPress = useCallback((sx: number, sy: number, canvasPx: { x: number; y: number }) => {
+    longPressFiredRef.current = false;
+    pressOriginRef.current = { sx, sy };
+    indicatorTimerRef.current = window.setTimeout(() => {
+      const wr = wrapperRef.current?.getBoundingClientRect();
+      if (wr) setPickerIndicator({ x: sx - wr.left, y: sy - wr.top });
+      indicatorTimerRef.current = null;
+    }, PIPETTE_INDICATOR_DELAY_MS);
+    longPressTimerRef.current = window.setTimeout(() => {
+      restoreDrawSession();
+      clearPreview();
+      pickColorAt(canvasPx);
+      isDrawing.current = false;
+      lastPixel.current = null;
+      drawSessionSnapshot.current = null;
+      shapeStartRef.current = null;
+      longPressFiredRef.current = true;
+      longPressTimerRef.current = null;
+      pressOriginRef.current = null;
+      setPickerIndicator(null);
+    }, PIPETTE_HOLD_MS);
+  }, [clearPreview, pickColorAt, restoreDrawSession]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     wrapperRef.current?.setPointerCapture(e.pointerId);
@@ -286,23 +215,7 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
 
     if (navResult === 'cancel') {
       clearLongPress();
-      if (isDrawing.current && drawSessionSnapshot.current !== null) {
-        layerPixelsRef.current = drawSessionSnapshot.current;
-        const active = layerCanvasesRef.current.get(activeLayerId);
-        if (active) {
-          active.pixelsRef = layerPixelsRef.current;
-          const ctx = active.canvas.getContext('2d');
-          if (ctx) {
-            ctx.clearRect(0, 0, data.width, data.height);
-            for (const [key, c] of Object.entries(drawSessionSnapshot.current)) {
-              const comma = key.indexOf(',');
-              ctx.fillStyle = c;
-              ctx.fillRect(parseInt(key.slice(0, comma), 10), parseInt(key.slice(comma + 1), 10), 1, 1);
-            }
-          }
-        }
-        recompositeMain();
-      }
+      if (isDrawing.current) restoreDrawSession();
       clearPreview();
       shapeStartRef.current = null;
       isDrawing.current = false;
@@ -318,6 +231,17 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
 
     if (tool === 'eyedropper') {
       pickColorAt(px);
+      return;
+    }
+
+    if (tool === 'select' && selection) {
+      if (selection.state.kind === 'floating') {
+        if (selection.isInsideFloating(px)) selection.startMove(px);
+        else { selection.commit(); selection.startDefining(px); }
+      } else {
+        selection.startDefining(px);
+      }
+      isDrawing.current = true;
       return;
     }
 
@@ -337,68 +261,25 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
       return;
     }
 
-    const scheduleLongPress = () => {
-      longPressFiredRef.current = false;
-      pressOriginRef.current = { sx: e.clientX, sy: e.clientY };
-      const sx = e.clientX;
-      const sy = e.clientY;
-      indicatorTimerRef.current = window.setTimeout(() => {
-        const wr = wrapperRef.current?.getBoundingClientRect();
-        if (wr) setPickerIndicator({ x: sx - wr.left, y: sy - wr.top });
-        indicatorTimerRef.current = null;
-      }, PIPETTE_INDICATOR_DELAY_MS);
-      longPressTimerRef.current = window.setTimeout(() => {
-        const snapshot = drawSessionSnapshot.current;
-        if (snapshot !== null) {
-          layerPixelsRef.current = snapshot;
-          const active = layerCanvasesRef.current.get(activeLayerId);
-          if (active) {
-            active.pixelsRef = layerPixelsRef.current;
-            const ctx = active.canvas.getContext('2d');
-            if (ctx) {
-              ctx.clearRect(0, 0, data.width, data.height);
-              for (const [key, c] of Object.entries(snapshot)) {
-                const comma = key.indexOf(',');
-                ctx.fillStyle = c;
-                ctx.fillRect(parseInt(key.slice(0, comma), 10), parseInt(key.slice(comma + 1), 10), 1, 1);
-              }
-            }
-          }
-          recompositeMain();
-        }
-        clearPreview();
-        pickColorAt(px);
-        isDrawing.current = false;
-        lastPixel.current = null;
-        drawSessionSnapshot.current = null;
-        shapeStartRef.current = null;
-        longPressFiredRef.current = true;
-        longPressTimerRef.current = null;
-        pressOriginRef.current = null;
-        setPickerIndicator(null);
-      }, PIPETTE_HOLD_MS);
-    };
-
     if (isShapeTool(tool)) {
       onDrawStart?.();
       drawSessionSnapshot.current = { ...layerPixelsRef.current };
       isDrawing.current = true;
       shapeStartRef.current = px;
       drawPreview([px]);
-      scheduleLongPress();
+      schedulePipetteLongPress(e.clientX, e.clientY, px);
       return;
     }
 
     onDrawStart?.();
     drawSessionSnapshot.current = { ...layerPixelsRef.current };
-    // Bind cache to mutable ref so the post-commit sync identity check (pixelsRef === layer.pixels) is true and skips redraw.
     const activeEntry = layerCanvasesRef.current.get(activeLayerId);
     if (activeEntry) activeEntry.pixelsRef = layerPixelsRef.current;
     isDrawing.current = true;
     lastPixel.current = px;
     pendingStartRef.current = px;
-    scheduleLongPress();
-  }, [data.layers, data.width, data.height, activeLayerId, tool, color, onInvisibleLayerAttempt, pickColorAt, screenToCanvas, onLayerChange, drawPreview, clearPreview, onDrawStart, onDrawEnd, onNavPointerDown, onNavPointerUp, recompositeMain, clearLongPress]);
+    schedulePipetteLongPress(e.clientX, e.clientY, px);
+  }, [data.layers, data.width, data.height, activeLayerId, tool, color, layerCanvasesRef, layerPixelsRef, onInvisibleLayerAttempt, pickColorAt, screenToCanvas, onLayerChange, drawPreview, clearPreview, onDrawStart, onDrawEnd, onNavPointerDown, onNavPointerUp, restoreDrawSession, clearLongPress, schedulePipetteLongPress, selection]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (onNavPointerMove(e.pointerId, e.clientX, e.clientY)) return;
@@ -410,6 +291,11 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
       if (dx * dx + dy * dy > 36) clearLongPress();
     }
     const px = screenToCanvas(e.clientX, e.clientY);
+    if (tool === 'select' && selection) {
+      if (selection.state.kind === 'defining') selection.updateDefining(px);
+      else if (selection.state.kind === 'floating') selection.moveTo(px);
+      return;
+    }
     if (isShapeTool(tool) && shapeStartRef.current) {
       drawPreview(getShapePixels(tool, shapeStartRef.current, px));
       return;
@@ -423,7 +309,7 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
       paint(last ? bresenham(last.x, last.y, px.x, px.y) : [px]);
     }
     lastPixel.current = px;
-  }, [onNavPointerMove, screenToCanvas, paint, tool, drawPreview, clearLongPress]);
+  }, [onNavPointerMove, screenToCanvas, paint, tool, drawPreview, clearLongPress, selection]);
 
   const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     wrapperRef.current?.releasePointerCapture(e.pointerId);
@@ -439,8 +325,17 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
       return;
     }
 
-    const wasDrawing = isDrawing.current;
+    if (tool === 'select' && selection) {
+      if (selection.state.kind === 'defining') selection.finishDefining();
+      else if (selection.state.kind === 'floating') selection.endMove();
+      isDrawing.current = false;
+      lastPixel.current = null;
+      drawSessionSnapshot.current = null;
+      pendingStartRef.current = null;
+      return;
+    }
 
+    const wasDrawing = isDrawing.current;
     if (wasDrawing && isShapeTool(tool) && shapeStartRef.current) {
       const endPx = screenToCanvas(e.clientX, e.clientY);
       const next = applyShape(tool, shapeStartRef.current, endPx, layerPixelsRef.current, color, data.width, data.height, mirrorH, mirrorV);
@@ -459,10 +354,11 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
     lastPixel.current = null;
     drawSessionSnapshot.current = null;
     pendingStartRef.current = null;
-  }, [tool, screenToCanvas, data.width, data.height, color, activeLayerId, onLayerChange, paint, clearPreview, mirrorH, mirrorV, onDrawEnd, onNavPointerUp, clearLongPress]);
+  }, [tool, screenToCanvas, data.width, data.height, color, activeLayerId, layerPixelsRef, onLayerChange, paint, clearPreview, mirrorH, mirrorV, onDrawEnd, onNavPointerUp, clearLongPress, selection]);
 
   const cssSize = { width: displaySize.w, height: displaySize.h };
   const { x, y, scale, angle } = transform;
+  const selectionRect = computeSelectionRect(selection?.state);
 
   return (
     <div
@@ -477,39 +373,20 @@ export function Canvas({ data, activeLayerId, tool, color, brushSize = 1, mirror
         className={styles.stack}
         style={{ ...cssSize, transform: `translate(${x}px,${y}px) rotate(${angle}deg) scale(${scale})` }}
       >
-        <canvas ref={checkerRef} className={styles.checker} width={data.width} height={data.height} />
-        {refImage && (
-          <img
-            src={refImage.src}
-            alt="Image de référence"
-            draggable={false}
-            style={{
-              position: 'absolute',
-              left: refImage.x,
-              top: refImage.y,
-              width: refImage.naturalWidth * refImage.scale,
-              height: 'auto',
-              opacity: refImage.opacity,
-              pointerEvents: 'none',
-            }}
-          />
-        )}
-        <canvas ref={canvasRef} className={styles.canvas} width={data.width} height={data.height} />
-        <canvas ref={previewRef} className={styles.preview} width={data.width} height={data.height} />
-        <canvas ref={highlightRef} className={styles.highlight} width={displaySize.w} height={displaySize.h} />
+        <CanvasStack
+          checkerRef={checkerRef}
+          canvasRef={canvasRef}
+          previewRef={previewRef}
+          highlightRef={highlightRef}
+          dataWidth={data.width}
+          dataHeight={data.height}
+          displaySize={displaySize}
+          refImage={refImage}
+          showGrid={showGrid}
+          selectionRect={selectionRect}
+        />
       </div>
-      {pickerIndicator && (
-        <svg
-          key={`${pickerIndicator.x},${pickerIndicator.y}`}
-          className={styles.pickerIndicator}
-          style={{ left: pickerIndicator.x, top: pickerIndicator.y }}
-          viewBox="0 0 40 40"
-          aria-hidden="true"
-        >
-          <circle className={styles.pickerIndicatorBg} cx="20" cy="20" r="18" />
-          <circle className={styles.pickerIndicatorFg} cx="20" cy="20" r="18" />
-        </svg>
-      )}
+      {pickerIndicator && <PickerIndicator position={pickerIndicator} />}
     </div>
   );
 }

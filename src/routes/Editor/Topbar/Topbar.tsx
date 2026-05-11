@@ -11,7 +11,7 @@ export function Topbar() {
     activeLayerId, layers, canvasWidth, canvasHeight, openPanel, onPanelToggle, onPanelClose,
     onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete, onLayerReorder,
     onBack, refImage, refImageError, onRefImageImport, onRefImageErrorClear, onRefImageRemove, onRefImageTransform, onRefImageCapture,
-    canvasDisplaySize, onCopySvg,
+    canvasDisplaySize, onCopySvg, showGrid, onShowGridToggle,
   } = useEditorContext();
 
   const topbarRef = useRef<HTMLElement>(null);
@@ -260,6 +260,16 @@ export function Topbar() {
             aria-pressed={mirrorV}
             onClick={() => onMirrorVChange(!mirrorV)}
           />
+          <Button
+            variant={showGrid ? 'selected' : 'selectable'}
+            size="md"
+            iconOnly
+            iconLeft="grid"
+            title="Afficher la grille"
+            aria-label="Afficher la grille"
+            aria-pressed={showGrid}
+            onClick={onShowGridToggle}
+          />
         </div>
 
         <div className={styles.buttonGroup}>
@@ -267,6 +277,7 @@ export function Topbar() {
           <Button variant={tool === 'eraser' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="erase" title="Gomme" aria-label="Gomme" aria-pressed={tool === 'eraser'} onClick={() => onToolChange('eraser')} />
           <Button variant={tool === 'fill' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="fill" title="Pot de peinture" aria-label="Pot de peinture" aria-pressed={tool === 'fill'} onClick={() => onToolChange('fill')} />
           <Button variant={tool === 'eyedropper' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="pipette" title="Pipette" aria-label="Pipette" aria-pressed={tool === 'eyedropper'} onClick={() => onToolChange('eyedropper')} />
+          <Button variant={tool === 'select' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="select" title="Sélection rectangulaire (S)" aria-label="Sélection rectangulaire" aria-pressed={tool === 'select'} onClick={() => onToolChange('select')} />
           <Button variant={tool === 'line' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="line" title="Ligne" aria-label="Ligne" aria-pressed={tool === 'line'} onClick={() => onToolChange('line')} />
           <Button variant={tool === 'square' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="rect" title="Rectangle" aria-label="Rectangle" aria-pressed={tool === 'square'} onClick={() => onToolChange('square')} />
           <Button variant={tool === 'circle' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="circle" title="Ellipse" aria-label="Ellipse" aria-pressed={tool === 'circle'} onClick={() => onToolChange('circle')} />

@@ -17,6 +17,7 @@ import { useLayers } from './hooks/useLayers';
 import { useReferenceImage } from './hooks/useReferenceImage';
 import { useColorPalette } from './hooks/useColorPalette';
 import { useEditorShortcuts } from './hooks/useEditorShortcuts';
+import { useSelection } from './hooks/useSelection';
 import { useModalA11y } from '@/hooks/useModalA11y';
 import { EditorContext } from './EditorContext';
 import type { EditorContextValue } from './EditorContext';
@@ -70,6 +71,7 @@ export function Editor() {
   const [showInvisibleModal, setShowInvisibleModal] = useState(false);
   const [mirrorH, setMirrorH] = useState(false);
   const [mirrorV, setMirrorV] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
   const [canvasDisplaySize, setCanvasDisplaySize] = useState({ w: 256, h: 256 });
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const rightSidebarRef = useRef<HTMLElement>(null);
@@ -99,7 +101,26 @@ export function Editor() {
     handleColorChange, commitRecentColor, handlePanelToggle, handleEditDrawingColor,
   } = useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory, latestDataRef, rightSidebarRef });
 
-  useEditorShortcuts({ handleUndo, handleRedo });
+  const fallbackData = useMemo(() => ({ width: 1, height: 1, layers: [] }), []);
+  const selection = useSelection({
+    data: drawing?.data ?? fallbackData,
+    activeLayerId,
+    onLayerChange: handleLayerChange,
+    pushHistory,
+    latestDataRef,
+  });
+  const selectionRef = useRef(selection);
+  selectionRef.current = selection;
+
+  useEffect(() => {
+    if (tool !== 'select' && selectionRef.current.hasFloating) {
+      selectionRef.current.commit();
+    }
+  }, [tool]);
+
+  useEditorShortcuts({ handleUndo, handleRedo, setTool, selectionRef });
+
+  const handleShowGridToggle = useCallback(() => setShowGrid(v => !v), []);
 
   const topbarRefImage = useMemo(() =>
     refImage ? { x: refImage.x, y: refImage.y, scale: refImage.scale, opacity: refImage.opacity, naturalWidth: refImage.naturalWidth, naturalHeight: refImage.naturalHeight } : null,
@@ -204,6 +225,8 @@ export function Editor() {
     onRefImageCapture: handleCapturePixels,
     canvasDisplaySize,
     onCopySvg: handleCopySvg,
+    showGrid,
+    onShowGridToggle: handleShowGridToggle,
   };
 
   return (
@@ -237,6 +260,8 @@ export function Editor() {
               hoveredColor={hoveredColor}
               refImage={refImage}
               onDisplaySizeChange={setCanvasDisplaySize}
+              showGrid={showGrid}
+              selection={selection}
             />
           </div>
 

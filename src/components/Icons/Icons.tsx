@@ -163,7 +163,7 @@ function renderIcon(icon: IconName): React.ReactNode {
     case 'select':
       return (
         <>
-          <path d="M4 4V16L8 12L10 20L13 18L11 11L16 11L4 4Z" />
+          <path d="M0 0L2 0L2 1L0 1zM3 0L4 0L4 1L3 1zM6 0L8 0L8 1L6 1zM0 1L1 1L1 2L0 2zM7 1L8 1L8 2L7 2zM0 3L1 3L1 4L0 4zM7 3L8 3L8 4L7 4zM0 6L1 6L1 7L0 7zM7 6L8 6L8 7L7 7zM0 7L2 7L2 8L0 8zM3 7L4 7L4 8L3 8zM6 7L8 7L8 8L6 8z"/>
         </>
       );
     case 'duplicate':

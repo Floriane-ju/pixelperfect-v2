@@ -7,6 +7,7 @@
 $neutral-0:    #FFFFFF;
 $neutral-400:  #AEAEAE;
 $neutral-500:  #8C8C8C;
+$neutral-700:  #4A4A4A;
 $neutral-1000: #000000;
 
 // Aliases pour compatibilité
@@ -46,6 +47,9 @@ $color-warning:       #bb7700;
 // Checkerboard transparence (DrawingCard preview)
 $color-checker-light: #e8e8e8;
 $color-checker-dark:  $neutral-400;
+
+// Pixel grid overlay
+$color-grid: $neutral-700;
 
 // ─────────────────────────────────────────────
 // Espacements (échelle 4 px)
@@ -115,6 +119,15 @@ $pipette-indicator-delay:    200ms;
 $pipette-indicator-duration: 300ms; // hold - delay
 $pipette-indicator-size:     40px;
 $pipette-indicator-stroke:   3px;
+
+// Selection (rectangular)
+$selection-fill:           $accent-2-500;
+$selection-fill-opacity:   0.15;
+$selection-stroke:         $color-black;
+$selection-stroke-width:   1;
+$selection-dasharray:      4 3;
+$selection-dash-cycle:     -7;
+$selection-anim-duration:  600ms;
 
 // ─────────────────────────────────────────────
 // Motif damier
