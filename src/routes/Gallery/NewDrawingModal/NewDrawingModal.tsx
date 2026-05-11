@@ -11,7 +11,8 @@ interface Preset {
 }
 
 const PRESETS: Preset[] = [
-  { label: '24 × 32', width: 24, height: 32 },
+  { label: '12 × 12', width: 12, height: 12 },
+  { label: '24 × 24', width: 24, height: 24 },
   { label: '32 × 32', width: 32, height: 32 },
   { label: '54 × 54', width: 54, height: 54 },
 ];
