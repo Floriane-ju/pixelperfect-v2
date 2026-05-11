@@ -12,7 +12,7 @@ interface Props {
   onInvited?: (userId: string) => void;
 }
 
-type Status = 'idle' | 'pending' | 'success' | 'error';
+type Status = 'idle' | 'pending' | 'error';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -36,9 +36,7 @@ export function InviteCollaboratorModal({ drawingId, drawingTitle, onClose, onIn
     try {
       const userId = await addCollaboratorByEmail(drawingId, trimmed);
       onInvited?.(userId);
-      setStatus('success');
-      setMessage(`${trimmed} ajouté comme contributeur.`);
-      setEmail('');
+      onClose();
     } catch (err) {
       setStatus('error');
       setMessage(err instanceof Error ? err.message : 'Erreur inconnue.');
@@ -72,7 +70,7 @@ export function InviteCollaboratorModal({ drawingId, drawingTitle, onClose, onIn
         />
 
         {message && (
-          <p className={status === 'error' ? styles.error : styles.success} role="status">
+          <p className={styles.error} role="status">
             {message}
           </p>
         )}

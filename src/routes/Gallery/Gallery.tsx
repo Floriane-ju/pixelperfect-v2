@@ -219,6 +219,14 @@ export function Gallery() {
           drawingId={inviteTarget.id}
           drawingTitle={inviteTarget.title}
           onClose={() => setInviteTarget(null)}
+          onInvited={() => {
+            const id = inviteTarget.id;
+            setDrawings((prev) =>
+              prev.map((d) =>
+                d.id === id ? { ...d, collaborator_count: Math.max(2, d.collaborator_count + 1) } : d,
+              ),
+            );
+          }}
         />
       )}
     </main>
