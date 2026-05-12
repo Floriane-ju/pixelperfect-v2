@@ -136,6 +136,8 @@ export function Topbar() {
                         max={xMax}
                         step={1}
                         value={Math.round(refImage.x)}
+                        aria-label="Position X de la référence"
+                        aria-valuetext={`${Math.round(refImage.x)} pixels`}
                         onChange={e =>
                           onRefImageTransform(Number(e.target.value), refImage.y, refImage.scale, refImage.opacity)
                         }
@@ -154,6 +156,8 @@ export function Topbar() {
                         max={yMax}
                         step={1}
                         value={Math.round(refImage.y)}
+                        aria-label="Position Y de la référence"
+                        aria-valuetext={`${Math.round(refImage.y)} pixels`}
                         onChange={e =>
                           onRefImageTransform(refImage.x, Number(e.target.value), refImage.scale, refImage.opacity)
                         }
@@ -172,6 +176,8 @@ export function Topbar() {
                         max={5}
                         step={0.01}
                         value={refImage.scale}
+                        aria-label="Zoom de la référence"
+                        aria-valuetext={`${Math.round(refImage.scale * 100)} pour cent`}
                         onChange={e => {
                           const newScale = Number(e.target.value);
                           const cx = refImage.x + (refImage.naturalWidth * refImage.scale) / 2;
@@ -198,6 +204,8 @@ export function Topbar() {
                         max={1}
                         step={0.01}
                         value={refImage.opacity}
+                        aria-label="Opacité de la référence"
+                        aria-valuetext={`${Math.round(refImage.opacity * 100)} pour cent`}
                         onChange={e =>
                           onRefImageTransform(refImage.x, refImage.y, refImage.scale, Number(e.target.value))
                         }

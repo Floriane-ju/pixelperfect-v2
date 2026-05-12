@@ -9,17 +9,29 @@ import styles from './DrawingCard.module.scss';
 
 interface Props {
   drawing: DrawingRow;
+  isOwner?: boolean;
   onClick?: () => void;
   onRename?: (newTitle: string) => void;
   onDelete?: () => void;
   onRemoveFromGroup?: () => void;
   onInvite?: () => void;
+  onCollaboratorRemoved?: () => void;
   onDropDrawing?: (sourceId: string) => void;
 }
 
 type Mode = 'default' | 'renaming' | 'confirming-delete';
 
-export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFromGroup, onInvite, onDropDrawing }: Props) {
+export function DrawingCard({
+  drawing,
+  isOwner = false,
+  onClick,
+  onRename,
+  onDelete,
+  onRemoveFromGroup,
+  onInvite,
+  onCollaboratorRemoved,
+  onDropDrawing,
+}: Props) {
   const [mode, setMode] = useState<Mode>('default');
   const [renameValue, setRenameValue] = useState(drawing.title);
   const [isDragging, setIsDragging] = useState(false);
@@ -126,7 +138,12 @@ export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFrom
               <span className={styles.title}>{drawing.title}</span>
             )}
             {mode === 'default' && drawing.collaborator_count >= 1 && (
-              <CollaboratorsButton drawingId={drawing.id} count={drawing.collaborator_count} />
+              <CollaboratorsButton
+                drawingId={drawing.id}
+                count={drawing.collaborator_count}
+                canRemove={isOwner}
+                onRemoved={onCollaboratorRemoved}
+              />
             )}
             {menuItems.length > 0 && mode === 'default' && (
               <Menu items={menuItems} ariaLabel="Actions" />

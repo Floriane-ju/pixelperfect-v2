@@ -70,7 +70,7 @@ export function InviteCollaboratorModal({ drawingId, drawingTitle, onClose, onIn
         />
 
         {message && (
-          <p className={styles.error} role="status">
+          <p className={styles.error} role={status === 'error' ? 'alert' : 'status'}>
             {message}
           </p>
         )}

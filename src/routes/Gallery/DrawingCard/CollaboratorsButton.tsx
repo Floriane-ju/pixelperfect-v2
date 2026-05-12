@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/Button';
-import { listCollaboratorsWithEmail, type CollaboratorInfo } from '@/lib/drawings';
+import { listCollaboratorsWithEmail, removeCollaborator, type CollaboratorInfo } from '@/lib/drawings';
 import styles from './CollaboratorsButton.module.scss';
 
 interface Props {
   drawingId: string;
   count: number;
+  canRemove?: boolean;
+  onRemoved?: () => void;
 }
 
 interface Position {
@@ -19,13 +21,29 @@ const MENU_MIN_WIDTH = 240;
 
 type Status = 'idle' | 'loading' | 'error';
 
-export function CollaboratorsButton({ drawingId, count }: Props) {
+export function CollaboratorsButton({ drawingId, count, canRemove = false, onRemoved }: Props) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<Position | null>(null);
   const [collaborators, setCollaborators] = useState<CollaboratorInfo[] | null>(null);
   const [status, setStatus] = useState<Status>('idle');
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
+
+  const handleRemove = useCallback(async (userId: string) => {
+    setRemovingId(userId);
+    try {
+      await removeCollaborator(drawingId, userId);
+      setCollaborators((prev) => prev?.filter((c) => c.user_id !== userId) ?? null);
+      onRemoved?.();
+    } catch {
+      setStatus('error');
+    } finally {
+      setRemovingId(null);
+      setConfirmingId(null);
+    }
+  }, [drawingId, onRemoved]);
 
   const updatePosition = useCallback(() => {
     const root = rootRef.current;
@@ -106,12 +124,54 @@ export function CollaboratorsButton({ drawingId, count }: Props) {
           {status === 'idle' && collaborators && collaborators.length === 0 && (
             <li className={styles.state}>Aucun collaborateur.</li>
           )}
-          {status === 'idle' && collaborators?.map((c, idx) => (
-            <li key={c.user_id} role="none" className={styles.row}>
-              <span role="menuitem" className={styles.item}>{c.email}</span>
-              {idx < collaborators.length - 1 && <span className={styles.divider} aria-hidden="true" />}
-            </li>
-          ))}
+          {status === 'idle' && collaborators?.map((c, idx) => {
+            const showRemove = canRemove && c.role !== 'owner';
+            const isConfirming = confirmingId === c.user_id;
+            const isRemoving = removingId === c.user_id;
+            return (
+              <li key={c.user_id} role="none" className={styles.row}>
+                {isConfirming ? (
+                  <div className={styles.confirm}>
+                    <span className={styles.confirmLabel}>Retirer&nbsp;?</span>
+                    <button
+                      type="button"
+                      className={styles.confirmYes}
+                      disabled={isRemoving}
+                      onClick={() => void handleRemove(c.user_id)}
+                    >
+                      Oui
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.confirmNo}
+                      disabled={isRemoving}
+                      onClick={() => setConfirmingId(null)}
+                    >
+                      Non
+                    </button>
+                  </div>
+                ) : (
+                  <span role="menuitem" className={styles.item}>
+                    <span className={styles.email}>{c.email}</span>
+                    <span className={styles.role} data-role={c.role}>
+                      {c.role === 'owner' ? 'propriétaire' : 'éditeur'}
+                    </span>
+                    {showRemove && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        iconOnly
+                        iconLeft="trash"
+                        aria-label={`Retirer ${c.email}`}
+                        onClick={() => setConfirmingId(c.user_id)}
+                      />
+                    )}
+                  </span>
+                )}
+                {idx < collaborators.length - 1 && <span className={styles.divider} aria-hidden="true" />}
+              </li>
+            );
+          })}
         </ul>,
         document.body,
       )}

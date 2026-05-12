@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties, ReactNode, RefObject } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchDrawing } from '@/lib/drawings';
 import type { DrawingRow, HexColor } from '@/types';
@@ -54,6 +55,25 @@ function InvisibleLayerModal({ onCancel, onConfirm }: InvisibleLayerModalProps) 
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+interface ColorPanelProps {
+  children: ReactNode;
+  onClose: () => void;
+  className?: string;
+  style?: CSSProperties;
+  panelRef?: RefObject<HTMLDivElement>;
+}
+
+function ColorPanel({ children, onClose, className, style, panelRef }: ColorPanelProps) {
+  const localRef = useRef<HTMLDivElement>(null);
+  const ref = panelRef ?? localRef;
+  useModalA11y({ modalRef: ref, onClose, closeOnEscape: false });
+  return (
+    <div ref={ref} className={className} style={style}>
+      {children}
     </div>
   );
 }
@@ -314,6 +334,8 @@ export function Editor() {
             ref={canvasAreaRef}
             id="canvas"
             className={styles.canvasArea}
+            role="img"
+            aria-label={`Dessin « ${drawing.title} » : ${drawing.data.width}×${drawing.data.height} pixels, ${drawing.data.layers.length} calque${drawing.data.layers.length > 1 ? 's' : ''}`}
           >
             <Canvas
               data={drawing.data}
@@ -350,9 +372,9 @@ export function Editor() {
                 <ColorWheelIcon size={32} />
               </Button>
               {openPanel === 'color' && !editColorMode && (
-                <div className={styles.colorPanel}>
+                <ColorPanel className={styles.colorPanel} onClose={handlePanelClose}>
                   <ColorPicker value={color} onChange={handleColorChange} onColorHover={setHoveredColor} recentColors={displayedRecentColors} drawingColors={drawingColors} />
-                </div>
+                </ColorPanel>
               )}
             </div>
             {displayedRecentColors.length > 0 && (
@@ -388,13 +410,14 @@ export function Editor() {
         </div>
 
         {openPanel === 'color' && editColorMode && (
-          <div
-            ref={editColorPanelRef}
+          <ColorPanel
+            panelRef={editColorPanelRef}
             className={styles.editColorPanel}
             style={{ top: editColorMode.pickerY }}
+            onClose={handlePanelClose}
           >
             <ColorPicker value={color} onChange={handleColorChange} onColorHover={setHoveredColor} recentColors={displayedRecentColors} drawingColors={drawingColors} />
-          </div>
+          </ColorPanel>
         )}
 
         {contextMenu && (

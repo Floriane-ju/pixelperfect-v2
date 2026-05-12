@@ -81,6 +81,8 @@ export function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? 'login-error' : undefined}
           />
           <Input
             id="password"
@@ -90,8 +92,10 @@ export function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? 'login-error' : undefined}
           />
-          {error && <p className={styles.error} role="alert">{error}</p>}
+          {error && <p id="login-error" className={styles.error} role="alert">{error}</p>}
           <Button type="submit" variant="primary" fullWidth disabled={loading || locked}>
             {locked ? `Réessayez dans ${remaining} s` : loading ? 'Connexion…' : 'Se connecter'}
           </Button>

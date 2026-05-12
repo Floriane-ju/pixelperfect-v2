@@ -9,23 +9,27 @@ import styles from './GroupModal.module.scss';
 interface Props {
   name: string;
   drawings: DrawingRow[];
+  currentUserId: string | null;
   onClose: () => void;
   onCardClick: (id: string) => void;
   onRename?: (id: string, title: string) => void;
   onDelete?: (id: string) => void;
   onRemoveFromGroup?: (id: string) => void;
   onInvite?: (drawing: DrawingRow) => void;
+  onCollaboratorRemoved?: (drawingId: string) => void;
 }
 
 export function GroupModal({
   name,
   drawings,
+  currentUserId,
   onClose,
   onCardClick,
   onRename,
   onDelete,
   onRemoveFromGroup,
   onInvite,
+  onCollaboratorRemoved,
 }: Props) {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isOverlayDragOver, setIsOverlayDragOver] = useState(false);
@@ -103,17 +107,22 @@ export function GroupModal({
           />
         </header>
         <div className={styles.content}>
-          {drawings.map((d) => (
-            <DrawingCard
-              key={d.id}
-              drawing={d}
-              onClick={() => onCardClick(d.id)}
-              onRename={onRename ? (title) => onRename(d.id, title) : undefined}
-              onDelete={onDelete ? () => onDelete(d.id) : undefined}
-              onRemoveFromGroup={onRemoveFromGroup ? () => onRemoveFromGroup(d.id) : undefined}
-              onInvite={onInvite ? () => onInvite(d) : undefined}
-            />
-          ))}
+          {drawings.map((d) => {
+            const isOwner = currentUserId !== null && d.owner_id === currentUserId;
+            return (
+              <DrawingCard
+                key={d.id}
+                drawing={d}
+                isOwner={isOwner}
+                onClick={() => onCardClick(d.id)}
+                onRename={onRename ? (title) => onRename(d.id, title) : undefined}
+                onDelete={onDelete && isOwner ? () => onDelete(d.id) : undefined}
+                onRemoveFromGroup={onRemoveFromGroup ? () => onRemoveFromGroup(d.id) : undefined}
+                onInvite={onInvite && isOwner ? () => onInvite(d) : undefined}
+                onCollaboratorRemoved={onCollaboratorRemoved ? () => onCollaboratorRemoved(d.id) : undefined}
+              />
+            );
+          })}
           {drawings.length === 0 && (
             <p className={styles.empty}>Aucun dessin dans ce groupe.</p>
           )}

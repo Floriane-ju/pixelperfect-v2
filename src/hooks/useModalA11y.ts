@@ -6,9 +6,10 @@ interface Options {
   modalRef: RefObject<HTMLElement | null>;
   onClose: () => void;
   initialFocusRef?: RefObject<HTMLElement | null>;
+  closeOnEscape?: boolean;
 }
 
-export function useModalA11y({ modalRef, onClose, initialFocusRef }: Options): void {
+export function useModalA11y({ modalRef, onClose, initialFocusRef, closeOnEscape = true }: Options): void {
   useEffect(() => {
     const previouslyFocused = document.activeElement;
     const explicit = initialFocusRef?.current;
@@ -25,7 +26,10 @@ export function useModalA11y({ modalRef, onClose, initialFocusRef }: Options): v
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key === 'Escape') {
+        if (closeOnEscape) onClose();
+        return;
+      }
       if (e.key !== 'Tab') return;
       const modal = modalRef.current;
       if (!modal) return;
@@ -45,5 +49,5 @@ export function useModalA11y({ modalRef, onClose, initialFocusRef }: Options): v
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [modalRef, onClose]);
+  }, [modalRef, onClose, closeOnEscape]);
 }

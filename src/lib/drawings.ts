@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import type { CollaboratorRole, DrawingData, DrawingRow, HexColor, PixelLayer } from '@/types';
 
 const MAX_DIMENSION = 512;
+const MAX_LAYERS = 64;
 const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -15,7 +16,7 @@ function parseHexColor(v: unknown): HexColor {
   return v as HexColor;
 }
 
-function parsePixelLayer(raw: unknown): PixelLayer {
+function parsePixelLayer(raw: unknown, maxPixels: number): PixelLayer {
   if (!isRecord(raw)) throw new Error('Invalid DrawingRow: layer must be object');
   const { id, name, pixels, opacity, visible } = raw;
   if (typeof id !== 'string') throw new Error('Invalid DrawingRow: layer.id');
@@ -25,8 +26,12 @@ function parsePixelLayer(raw: unknown): PixelLayer {
   }
   if (typeof visible !== 'boolean') throw new Error('Invalid DrawingRow: layer.visible');
   if (!isRecord(pixels)) throw new Error('Invalid DrawingRow: layer.pixels');
+  const entries = Object.entries(pixels);
+  if (entries.length > maxPixels) {
+    throw new Error(`Invalid DrawingRow: layer.pixels exceeds cap ${maxPixels}`);
+  }
   const parsedPixels: Record<string, HexColor> = {};
-  for (const [key, value] of Object.entries(pixels)) {
+  for (const [key, value] of entries) {
     parsedPixels[key] = parseHexColor(value);
   }
   return { id, name, pixels: parsedPixels, opacity, visible };
@@ -42,7 +47,11 @@ function parseDrawingData(raw: unknown): DrawingData {
     throw new Error(`Invalid DrawingRow: height must be integer in [1, ${MAX_DIMENSION}]`);
   }
   if (!Array.isArray(layers)) throw new Error('Invalid DrawingRow: layers must be array');
-  return { width, height, layers: layers.map(parsePixelLayer) };
+  if (layers.length > MAX_LAYERS) {
+    throw new Error(`Invalid DrawingRow: layers exceeds cap ${MAX_LAYERS}`);
+  }
+  const maxPixels = width * height;
+  return { width, height, layers: layers.map((l) => parsePixelLayer(l, maxPixels)) };
 }
 
 function parseCollaboratorCount(raw: unknown): number {

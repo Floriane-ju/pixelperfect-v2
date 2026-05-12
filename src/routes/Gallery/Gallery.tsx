@@ -10,6 +10,7 @@ import { NewGroupModal } from './NewGroupModal/NewGroupModal';
 import { InviteCollaboratorModal } from './InviteCollaboratorModal/InviteCollaboratorModal';
 import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup, moveToGroup, renameGroup } from '@/lib/drawings';
 import { signOut } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
 import { groupDrawings } from '@/lib/groupDrawings';
 import type { DrawingRow } from '@/types';
 import styles from './Gallery.module.scss';
@@ -27,6 +28,7 @@ export function Gallery() {
   const [pendingGroup, setPendingGroup] = useState<{ sourceId: string; targetId: string } | null>(null);
   const [isContentDragOver, setIsContentDragOver] = useState(false);
   const [inviteTarget, setInviteTarget] = useState<DrawingRow | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     setStatus('loading');
@@ -36,7 +38,18 @@ export function Gallery() {
         setErrorMsg(err instanceof Error ? err.message : 'Erreur inconnue');
         setStatus('error');
       });
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id ?? null);
+    });
   }, []);
+
+  const handleCollaboratorRemoved = (drawingId: string) => {
+    setDrawings((prev) =>
+      prev.map((d) =>
+        d.id === drawingId ? { ...d, collaborator_count: Math.max(0, d.collaborator_count - 1) } : d,
+      ),
+    );
+  };
 
   const refetchSilent = () => {
     fetchDrawings().then(setDrawings).catch(() => {});
@@ -182,17 +195,22 @@ export function Gallery() {
               existingGroupNames={groups.map((x) => x.name)}
             />
           ))}
-          {ungrouped.map((d) => (
-            <DrawingCard
-              key={d.id}
-              drawing={d}
-              onClick={() => navigate(`/editor/${d.id}`)}
-              onRename={(title) => handleRename(d.id, title)}
-              onDelete={() => handleDelete(d.id)}
-              onInvite={() => setInviteTarget(d)}
-              onDropDrawing={(sourceId) => setPendingGroup({ sourceId, targetId: d.id })}
-            />
-          ))}
+          {ungrouped.map((d) => {
+            const isOwner = currentUserId !== null && d.owner_id === currentUserId;
+            return (
+              <DrawingCard
+                key={d.id}
+                drawing={d}
+                isOwner={isOwner}
+                onClick={() => navigate(`/editor/${d.id}`)}
+                onRename={(title) => handleRename(d.id, title)}
+                onDelete={isOwner ? () => handleDelete(d.id) : undefined}
+                onInvite={isOwner ? () => setInviteTarget(d) : undefined}
+                onCollaboratorRemoved={() => handleCollaboratorRemoved(d.id)}
+                onDropDrawing={(sourceId) => setPendingGroup({ sourceId, targetId: d.id })}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -207,12 +225,14 @@ export function Gallery() {
         <GroupModal
           name={activeGroupData.name}
           drawings={activeGroupData.drawings}
+          currentUserId={currentUserId}
           onClose={() => setActiveGroup(null)}
           onCardClick={(id) => navigate(`/editor/${id}`)}
           onRename={handleRename}
           onDelete={handleDelete}
           onRemoveFromGroup={handleRemoveFromGroup}
           onInvite={(d) => setInviteTarget(d)}
+          onCollaboratorRemoved={handleCollaboratorRemoved}
         />
       )}
 
