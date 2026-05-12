@@ -37,6 +37,42 @@
   color: $color-danger;
 }
 
+.combobox {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: $space-xxs 0 0;
+  padding: $space-xxs;
+  list-style: none;
+  background: $accent-1-450;
+  border: $border-m-accent-1;
+  box-shadow: $inner-shadow-interactive-purple;
+  z-index: $z-popover;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.suggestion {
+  padding: $space-s $space-l;
+  font-family: $font-family-base;
+  font-size: $font-size-md;
+  color: $accent-2-500;
+  cursor: pointer;
+  @include no-select;
+}
+
+.suggestionActive {
+  background: $accent-2-500;
+  color: $accent-1-600;
+}
+
 .success {
   margin: 0;
   font-size: $font-size-sm;

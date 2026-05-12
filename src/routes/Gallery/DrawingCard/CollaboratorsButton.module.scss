@@ -39,9 +39,13 @@
   @include no-select;
 }
 
-.email {
+.identity {
   flex: 1;
   min-width: 0;
+}
+
+.username {
+  font-weight: $font-weight-semibold;
   word-break: break-all;
 }
 

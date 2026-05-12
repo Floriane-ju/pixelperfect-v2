@@ -16,6 +16,12 @@ export interface DrawingData {
 
 export type CollaboratorRole = 'owner' | 'editor';
 
+export interface Profile {
+  user_id: string;
+  username: string;
+  email: string;
+}
+
 export interface DrawingRow {
   id: string;
   title: string;

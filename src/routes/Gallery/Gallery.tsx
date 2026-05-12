@@ -8,6 +8,7 @@ import { GroupModal } from './GroupModal/GroupModal';
 import { NewDrawingModal } from './NewDrawingModal/NewDrawingModal';
 import { NewGroupModal } from './NewGroupModal/NewGroupModal';
 import { InviteCollaboratorModal } from './InviteCollaboratorModal/InviteCollaboratorModal';
+import { ProfileModal } from './ProfileModal';
 import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup, moveToGroup, renameGroup } from '@/lib/drawings';
 import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
@@ -30,6 +31,7 @@ export function Gallery() {
   const [isContentDragOver, setIsContentDragOver] = useState(false);
   const [inviteTarget, setInviteTarget] = useState<DrawingRow | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     setStatus('loading');
@@ -146,6 +148,9 @@ export function Gallery() {
           <Button variant="primary" onClick={() => setShowNewModal(true)}>
             Nouveau dessin
           </Button>
+          <Button variant="ghost" onClick={() => setShowProfile(true)}>
+            Profil
+          </Button>
           <Button variant="ghost" onClick={() => void signOut()}>
             Déconnexion
           </Button>
@@ -242,15 +247,22 @@ export function Gallery() {
           drawingId={inviteTarget.id}
           drawingTitle={inviteTarget.title}
           onClose={() => setInviteTarget(null)}
-          onInvited={(_userId, email) => {
+          onInvited={(_userId, handle) => {
             const id = inviteTarget.id;
             setDrawings((prev) =>
               prev.map((d) =>
                 d.id === id ? { ...d, collaborator_count: d.collaborator_count + 1 } : d,
               ),
             );
-            snackbar.show(`${email} a été invité`, { icon: 'collaborators' });
+            snackbar.show(`${handle} a été invité`, { icon: 'collaborators' });
           }}
+        />
+      )}
+
+      {showProfile && (
+        <ProfileModal
+          onClose={() => setShowProfile(false)}
+          onUpdated={(p) => snackbar.show(`Pseudo mis à jour : ${p.username}`)}
         />
       )}
     </main>

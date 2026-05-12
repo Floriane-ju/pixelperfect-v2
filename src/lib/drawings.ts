@@ -172,27 +172,6 @@ export async function updateDrawingData(id: string, drawingData: DrawingData): P
   if (error) throw error;
 }
 
-export async function listCollaborators(drawingId: string): Promise<string[]> {
-  const { data, error } = await supabase
-    .from('drawing_users')
-    .select('user_id')
-    .eq('drawing_id', drawingId);
-  if (error) throw error;
-  return (data ?? []).map((row) => {
-    if (!isRecord(row) || typeof row.user_id !== 'string') {
-      throw new Error('Invalid collaborator row');
-    }
-    return row.user_id;
-  });
-}
-
-export async function addCollaborator(drawingId: string, userId: string): Promise<void> {
-  const { error } = await supabase
-    .from('drawing_users')
-    .insert({ drawing_id: drawingId, user_id: userId });
-  if (error) throw error;
-}
-
 export async function removeCollaborator(drawingId: string, userId: string): Promise<void> {
   const { error } = await supabase
     .from('drawing_users')
@@ -204,7 +183,7 @@ export async function removeCollaborator(drawingId: string, userId: string): Pro
 
 export interface CollaboratorInfo {
   user_id: string;
-  email: string;
+  username: string | null;
   role: CollaboratorRole;
 }
 
@@ -213,26 +192,27 @@ function parseRole(v: unknown): CollaboratorRole {
   throw new Error('Invalid collaborator row: role');
 }
 
-export async function listCollaboratorsWithEmail(drawingId: string): Promise<CollaboratorInfo[]> {
+export async function listCollaborators(drawingId: string): Promise<CollaboratorInfo[]> {
   const { data, error } = await supabase.rpc('list_collaborators', { d_id: drawingId });
   if (error) throw error;
   if (!Array.isArray(data)) throw new Error('Réponse invalide du serveur.');
   return data.map((row) => {
-    if (!isRecord(row) || typeof row.user_id !== 'string' || typeof row.email !== 'string') {
+    if (!isRecord(row) || typeof row.user_id !== 'string') {
       throw new Error('Invalid collaborator row');
     }
-    return { user_id: row.user_id, email: row.email, role: parseRole(row.role) };
+    const username = typeof row.username === 'string' ? row.username : null;
+    return { user_id: row.user_id, username, role: parseRole(row.role) };
   });
 }
 
-export async function addCollaboratorByEmail(drawingId: string, email: string): Promise<string> {
-  const { data, error } = await supabase.rpc('add_collaborator_by_email', {
+export async function addCollaboratorByHandle(drawingId: string, handle: string): Promise<string> {
+  const { data, error } = await supabase.rpc('add_collaborator_by_handle', {
     d_id: drawingId,
-    email_in: email,
+    handle_in: handle,
   });
   if (error) {
-    if (error.code === 'P0002') throw new Error("Aucun utilisateur trouvé avec cet email.");
-    if (error.code === '42501') throw new Error("Action non autorisée.");
+    if (error.code === 'P0002') throw new Error('Aucun utilisateur trouvé avec ce pseudo ou cet email.');
+    if (error.code === '42501') throw new Error('Action non autorisée.');
     if (error.code === '54000') throw new Error("Trop d'invitations envoyées. Réessayez dans quelques minutes.");
     throw new Error(error.message);
   }

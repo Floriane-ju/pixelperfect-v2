@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/Button';
-import { listCollaboratorsWithEmail, removeCollaborator, type CollaboratorInfo } from '@/lib/drawings';
+import { listCollaborators, removeCollaborator, type CollaboratorInfo } from '@/lib/drawings';
 import styles from './CollaboratorsButton.module.scss';
 
 interface Props {
@@ -86,7 +86,7 @@ export function CollaboratorsButton({ drawingId, count, canRemove = false, onRem
   useEffect(() => {
     if (!open || collaborators !== null || status === 'loading') return;
     setStatus('loading');
-    listCollaboratorsWithEmail(drawingId)
+    listCollaborators(drawingId)
       .then((rows) => { setCollaborators(rows); setStatus('idle'); })
       .catch(() => setStatus('error'));
   }, [open, drawingId, collaborators, status]);
@@ -152,7 +152,9 @@ export function CollaboratorsButton({ drawingId, count, canRemove = false, onRem
                   </div>
                 ) : (
                   <span role="menuitem" className={styles.item}>
-                    <span className={styles.email}>{c.email}</span>
+                    <span className={styles.identity}>
+                      <span className={styles.username}>{c.username ? `@${c.username}` : '—'}</span>
+                    </span>
                     <span className={styles.role} data-role={c.role}>
                       {c.role === 'owner' ? 'propriétaire' : 'éditeur'}
                     </span>
@@ -162,7 +164,7 @@ export function CollaboratorsButton({ drawingId, count, canRemove = false, onRem
                         size="sm"
                         iconOnly
                         iconLeft="trash"
-                        aria-label={`Retirer ${c.email}`}
+                        aria-label={`Retirer ${c.username ?? 'utilisateur'}`}
                         onClick={() => setConfirmingId(c.user_id)}
                       />
                     )}
