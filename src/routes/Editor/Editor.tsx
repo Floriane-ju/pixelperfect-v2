@@ -8,10 +8,11 @@ import { ColorWheelIcon } from '@/components/ColorWheelIcon';
 import { BrushSizeSlider } from '@/components/BrushSizeSlider';
 import { Button } from '@/components/Button';
 import { ColorPicker } from './ColorPicker/ColorPicker';
-import { ContextMenu } from './ContextMenu/ContextMenu';
+import { ContextMenu } from '@/components/ContextMenu';
 import { Canvas } from './Canvas/Canvas';
 import type { Tool } from './Canvas/Canvas';
 import { buildLayersSvg } from './exportSvg';
+import { copyLayersPng } from './exportPng';
 import { Topbar } from './Topbar/Topbar';
 import { useSave } from './hooks/useSave';
 import { useUndoRedo } from './hooks/useUndoRedo';
@@ -220,6 +221,12 @@ export function Editor() {
     navigator.clipboard.writeText(buildLayersSvg(layers, width, height)).catch(() => undefined);
   }, [drawing]);
 
+  const handleCopyPng = useCallback(() => {
+    if (!drawing) return;
+    const { layers, width, height } = drawing.data;
+    copyLayersPng(layers, width, height).catch(() => undefined);
+  }, [drawing]);
+
   const handleBack = useCallback(() => navigate('/'), [navigate]);
   const handlePanelClose = useCallback(() => setOpenPanel(null), [setOpenPanel]);
 
@@ -286,6 +293,7 @@ export function Editor() {
     onRefImageCapture: handleCaptureRequest,
     canvasDisplaySize,
     onCopySvg: handleCopySvg,
+    onCopyPng: handleCopyPng,
   };
 
   return (

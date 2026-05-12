@@ -13,6 +13,7 @@ import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { groupDrawings } from '@/lib/groupDrawings';
 import type { DrawingRow } from '@/types';
+import { version as appVersion } from '../../../package.json';
 import styles from './Gallery.module.scss';
 
 type Status = 'idle' | 'loading' | 'error';
@@ -134,7 +135,7 @@ export function Gallery() {
     <main className={styles.gallery}>
       <a className="skip-link" href="#gallery-content">Aller au contenu</a>
       <div className={styles.decoLeft}>
-        <div className={styles.version}>v{__APP_VERSION__}</div>
+        <div className={styles.version}>v{appVersion}</div>
       </div>
       <header className={styles.header}>
         <div className={styles.titleGroup}>

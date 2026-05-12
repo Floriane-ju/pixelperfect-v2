@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import styles from './ContextMenu.module.scss';
 
 export interface ContextMenuItem {
@@ -12,9 +12,10 @@ export interface ContextMenuItem {
 interface Props {
   items: ContextMenuItem[];
   onClose: () => void;
+  triggerRef?: RefObject<HTMLElement>;
 }
 
-export function ContextMenu({ items, onClose }: Props) {
+export function ContextMenu({ items, onClose, triggerRef }: Props) {
   const ref = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
@@ -28,7 +29,10 @@ export function ContextMenu({ items, onClose }: Props) {
 
   useEffect(() => {
     const handlePointer = (e: PointerEvent) => {
-      if (!ref.current?.contains(e.target as Node)) onClose();
+      const target = e.target as Node;
+      if (ref.current?.contains(target)) return;
+      if (triggerRef?.current?.contains(target)) return;
+      onClose();
     };
     const handleKey = (e: KeyboardEvent) => {
       const menu = ref.current;
@@ -51,7 +55,7 @@ export function ContextMenu({ items, onClose }: Props) {
       document.removeEventListener('pointerdown', handlePointer);
       document.removeEventListener('keydown', handleKey);
     };
-  }, [onClose]);
+  }, [onClose, triggerRef]);
 
   return (
     <ul role="menu" aria-orientation="vertical" className={styles.menu} ref={ref}>

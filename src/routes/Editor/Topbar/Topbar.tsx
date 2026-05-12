@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/Button';
+import { Menu } from '@/components/Menu';
 import { LayerPanel } from '@/routes/Editor/LayerPanel/LayerPanel';
 import { useEditorContext } from '../EditorContext';
 import styles from './Topbar.module.scss';
@@ -10,15 +11,20 @@ export function Topbar() {
     activeLayerId, layers, canvasWidth, canvasHeight, openPanel, onPanelToggle, onPanelClose,
     onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete, onLayerReorder,
     onBack, refImage, refImageError, onRefImageImport, onRefImageErrorClear, onRefImageRemove, onRefImageTransform, onRefImageCapture,
-    canvasDisplaySize, onCopySvg,
+    canvasDisplaySize, onCopySvg, onCopyPng,
   } = useEditorContext();
 
   const topbarRef = useRef<HTMLElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState(false);
 
+  const flashCopied = () => {
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   useEffect(() => {
-    if (!openPanel || openPanel === 'color') return;
+    if (!openPanel || openPanel === 'color' || openPanel === 'export') return;
     const handler = (e: PointerEvent) => {
       if (topbarRef.current && !topbarRef.current.contains(e.target as Node)) {
         onPanelClose();
@@ -237,19 +243,21 @@ export function Topbar() {
         </div>
 
         <div className={styles.buttonGroup}>
-          <Button
-            variant="selectable"
-            size="md"
-            iconOnly
-            iconLeft={copied ? 'check' : 'export'}
-            title="Copier le SVG"
-            aria-label="Copier le SVG"
-            onClick={() => {
-              onCopySvg();
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            }}
-          />
+          <div className={styles.exportContainer}>
+            <Menu
+              ariaLabel="Exporter"
+              triggerIcon={copied ? 'check' : 'export'}
+              triggerVariant={openPanel === 'export' ? 'selected' : 'selectable'}
+              triggerSize="md"
+              triggerTitle="Exporter"
+              open={openPanel === 'export'}
+              onOpenChange={(next) => { if (next) onPanelToggle('export'); else onPanelClose(); }}
+              items={[
+                { label: 'Copier en SVG', onClick: () => { onCopySvg(); flashCopied(); } },
+                { label: 'Copier en PNG', onClick: () => { onCopyPng(); flashCopied(); } },
+              ]}
+            />
+          </div>
         </div>
 
         <div className={styles.buttonGroup}>

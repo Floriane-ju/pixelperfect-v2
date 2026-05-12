@@ -233,6 +233,7 @@ export async function addCollaboratorByEmail(drawingId: string, email: string): 
   if (error) {
     if (error.code === 'P0002') throw new Error("Aucun utilisateur trouvé avec cet email.");
     if (error.code === '42501') throw new Error("Action non autorisée.");
+    if (error.code === '54000') throw new Error("Trop d'invitations envoyées. Réessayez dans quelques minutes.");
     throw new Error(error.message);
   }
   if (typeof data !== 'string') throw new Error('Réponse invalide du serveur.');

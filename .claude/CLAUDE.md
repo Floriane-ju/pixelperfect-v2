@@ -28,7 +28,7 @@ ANALYZE=1 npm run build  # rollup-plugin-visualizer → dist/stats.html
 
 ## Env
 - `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` obligatoires (cf. `src/lib/supabase.ts`).
-- Global `__APP_VERSION__` injecté par Vite depuis `package.json`.
+- Version applicative importée à l'exécution depuis `package.json` (cf. `src/routes/Gallery/Gallery.tsx`).
 
 ## Architecture
 ```
@@ -71,6 +71,7 @@ public/                 # icônes PWA + favicon
 - Bump du `version` dans `package.json` après toute modification fonctionnelle.
 - Toujours réutiliser les composants existants (ex. `<Button>` plutôt qu'un `<button>` brut).
 - Validation runtime obligatoire pour toute donnée venant de Supabase (cf. `parseDrawingData` dans `lib/drawings.ts`).
+- Quand un changement mérite une mise à jour de claude.md ou des rules, propose la.
 
 ## PWA
 - Manifest et service worker générés par `vite-plugin-pwa` (cf. `vite.config.ts`, `registerType: 'autoUpdate'`).

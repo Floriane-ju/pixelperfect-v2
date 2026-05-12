@@ -2,8 +2,8 @@ import { useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import type { DrawingRow } from '@/types';
 import { DrawingThumbnail } from '@/routes/Gallery/DrawingThumbnail/DrawingThumbnail';
-import { Menu } from '@/routes/Gallery/Menu/Menu';
-import type { MenuItem } from '@/routes/Gallery/Menu/Menu';
+import { Menu } from '@/components/Menu';
+import type { MenuItem } from '@/components/Menu';
 import { CollaboratorsButton } from './CollaboratorsButton';
 import styles from './DrawingCard.module.scss';
 

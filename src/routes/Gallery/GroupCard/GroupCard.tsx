@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { DrawingThumbnail } from '@/routes/Gallery/DrawingThumbnail/DrawingThumbnail';
-import { Menu } from '@/routes/Gallery/Menu/Menu';
-import type { MenuItem } from '@/routes/Gallery/Menu/Menu';
+import { Menu } from '@/components/Menu';
+import type { MenuItem } from '@/components/Menu';
 import type { DrawingRow } from '@/types';
 import styles from './GroupCard.module.scss';
 

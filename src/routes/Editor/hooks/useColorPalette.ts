@@ -4,7 +4,7 @@ import type { DrawingData, DrawingRow, HexColor } from '@/types';
 
 const MAX_RECENT_COLORS = 4;
 
-export type OpenPanel = 'layers' | 'color' | 'ref' | null;
+export type OpenPanel = 'layers' | 'color' | 'ref' | 'export' | null;
 
 interface UseColorPaletteParams {
   drawing: DrawingRow | null;
@@ -108,7 +108,7 @@ export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory
     setOpenPanel(null);
   }, [pushHistory, scheduleSave]);
 
-  const handlePanelToggle = useCallback((panel: 'layers' | 'color' | 'ref') => {
+  const handlePanelToggle = useCallback((panel: 'layers' | 'color' | 'ref' | 'export') => {
     if (panel === 'color') {
       if (openPanelRef.current === 'color') {
         closeColorPanel();

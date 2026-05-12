@@ -25,7 +25,7 @@ export interface EditorContextValue {
   canvasWidth: number;
   canvasHeight: number;
   openPanel: OpenPanel;
-  onPanelToggle: (p: 'layers' | 'color' | 'ref') => void;
+  onPanelToggle: (p: 'layers' | 'color' | 'ref' | 'export') => void;
   onPanelClose: () => void;
   onLayerAdd: () => void;
   onLayerSelect: (id: string) => void;
@@ -43,6 +43,7 @@ export interface EditorContextValue {
   onRefImageCapture: () => void;
   canvasDisplaySize: { w: number; h: number };
   onCopySvg: () => void;
+  onCopyPng: () => void;
 }
 
 const EditorContext = createContext<EditorContextValue | null>(null);

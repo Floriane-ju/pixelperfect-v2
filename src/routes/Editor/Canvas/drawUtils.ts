@@ -1,15 +1,21 @@
-import type { DrawingData, HexColor } from '@/types';
+import type { HexColor } from '@/types';
 
-export function pickColorAt(data: DrawingData, px: { x: number; y: number }): HexColor | null {
-  if (px.x < 0 || px.y < 0 || px.x >= data.width || px.y >= data.height) return null;
-  const key = `${px.x},${px.y}`;
-  for (let i = data.layers.length - 1; i >= 0; i--) {
-    const layer = data.layers[i];
-    if (!layer || !layer.visible) continue;
-    const picked = layer.pixels[key];
-    if (picked) return picked;
-  }
-  return null;
+const HEX2 = (n: number): string => n.toString(16).padStart(2, '0');
+
+export function pickColorAt(
+  mainCanvas: HTMLCanvasElement | null,
+  px: { x: number; y: number },
+  width: number,
+  height: number,
+): HexColor | null {
+  if (!mainCanvas) return null;
+  if (px.x < 0 || px.y < 0 || px.x >= width || px.y >= height) return null;
+  const ctx = mainCanvas.getContext('2d');
+  if (!ctx) return null;
+  const { data: rgba } = ctx.getImageData(px.x, px.y, 1, 1);
+  const a = rgba[3] ?? 0;
+  if (a === 0) return null;
+  return `#${HEX2(rgba[0] ?? 0)}${HEX2(rgba[1] ?? 0)}${HEX2(rgba[2] ?? 0)}` as HexColor;
 }
 
 export function stampBrush(pixels: Array<{ x: number; y: number }>, size: number): Array<{ x: number; y: number }> {

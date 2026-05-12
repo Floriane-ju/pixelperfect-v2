@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Button } from '@/components/Button';
+import { Button, type ButtonSize, type ButtonVariant } from '@/components/Button';
 import { Icons, type IconName } from '@/components/Icons';
 import styles from './Menu.module.scss';
 
@@ -14,6 +14,12 @@ export interface MenuItem {
 export interface MenuProps {
   items: MenuItem[];
   ariaLabel?: string;
+  triggerIcon?: IconName;
+  triggerVariant?: ButtonVariant;
+  triggerSize?: ButtonSize;
+  triggerTitle?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 interface Position {
@@ -23,8 +29,29 @@ interface Position {
 
 const MENU_GAP = 4;
 
-export function Menu({ items, ariaLabel = 'Options' }: MenuProps) {
-  const [open, setOpen] = useState(false);
+export function Menu({
+  items,
+  ariaLabel = 'Options',
+  triggerIcon = 'more',
+  triggerVariant = 'ghost',
+  triggerSize = 'sm',
+  triggerTitle,
+  open: openProp,
+  onOpenChange,
+}: MenuProps) {
+  const isControlled = openProp !== undefined;
+  const [openState, setOpenState] = useState(false);
+  const open = isControlled ? openProp : openState;
+
+  const setOpen = useCallback(
+    (next: boolean | ((prev: boolean) => boolean)) => {
+      const value = typeof next === 'function' ? next(open) : next;
+      if (!isControlled) setOpenState(value);
+      onOpenChange?.(value);
+    },
+    [isControlled, onOpenChange, open],
+  );
+
   const [position, setPosition] = useState<Position | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
@@ -65,7 +92,7 @@ export function Menu({ items, ariaLabel = 'Options' }: MenuProps) {
       window.removeEventListener('resize', handleReposition);
       window.removeEventListener('scroll', handleReposition, true);
     };
-  }, [open, updatePosition]);
+  }, [open, setOpen, updatePosition]);
 
   return (
     <div
@@ -74,10 +101,11 @@ export function Menu({ items, ariaLabel = 'Options' }: MenuProps) {
       onClick={(e) => e.stopPropagation()}
     >
       <Button
-        variant="ghost"
-        size="sm"
+        variant={triggerVariant}
+        size={triggerSize}
         iconOnly
-        iconLeft="more"
+        iconLeft={triggerIcon}
+        title={triggerTitle}
         aria-label={ariaLabel}
         aria-haspopup="menu"
         aria-expanded={open}

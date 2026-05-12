@@ -19,6 +19,9 @@ interface UseLayerCompositeReturn {
 export function useLayerComposite({ mainCanvasRef, data, activeLayerId }: UseLayerCompositeParams): UseLayerCompositeReturn {
   const layerCanvasesRef = useRef<Map<string, LayerCanvasEntry>>(new Map());
   const layerPixelsRef = useRef<Record<string, HexColor>>({});
+  const lastLayersRef = useRef<DrawingData['layers'] | null>(null);
+  const lastDimsRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
+  const lastActiveLayerIdRef = useRef<string | null>(null);
 
   const recompositeMain = useCallback(() => {
     const ctx = mainCanvasRef.current?.getContext('2d');
@@ -35,11 +38,16 @@ export function useLayerComposite({ mainCanvasRef, data, activeLayerId }: UseLay
   }, [mainCanvasRef, data]);
 
   useEffect(() => {
+    if (lastActiveLayerIdRef.current === activeLayerId && lastLayersRef.current === data.layers) return;
     const layer = data.layers.find(l => l.id === activeLayerId);
     layerPixelsRef.current = layer ? { ...layer.pixels } : {};
+    lastActiveLayerIdRef.current = activeLayerId;
   }, [data, activeLayerId]);
 
   useEffect(() => {
+    const sameDims = lastDimsRef.current.w === data.width && lastDimsRef.current.h === data.height;
+    if (lastLayersRef.current === data.layers && sameDims) return;
+
     const cache = layerCanvasesRef.current;
     const seen = new Set<string>();
     for (const layer of data.layers) {
@@ -60,7 +68,10 @@ export function useLayerComposite({ mainCanvasRef, data, activeLayerId }: UseLay
       const ctx = entry.canvas.getContext('2d');
       if (!ctx) continue;
       ctx.clearRect(0, 0, data.width, data.height);
-      for (const [key, c] of Object.entries(layer.pixels)) {
+      const pixels = layer.pixels;
+      for (const key in pixels) {
+        const c = pixels[key];
+        if (!c) continue;
         const comma = key.indexOf(',');
         ctx.fillStyle = c;
         ctx.fillRect(parseInt(key.slice(0, comma), 10), parseInt(key.slice(comma + 1), 10), 1, 1);
@@ -70,6 +81,8 @@ export function useLayerComposite({ mainCanvasRef, data, activeLayerId }: UseLay
     for (const id of Array.from(cache.keys())) {
       if (!seen.has(id)) cache.delete(id);
     }
+    lastLayersRef.current = data.layers;
+    lastDimsRef.current = { w: data.width, h: data.height };
     recompositeMain();
   }, [data, recompositeMain]);
 

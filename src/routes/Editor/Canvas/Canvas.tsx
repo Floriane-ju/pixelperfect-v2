@@ -110,9 +110,9 @@ export function Canvas({
   }, []);
 
   const pickColorAt = useCallback((px: { x: number; y: number }) => {
-    const c = pickColorFrom(data, px);
+    const c = pickColorFrom(canvasRef.current, px, data.width, data.height);
     if (c) onPickColor?.(c);
-  }, [data, onPickColor]);
+  }, [data.width, data.height, onPickColor]);
 
   const restoreDrawSession = useCallback(() => {
     const snapshot = drawSessionSnapshot.current;
