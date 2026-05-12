@@ -13,8 +13,8 @@
 - Respecter `env(safe-area-inset-*)` sur iPhone à encoche (mixins `safe-area-top`/`safe-area-bottom`).
 
 ## Offline
-- Workbox cache `js/css/html/svg/png/ico/woff2` par défaut.
-- Toute donnée utilisateur (dessins en cours) doit pouvoir tomber dans une file localStorage en cas d'échec réseau, puis se synchroniser.
+- Workbox cache `js/css/html/svg/png/ico/woff2` par défaut (cap 3 MiB par fichier).
+- Dessins en cours mis en file dans IndexedDB (`src/lib/offlineQueue.ts`, base `pixelperfect`, store `offline-queue`) en cas d'échec réseau, puis re-sync. Ne pas réintroduire de fallback localStorage — la migration des anciennes entrées est déjà gérée par `getPending`.
 
 ## iOS particularités
 - Pas de `100vh` (bug Safari) → utiliser `100dvh`.

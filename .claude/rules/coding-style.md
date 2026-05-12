@@ -32,6 +32,8 @@
 - Pas de bloc commenté.
 - Commentaires uniquement quand le **pourquoi** n'est pas évident.
 
-## Tests (à venir)
-- Vitest + Testing Library côté unité quand le besoin se présente.
-- Pas de mocks de la persistance dans les tests d'intégration : Supabase local ou stubbed côté réseau uniquement.
+## Tests
+- Vitest + Testing Library + jsdom (cf. bloc `test` dans `vite.config.ts`).
+- Co-localiser les tests : `<module>.test.ts` à côté du module testé (cf. `routes/Editor/colorMerge.test.ts`, `hooks/useSave.test.ts`).
+- Lancer via `npm run test`.
+- Pas de mocks de la persistance dans les tests d'intégration : Supabase local ou stubbé côté réseau uniquement.
