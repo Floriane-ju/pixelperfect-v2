@@ -1,0 +1,59 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+  width: 100%;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: $font-family-base;
+  font-size: $font-size-xs;
+  color: $color-text;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.valueLabel {
+  color: $color-text-muted;
+  font-family: $font-family-mono;
+  font-size: $font-size-xs;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.input {
+  width: 100%;
+  height: $space-s;
+  appearance: none;
+  background: $color-surface-2;
+  cursor: pointer;
+  touch-action: none;
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: $space-sm;
+    height: $size-slider-thumb;
+    background: $color-primary;
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: $space-sm;
+    height: $size-slider-thumb;
+    background: $color-primary;
+    cursor: grab;
+    border: 0;
+    border-radius: 0;
+  }
+
+  &:focus-visible {
+    outline-offset: $outline-offset;
+  }
+}

@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/Button';
 import { Menu } from '@/components/Menu';
+import { Slider } from '@/components/Slider';
 import { LayerPanel } from '@/routes/Editor/LayerPanel/LayerPanel';
 import { useEditorContext } from '../EditorContext';
 import styles from './Topbar.module.scss';
@@ -130,93 +131,68 @@ export function Topbar() {
 
                 {refImage && (
                   <>
-                    <div className={styles.sliderGroup}>
-                      <div className={styles.sliderLabel}>
-                        <span>Position X</span>
-                        <span className={styles.sliderValue}>{Math.round(refImage.x)} px</span>
-                      </div>
-                      <input
-                        type="range"
-                        className={styles.slider}
-                        min={xMin}
-                        max={xMax}
-                        step={1}
-                        value={Math.round(refImage.x)}
-                        aria-label="Position X de la référence"
-                        aria-valuetext={`${Math.round(refImage.x)} pixels`}
-                        onChange={e =>
-                          onRefImageTransform(Number(e.target.value), refImage.y, refImage.scale, refImage.opacity)
-                        }
-                      />
-                    </div>
+                    <Slider
+                      label="Position X"
+                      valueLabel={`${Math.round(refImage.x)} px`}
+                      min={xMin}
+                      max={xMax}
+                      step={1}
+                      value={Math.round(refImage.x)}
+                      ariaLabel="Position X de la référence"
+                      ariaValueText={`${Math.round(refImage.x)} pixels`}
+                      onChange={v =>
+                        onRefImageTransform(v, refImage.y, refImage.scale, refImage.opacity)
+                      }
+                    />
 
-                    <div className={styles.sliderGroup}>
-                      <div className={styles.sliderLabel}>
-                        <span>Position Y</span>
-                        <span className={styles.sliderValue}>{Math.round(refImage.y)} px</span>
-                      </div>
-                      <input
-                        type="range"
-                        className={styles.slider}
-                        min={yMin}
-                        max={yMax}
-                        step={1}
-                        value={Math.round(refImage.y)}
-                        aria-label="Position Y de la référence"
-                        aria-valuetext={`${Math.round(refImage.y)} pixels`}
-                        onChange={e =>
-                          onRefImageTransform(refImage.x, Number(e.target.value), refImage.scale, refImage.opacity)
-                        }
-                      />
-                    </div>
+                    <Slider
+                      label="Position Y"
+                      valueLabel={`${Math.round(refImage.y)} px`}
+                      min={yMin}
+                      max={yMax}
+                      step={1}
+                      value={Math.round(refImage.y)}
+                      ariaLabel="Position Y de la référence"
+                      ariaValueText={`${Math.round(refImage.y)} pixels`}
+                      onChange={v =>
+                        onRefImageTransform(refImage.x, v, refImage.scale, refImage.opacity)
+                      }
+                    />
 
-                    <div className={styles.sliderGroup}>
-                      <div className={styles.sliderLabel}>
-                        <span>Zoom</span>
-                        <span className={styles.sliderValue}>{Math.round(refImage.scale * 100)} %</span>
-                      </div>
-                      <input
-                        type="range"
-                        className={styles.slider}
-                        min={0.05}
-                        max={5}
-                        step={0.01}
-                        value={refImage.scale}
-                        aria-label="Zoom de la référence"
-                        aria-valuetext={`${Math.round(refImage.scale * 100)} pour cent`}
-                        onChange={e => {
-                          const newScale = Number(e.target.value);
-                          const cx = refImage.x + (refImage.naturalWidth * refImage.scale) / 2;
-                          const cy = refImage.y + (refImage.naturalHeight * refImage.scale) / 2;
-                          onRefImageTransform(
-                            cx - (refImage.naturalWidth * newScale) / 2,
-                            cy - (refImage.naturalHeight * newScale) / 2,
-                            newScale,
-                            refImage.opacity,
-                          );
-                        }}
-                      />
-                    </div>
+                    <Slider
+                      label="Zoom"
+                      valueLabel={`${Math.round(refImage.scale * 100)} %`}
+                      min={0.05}
+                      max={5}
+                      step={0.01}
+                      value={refImage.scale}
+                      ariaLabel="Zoom de la référence"
+                      ariaValueText={`${Math.round(refImage.scale * 100)} pour cent`}
+                      onChange={newScale => {
+                        const cx = refImage.x + (refImage.naturalWidth * refImage.scale) / 2;
+                        const cy = refImage.y + (refImage.naturalHeight * refImage.scale) / 2;
+                        onRefImageTransform(
+                          cx - (refImage.naturalWidth * newScale) / 2,
+                          cy - (refImage.naturalHeight * newScale) / 2,
+                          newScale,
+                          refImage.opacity,
+                        );
+                      }}
+                    />
 
-                    <div className={styles.sliderGroup}>
-                      <div className={styles.sliderLabel}>
-                        <span>Opacité</span>
-                        <span className={styles.sliderValue}>{Math.round(refImage.opacity * 100)} %</span>
-                      </div>
-                      <input
-                        type="range"
-                        className={styles.slider}
-                        min={0.05}
-                        max={1}
-                        step={0.01}
-                        value={refImage.opacity}
-                        aria-label="Opacité de la référence"
-                        aria-valuetext={`${Math.round(refImage.opacity * 100)} pour cent`}
-                        onChange={e =>
-                          onRefImageTransform(refImage.x, refImage.y, refImage.scale, Number(e.target.value))
-                        }
-                      />
-                    </div>
+                    <Slider
+                      label="Opacité"
+                      valueLabel={`${Math.round(refImage.opacity * 100)} %`}
+                      min={0.05}
+                      max={1}
+                      step={0.01}
+                      value={refImage.opacity}
+                      ariaLabel="Opacité de la référence"
+                      ariaValueText={`${Math.round(refImage.opacity * 100)} pour cent`}
+                      onChange={v =>
+                        onRefImageTransform(refImage.x, refImage.y, refImage.scale, v)
+                      }
+                    />
 
                     <Button
                       variant="primary"

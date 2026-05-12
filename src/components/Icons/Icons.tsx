@@ -29,7 +29,8 @@ export type IconName =
   | 'reference'
   | 'fill'
   | 'erase'
-  | 'pipette';
+  | 'pipette'
+  | 'settings';
 
 export interface IconsProps {
   icon: IconName;
@@ -163,7 +164,7 @@ function renderIcon(icon: IconName): React.ReactNode {
     case 'select':
       return (
         <>
-          <path d="M0 0L2 0L2 1L0 1zM3 0L4 0L4 1L3 1zM6 0L8 0L8 1L6 1zM0 1L1 1L1 2L0 2zM7 1L8 1L8 2L7 2zM0 3L1 3L1 4L0 4zM7 3L8 3L8 4L7 4zM0 6L1 6L1 7L0 7zM7 6L8 6L8 7L7 7zM0 7L2 7L2 8L0 8zM3 7L4 7L4 8L3 8zM6 7L8 7L8 8L6 8z"/>
+          <path d="M0 0L2 0L2 1L6 1L6 0L8 0L8 2L7 2L7 6L8 6L8 8L6 8L6 7L2 7L2 8L0 8L0 6L1 6L1 2L0 2ZM2 2L2 6L6 6L6 2ZM3 3L4 3L4 4L3 4ZM4 4L5 4L5 5L4 5Z"/>
         </>
       );
     case 'duplicate':
@@ -211,7 +212,13 @@ function renderIcon(icon: IconName): React.ReactNode {
     case 'pipette':
       return (
         <>
-          <path d="M1 6L2 6L2 7L1 7zM2 5L3 5L3 6L2 6zM3 4L4 4L4 5L3 5zM4 3L5 3L5 4L4 4zM5 2L6 2L6 3L5 3zM5 4L6 4L6 5L5 5zM4 5L5 5L5 6L4 6zM6 1L7 1L7 2L6 2zM6 3L7 3L7 4L6 4zM7 2L8 2L8 3L7 3z"/>
+          <path d="M1 7L1 5L2 5L2 4L3 4L3 3L4 3L4 2L5 2L5 1L7 1L7 3L6 3L6 4L5 4L5 5L4 5L4 6L3 6L3 7ZM6 4L7 4L7 5L6 5ZM3 1L4 1L4 2L3 2Z"/>
+        </>
+      );
+    case 'settings':
+      return (
+        <>
+          <path d="M1 1L3 1L3 2L2 2L2 3L1 3ZM2 3L3 3L3 5L2 5ZM3 2L5 2L5 3L3 3ZM5 3L6 3L6 5L5 5ZM3 5L5 5L5 6L3 6ZM3 0L5 0L5 1L3 1ZM7 3L8 3L8 5L7 5ZM5 1L7 1L7 3L6 3L6 2L5 2ZM6 5L7 5L7 7L5 7L5 6L6 6ZM5 7L5 8L3 8L3 7ZM2 6L3 6L3 7L1 7L1 5L2 5ZM1 5L0 5L0 3L1 3Z"/>
         </>
       );
     default:

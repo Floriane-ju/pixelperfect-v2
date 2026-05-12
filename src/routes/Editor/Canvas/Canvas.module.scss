@@ -53,6 +53,7 @@
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   display: block;
+  opacity: var(--checker-opacity, 1);
 }
 
 .canvas {

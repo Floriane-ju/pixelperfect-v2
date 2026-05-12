@@ -8,6 +8,8 @@ import { ColorWheelIcon } from '@/components/ColorWheelIcon';
 import { BrushSizeSlider } from '@/components/BrushSizeSlider';
 import { Button } from '@/components/Button';
 import { ColorPicker } from './ColorPicker/ColorPicker';
+import { SettingsPanel } from './SettingsPanel';
+import type { EditorBgColor } from './SettingsPanel';
 import { ContextMenu } from '@/components/ContextMenu';
 import { Canvas } from './Canvas/Canvas';
 import type { Tool } from './Canvas/Canvas';
@@ -129,8 +131,13 @@ export function Editor() {
   const [mirrorH, setMirrorH] = useState(false);
   const [mirrorV, setMirrorV] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [gridOpacity, setGridOpacity] = useState(1);
+  const [bgColor, setBgColor] = useState<EditorBgColor>('white');
   const [canvasDisplaySize, setCanvasDisplaySize] = useState({ w: 256, h: 256 });
   const canvasAreaRef = useRef<HTMLDivElement>(null);
+  const leftSidebarRef = useRef<HTMLElement>(null);
+  const settingsContainerRef = useRef<HTMLDivElement>(null);
   const rightSidebarRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -178,6 +185,18 @@ export function Editor() {
   useEditorShortcuts({ handleUndo, handleRedo, setTool, selectionRef });
 
   const handleShowGridToggle = useCallback(() => setShowGrid(v => !v), []);
+  const handleSettingsToggle = useCallback(() => setShowSettings(v => !v), []);
+  const handleSettingsClose = useCallback(() => setShowSettings(false), []);
+
+  useEffect(() => {
+    if (!showSettings) return;
+    const handler = (e: PointerEvent) => {
+      const inPanel = settingsContainerRef.current?.contains(e.target as Node);
+      if (!inPanel) setShowSettings(false);
+    };
+    document.addEventListener('pointerdown', handler);
+    return () => document.removeEventListener('pointerdown', handler);
+  }, [showSettings]);
 
   const topbarRefImage = useMemo(() =>
     refImage ? { x: refImage.x, y: refImage.y, scale: refImage.scale, opacity: refImage.opacity, naturalWidth: refImage.naturalWidth, naturalHeight: refImage.naturalHeight } : null,
@@ -303,7 +322,7 @@ export function Editor() {
         <Topbar />
 
         <div className={styles.body}>
-          <aside className={styles.leftSidebar} aria-label="Outils d'affichage">
+          <aside ref={leftSidebarRef} className={styles.leftSidebar} aria-label="Outils d'affichage">
             <BrushSizeSlider value={brushSize} onChange={setBrushSize} min={1} max={16} />
             <div className={styles.leftSidebarTools}>
               <Button
@@ -326,22 +345,39 @@ export function Editor() {
                 aria-pressed={mirrorV}
                 onClick={() => setMirrorV(v => !v)}
               />
-              <Button
-                variant={showGrid ? 'selected' : 'selectable'}
-                size="md"
-                iconOnly
-                iconLeft="grid"
-                title="Afficher la grille"
-                aria-label="Afficher la grille"
-                aria-pressed={showGrid}
-                onClick={handleShowGridToggle}
-              />
+              <div ref={settingsContainerRef} className={styles.settingsContainer}>
+                <Button
+                  variant={showSettings ? 'selected' : 'selectable'}
+                  size="md"
+                  iconOnly
+                  iconLeft="settings"
+                  title="Paramètres"
+                  aria-label="Paramètres"
+                  aria-expanded={showSettings}
+                  onClick={handleSettingsToggle}
+                />
+                {showSettings && (
+                  <div className={styles.settingsPanelAnchor}>
+                    <SettingsPanel
+                      showGrid={showGrid}
+                      gridOpacity={gridOpacity}
+                      bgColor={bgColor}
+                      onShowGridToggle={handleShowGridToggle}
+                      onGridOpacityChange={setGridOpacity}
+                      onBgColorChange={setBgColor}
+                      onClose={handleSettingsClose}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </aside>
           <div
             ref={canvasAreaRef}
             id="canvas"
             className={styles.canvasArea}
+            data-bg={bgColor}
+            style={{ ['--checker-opacity' as string]: String(gridOpacity) } as CSSProperties}
             role="img"
             aria-label={`Dessin « ${drawing.title} » : ${drawing.data.width}×${drawing.data.height} pixels, ${drawing.data.layers.length} calque${drawing.data.layers.length > 1 ? 's' : ''}`}
           >

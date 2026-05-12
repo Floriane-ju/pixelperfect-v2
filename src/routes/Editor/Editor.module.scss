@@ -26,6 +26,10 @@
   background:$neutral-0;
   box-shadow:8px 8px 0 0 #{$accent-1-600};
   border:$border-m-accent-1;
+
+  &[data-bg='white']  { background: $neutral-0; }
+  &[data-bg='gray']   { background: $neutral-500; }
+  &[data-bg='black']  { background: $neutral-1000; }
 }
 
 .leftSidebar {
@@ -44,6 +48,18 @@
   flex-direction: column;
   gap: $space-xs;
   flex-shrink: 0;
+}
+
+.settingsContainer {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.settingsPanelAnchor {
+  position: absolute;
+  bottom: 0;
+  left: calc(100% + $space-s);
+  z-index: $z-dropdown;
 }
 
 .rightSidebar {
