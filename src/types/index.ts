@@ -14,6 +14,8 @@ export interface DrawingData {
   layers: PixelLayer[];
 }
 
+export type CollaboratorRole = 'owner' | 'editor';
+
 export interface DrawingRow {
   id: string;
   title: string;
@@ -21,5 +23,6 @@ export interface DrawingRow {
   created_at: string;
   updated_at: string;
   group: string | null;
+  owner_id: string;
   collaborator_count: number;
 }

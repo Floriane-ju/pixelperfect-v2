@@ -9,7 +9,7 @@ interface Props {
   drawingId: string;
   drawingTitle: string;
   onClose: () => void;
-  onInvited?: (userId: string) => void;
+  onInvited?: (userId: string, email: string) => void;
 }
 
 type Status = 'idle' | 'pending' | 'error';
@@ -35,7 +35,7 @@ export function InviteCollaboratorModal({ drawingId, drawingTitle, onClose, onIn
     setMessage('');
     try {
       const userId = await addCollaboratorByEmail(drawingId, trimmed);
-      onInvited?.(userId);
+      onInvited?.(userId, trimmed);
       onClose();
     } catch (err) {
       setStatus('error');

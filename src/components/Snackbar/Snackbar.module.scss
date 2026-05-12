@@ -1,0 +1,45 @@
+.snackbar {
+  position: fixed;
+  left: 50%;
+  bottom: max(#{$space-l}, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: $z-toast;
+
+  display: flex;
+  align-items: center;
+  gap: $space-s;
+
+  max-width: calc(100% - #{$space-2xl});
+  padding: $space-sm $space-m;
+
+  background: $color-surface;
+  color: $color-text;
+  border: $border-m-accent-1;
+  box-shadow: $shadow-modal;
+
+  font-family: $font-family-base;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+
+  animation: slide-up $transition-base both;
+}
+
+.icon {
+  flex-shrink: 0;
+  color: $accent-1-500;
+}
+
+.message {
+  min-width: 0;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translate(-50%, #{$space-m});
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

@@ -52,8 +52,11 @@
 |--------|--------|
 | `P` | Crayon |
 | `E` | Gomme |
+| `F` | Pot de peinture |
+| `K` | Pipette |
 | `S` | Sélection |
 | `L` | Ligne |
+| `R` | Rectangle |
 | `O` | Cercle |
 | `Ctrl/Cmd+Z` | Annuler |
 | `Ctrl/Cmd+Shift+Z` | Rétablir |
@@ -89,14 +92,15 @@
 - Accès direct par URL (`/editor/{id}`)
 
 ### Hors ligne
-- File d'attente localStorage quand le réseau est indisponible
+- File d'attente IndexedDB quand le réseau est indisponible (`src/lib/offlineQueue.ts`)
 - Synchronisation automatique au retour de la connectivité
 
 ---
 
 ## Authentification
-- Protection optionnelle par mot de passe (variable `VITE_APP_PASSWORD`)
-- Session persistante dans `sessionStorage`
+- Connexion par email + mot de passe (Supabase Auth)
+- Session persistante gérée par `supabase-js`
+- Route protégée via `RequireAuth`
 
 ---
 

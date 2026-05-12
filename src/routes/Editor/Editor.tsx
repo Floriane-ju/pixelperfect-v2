@@ -46,12 +46,46 @@ function InvisibleLayerModal({ onCancel, onConfirm }: InvisibleLayerModalProps) 
           Ce calque est masqué. Voulez-vous l'afficher pour pouvoir dessiner dessus ?
         </p>
         <div className={styles.modalActions}>
-          <button className={styles.modalBtnSecondary} onClick={onCancel}>
+          <Button variant="secondary" size="sm" onClick={onCancel}>
             Annuler
-          </button>
-          <button className={styles.modalBtnPrimary} onClick={onConfirm}>
+          </Button>
+          <Button variant="primary" size="sm" onClick={onConfirm}>
             Afficher le calque
-          </button>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface CapturePixelsModalProps {
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+function CapturePixelsModal({ onCancel, onConfirm }: CapturePixelsModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  useModalA11y({ modalRef, onClose: onCancel });
+  return (
+    <div className={styles.modalOverlay} onClick={onCancel}>
+      <div
+        ref={modalRef}
+        className={styles.modal}
+        onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="capture-pixels-text"
+      >
+        <p id="capture-pixels-text" className={styles.modalText}>
+          Cette action remplit le calque actif avec les couleurs de la référence et écrase les pixels existants. Continuer ?
+        </p>
+        <div className={styles.modalActions}>
+          <Button variant="secondary" size="sm" onClick={onCancel}>
+            Annuler
+          </Button>
+          <Button variant="primary" size="sm" onClick={onConfirm}>
+            Capturer
+          </Button>
         </div>
       </div>
     </div>
@@ -70,6 +104,7 @@ export function Editor() {
   const [brushSize, setBrushSize] = useState<number>(1);
   const [activeLayerId, setActiveLayerId] = useState<string>('');
   const [showInvisibleModal, setShowInvisibleModal] = useState(false);
+  const [showCaptureModal, setShowCaptureModal] = useState(false);
   const [mirrorH, setMirrorH] = useState(false);
   const [mirrorV, setMirrorV] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
@@ -142,7 +177,7 @@ export function Editor() {
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
       const text = e.clipboardData?.getData('text') ?? '';
       const raw = text.trim().replace(/^#/, '');
-      if (!/^[0-9a-fA-F]{6}$/.test(raw)) return;
+      if (!/^([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(raw)) return;
       e.preventDefault();
       const hex = `#${raw.toUpperCase()}` as HexColor;
       handleColorChange(hex);
@@ -168,6 +203,15 @@ export function Editor() {
   const handleBack = useCallback(() => navigate('/'), [navigate]);
   const handlePanelClose = useCallback(() => setOpenPanel(null), [setOpenPanel]);
 
+  const handleCaptureRequest = useCallback(() => {
+    const activeLayer = drawing?.data.layers.find(l => l.id === activeLayerId);
+    if (activeLayer && Object.keys(activeLayer.pixels).length > 0) {
+      setShowCaptureModal(true);
+      return;
+    }
+    handleCapturePixels();
+  }, [drawing, activeLayerId, handleCapturePixels]);
+
   if (status === 'loading') {
     return (
       <main className={styles.editor}>
@@ -183,9 +227,9 @@ export function Editor() {
       <main className={styles.editor}>
         <div className={styles.centered}>
           <span className={styles.danger} role="alert">Impossible de charger le dessin.</span>
-          <button className={styles.linkBtn} onClick={() => navigate('/')}>
-            ← Retour à la galerie
-          </button>
+          <Button variant="ghost" size="sm" iconLeft="back" onClick={() => navigate('/')}>
+            Retour à la galerie
+          </Button>
         </div>
       </main>
     );
@@ -219,7 +263,7 @@ export function Editor() {
     onRefImageErrorClear: clearRefImageError,
     onRefImageRemove: handleRefImageRemove,
     onRefImageTransform: handleRefImageTransform,
-    onRefImageCapture: handleCapturePixels,
+    onRefImageCapture: handleCaptureRequest,
     canvasDisplaySize,
     onCopySvg: handleCopySvg,
   };
@@ -294,15 +338,17 @@ export function Editor() {
 
           <aside ref={rightSidebarRef} className={styles.rightSidebar}>
             <div className={styles.colorWheelContainer}>
-              <button
-                className={styles.colorWheelBtn}
+              <Button
+                variant="ghost"
+                size="md"
+                iconOnly
                 title="Choisir une couleur"
                 aria-label="Choisir une couleur"
                 aria-expanded={openPanel === 'color' && !editColorMode}
                 onClick={() => handlePanelToggle('color')}
               >
                 <ColorWheelIcon size={32} />
-              </button>
+              </Button>
               {openPanel === 'color' && !editColorMode && (
                 <div className={styles.colorPanel}>
                   <ColorPicker value={color} onChange={handleColorChange} onColorHover={setHoveredColor} recentColors={displayedRecentColors} drawingColors={drawingColors} />
@@ -366,6 +412,13 @@ export function Editor() {
           <InvisibleLayerModal
             onCancel={() => setShowInvisibleModal(false)}
             onConfirm={() => { handleLayerVisibilityToggle(activeLayerId); setShowInvisibleModal(false); }}
+          />
+        )}
+
+        {showCaptureModal && (
+          <CapturePixelsModal
+            onCancel={() => setShowCaptureModal(false)}
+            onConfirm={() => { setShowCaptureModal(false); handleCapturePixels(); }}
           />
         )}
       </main>

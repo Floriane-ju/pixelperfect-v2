@@ -21,7 +21,7 @@ export default defineConfig({
         name: 'PixelPerfect',
         short_name: 'PixelPerfect',
         description: 'Éditeur de pixel art installable',
-        theme_color: '#ffffff',
+        theme_color: '#553692',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'any',

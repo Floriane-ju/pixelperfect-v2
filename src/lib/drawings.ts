@@ -1,8 +1,8 @@
 import { supabase } from './supabase';
-import type { DrawingData, DrawingRow, HexColor, PixelLayer } from '@/types';
+import type { CollaboratorRole, DrawingData, DrawingRow, HexColor, PixelLayer } from '@/types';
 
 const MAX_DIMENSION = 512;
-const HEX_COLOR_RE = /^#[0-9a-fA-F]{3,8}$/;
+const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -54,12 +54,13 @@ function parseCollaboratorCount(raw: unknown): number {
 
 function parseDrawingRow(raw: unknown): DrawingRow {
   if (!isRecord(raw)) throw new Error('Invalid DrawingRow: row must be object');
-  const { id, title, data, created_at, updated_at, group, drawing_users } = raw;
+  const { id, title, data, created_at, updated_at, group, owner_id, drawing_users } = raw;
   if (typeof id !== 'string') throw new Error('Invalid DrawingRow: id');
   if (typeof title !== 'string') throw new Error('Invalid DrawingRow: title');
   if (typeof created_at !== 'string') throw new Error('Invalid DrawingRow: created_at');
   if (typeof updated_at !== 'string') throw new Error('Invalid DrawingRow: updated_at');
   if (group !== null && typeof group !== 'string') throw new Error('Invalid DrawingRow: group');
+  if (typeof owner_id !== 'string') throw new Error('Invalid DrawingRow: owner_id');
   return {
     id,
     title,
@@ -67,6 +68,7 @@ function parseDrawingRow(raw: unknown): DrawingRow {
     created_at,
     updated_at,
     group,
+    owner_id,
     collaborator_count: parseCollaboratorCount(drawing_users),
   };
 }
@@ -74,7 +76,7 @@ function parseDrawingRow(raw: unknown): DrawingRow {
 export async function fetchDrawings(): Promise<DrawingRow[]> {
   const { data, error } = await supabase
     .from('drawings')
-    .select('id, title, data, created_at, updated_at, group, drawing_users(count)')
+    .select('id, title, data, created_at, updated_at, group, owner_id, drawing_users(count)')
     .order('updated_at', { ascending: false });
 
   if (error) throw error;
@@ -121,7 +123,7 @@ export async function renameGroup(oldName: string, newName: string): Promise<voi
 export async function fetchDrawing(id: string): Promise<DrawingRow> {
   const { data, error } = await supabase
     .from('drawings')
-    .select('id, title, data, created_at, updated_at, group, drawing_users(count)')
+    .select('id, title, data, created_at, updated_at, group, owner_id, drawing_users(count)')
     .eq('id', id)
     .single();
   if (error) throw error;
@@ -194,6 +196,12 @@ export async function removeCollaborator(drawingId: string, userId: string): Pro
 export interface CollaboratorInfo {
   user_id: string;
   email: string;
+  role: CollaboratorRole;
+}
+
+function parseRole(v: unknown): CollaboratorRole {
+  if (v === 'owner' || v === 'editor') return v;
+  throw new Error('Invalid collaborator row: role');
 }
 
 export async function listCollaboratorsWithEmail(drawingId: string): Promise<CollaboratorInfo[]> {
@@ -204,7 +212,7 @@ export async function listCollaboratorsWithEmail(drawingId: string): Promise<Col
     if (!isRecord(row) || typeof row.user_id !== 'string' || typeof row.email !== 'string') {
       throw new Error('Invalid collaborator row');
     }
-    return { user_id: row.user_id, email: row.email };
+    return { user_id: row.user_id, email: row.email, role: parseRole(row.role) };
   });
 }
 

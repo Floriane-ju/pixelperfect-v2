@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
@@ -6,11 +6,17 @@ import { signIn } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import styles from './Login.module.scss';
 
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 30_000;
+
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [lockUntil, setLockUntil] = useState<number | null>(null);
+  const [remaining, setRemaining] = useState(0);
+  const attemptsRef = useRef(0);
   const navigate = useNavigate();
   const location = useLocation();
   const rawFrom = (location.state as { from?: { pathname: string } } | null)?.from?.pathname;
@@ -22,15 +28,41 @@ export function Login() {
     });
   }, [from, navigate]);
 
+  useEffect(() => {
+    if (lockUntil === null) return;
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((lockUntil - Date.now()) / 1000));
+      setRemaining(left);
+      if (left === 0) {
+        setLockUntil(null);
+        attemptsRef.current = 0;
+        setError(null);
+      }
+    };
+    tick();
+    const id = window.setInterval(tick, 500);
+    return () => window.clearInterval(id);
+  }, [lockUntil]);
+
+  const locked = lockUntil !== null && Date.now() < lockUntil;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (locked) return;
     setError(null);
     setLoading(true);
     try {
       await signIn(email, password);
+      attemptsRef.current = 0;
       navigate(from, { replace: true });
     } catch {
-      setError('Email ou mot de passe incorrect');
+      attemptsRef.current += 1;
+      if (attemptsRef.current >= MAX_ATTEMPTS) {
+        setLockUntil(Date.now() + LOCKOUT_MS);
+        setError(`Trop de tentatives. Réessayez dans ${Math.ceil(LOCKOUT_MS / 1000)} s.`);
+      } else {
+        setError('Email ou mot de passe incorrect');
+      }
     } finally {
       setLoading(false);
     }
@@ -60,8 +92,8 @@ export function Login() {
             required
           />
           {error && <p className={styles.error} role="alert">{error}</p>}
-          <Button type="submit" variant="primary" fullWidth disabled={loading}>
-            {loading ? 'Connexion…' : 'Se connecter'}
+          <Button type="submit" variant="primary" fullWidth disabled={loading || locked}>
+            {locked ? `Réessayez dans ${remaining} s` : loading ? 'Connexion…' : 'Se connecter'}
           </Button>
         </form>
       </div>

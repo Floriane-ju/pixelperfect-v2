@@ -107,12 +107,14 @@ export function Topbar() {
             />
             {openPanel === 'ref' && (
               <div className={styles.refPanel}>
-                <button
-                  className={styles.refImportBtn}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  fullWidth
                   onClick={() => fileInputRef.current?.click()}
                 >
                   Importer une image
-                </button>
+                </Button>
 
                 {refImageError && (
                   <div className={styles.refError} role="alert" onClick={onRefImageErrorClear}>
@@ -202,19 +204,23 @@ export function Topbar() {
                       />
                     </div>
 
-                    <button
-                      className={styles.refCaptureBtn}
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      fullWidth
                       onClick={onRefImageCapture}
                     >
                       Capturer les pixels
-                    </button>
+                    </Button>
 
-                    <button
-                      className={styles.refRemoveBtn}
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      fullWidth
                       onClick={() => { onRefImageRemove(); onPanelClose(); }}
                     >
                       Retirer l'image
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>

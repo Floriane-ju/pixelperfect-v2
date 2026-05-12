@@ -64,19 +64,6 @@
   flex-shrink: 0;
 }
 
-.colorWheelBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: $btn-height;
-  height: $btn-height;
-  cursor: pointer;
-  background: transparent;
-  padding: 0;
-  border: none;
-  flex-shrink: 0;
-}
-
 .colorPanel {
   position: absolute;
   top: 0;
@@ -148,19 +135,6 @@
   font-size: $font-size-sm;
 }
 
-.linkBtn {
-  background: none;
-  border: none;
-  color: $color-primary;
-  cursor: pointer;
-  font-size: $font-size-sm;
-  padding: $space-s;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
 // ── Modals ────────────────────────────────────────────────────────────────────
 
 .modalOverlay {
@@ -194,34 +168,6 @@
   display: flex;
   gap: $space-s;
   justify-content: flex-end;
-}
-
-.modalBtnSecondary {
-  padding: $space-s $space-m;
-  background: transparent;
-  color: $color-text-muted;
-  font-size: $font-size-sm;
-  cursor: pointer;
-  transition: background $transition-fast, color $transition-fast;
-
-  &:hover {
-    background: $color-surface-2;
-    color: $color-text;
-  }
-}
-
-.modalBtnPrimary {
-  padding: $space-s $space-m;
-  background: $color-primary;
-  color: $color-white;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  cursor: pointer;
-  transition: background $transition-fast;
-
-  &:hover {
-    background: $color-primary-hover;
-  }
 }
 
 .savingBadge {

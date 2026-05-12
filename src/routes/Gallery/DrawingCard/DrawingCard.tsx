@@ -125,7 +125,7 @@ export function DrawingCard({ drawing, onClick, onRename, onDelete, onRemoveFrom
             ) : (
               <span className={styles.title}>{drawing.title}</span>
             )}
-            {mode === 'default' && drawing.collaborator_count >= 2 && (
+            {mode === 'default' && drawing.collaborator_count >= 1 && (
               <CollaboratorsButton drawingId={drawing.id} count={drawing.collaborator_count} />
             )}
             {menuItems.length > 0 && mode === 'default' && (

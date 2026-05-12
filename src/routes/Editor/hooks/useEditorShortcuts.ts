@@ -32,9 +32,20 @@ export function useEditorShortcuts({ handleUndo, handleRedo, setTool, selectionR
       if (inText) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      if (e.key === 's' || e.key === 'S') {
+      const toolKeys: Record<string, Tool> = {
+        p: 'pencil',
+        e: 'eraser',
+        f: 'fill',
+        k: 'eyedropper',
+        l: 'line',
+        r: 'square',
+        o: 'circle',
+        s: 'select',
+      };
+      const tool = toolKeys[e.key.toLowerCase()];
+      if (tool) {
         e.preventDefault();
-        setTool('select');
+        setTool(tool);
         return;
       }
       if (e.key === 'Escape') {

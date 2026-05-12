@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/Button';
+import { useSnackbar } from '@/components/Snackbar';
 import { DrawingCard } from './DrawingCard/DrawingCard';
 import { GroupCard } from './GroupCard/GroupCard';
 import { GroupModal } from './GroupModal/GroupModal';
@@ -17,6 +18,7 @@ type Status = 'idle' | 'loading' | 'error';
 
 export function Gallery() {
   const navigate = useNavigate();
+  const snackbar = useSnackbar();
   const [drawings, setDrawings] = useState<DrawingRow[]>([]);
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -219,13 +221,14 @@ export function Gallery() {
           drawingId={inviteTarget.id}
           drawingTitle={inviteTarget.title}
           onClose={() => setInviteTarget(null)}
-          onInvited={() => {
+          onInvited={(_userId, email) => {
             const id = inviteTarget.id;
             setDrawings((prev) =>
               prev.map((d) =>
-                d.id === id ? { ...d, collaborator_count: Math.max(2, d.collaborator_count + 1) } : d,
+                d.id === id ? { ...d, collaborator_count: d.collaborator_count + 1 } : d,
               ),
             );
+            snackbar.show(`${email} a été invité`, { icon: 'collaborators' });
           }}
         />
       )}

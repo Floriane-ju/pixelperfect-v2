@@ -1,10 +1,13 @@
 import { Outlet } from 'react-router-dom';
+import { SnackbarProvider } from '@/components/Snackbar';
 import styles from './AppLayout.module.scss';
 
 export function AppLayout() {
   return (
-    <div className={styles.app}>
-      <Outlet />
-    </div>
+    <SnackbarProvider>
+      <div className={styles.app}>
+        <Outlet />
+      </div>
+    </SnackbarProvider>
   );
 }
