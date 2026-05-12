@@ -3,13 +3,28 @@ import { renderHook, act } from '@testing-library/react';
 import { useState } from 'react';
 import { useSave } from './useSave';
 import { updateDrawingData } from '@/lib/drawings';
+import * as offlineQueue from '@/lib/offlineQueue';
 import type { DrawingData, DrawingRow } from '@/types';
 
 vi.mock('@/lib/drawings', () => ({
   updateDrawingData: vi.fn(),
 }));
 
+vi.mock('@/lib/offlineQueue', () => {
+  const store = new Map<string, DrawingData>();
+  return {
+    enqueue: vi.fn(async (id: string, data: DrawingData) => { store.set(id, data); }),
+    dequeue: vi.fn(async (id: string) => { store.delete(id); }),
+    getPending: vi.fn(async (id: string) => store.get(id) ?? null),
+    __store: store,
+  };
+});
+
 const updateMock = vi.mocked(updateDrawingData);
+const enqueueMock = vi.mocked(offlineQueue.enqueue);
+const dequeueMock = vi.mocked(offlineQueue.dequeue);
+const getPendingMock = vi.mocked(offlineQueue.getPending);
+const queueStore = offlineQueue as unknown as { __store: Map<string, DrawingData> };
 
 const data: DrawingData = {
   width: 4,
@@ -27,8 +42,6 @@ const row = (d: DrawingData): DrawingRow => ({
   collaborator_count: 1,
 });
 
-const QUEUE_KEY = 'pp_offline_d1';
-
 function setup(initial: DrawingRow | null = row(data)) {
   const setStatus = vi.fn();
   const hook = renderHook(() => {
@@ -43,7 +56,10 @@ beforeEach(() => {
   vi.useFakeTimers();
   updateMock.mockReset();
   updateMock.mockResolvedValue(undefined);
-  localStorage.clear();
+  enqueueMock.mockClear();
+  dequeueMock.mockClear();
+  getPendingMock.mockClear();
+  queueStore.__store.clear();
   Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
 });
 
@@ -75,47 +91,47 @@ describe('useSave', () => {
     expect(updateMock).toHaveBeenCalledTimes(1);
   });
 
-  it('enqueues to localStorage and sets error on failure', async () => {
+  it('enqueues to offline queue and sets error on failure', async () => {
     updateMock.mockRejectedValueOnce(new Error('network'));
     const { hook, setStatus } = setup();
     act(() => { hook.result.current.save.scheduleSave(); });
     await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
 
-    const queued = localStorage.getItem(QUEUE_KEY);
-    expect(queued).not.toBeNull();
-    expect(JSON.parse(queued!)).toEqual(data);
+    expect(enqueueMock).toHaveBeenCalledWith('d1', data);
+    expect(queueStore.__store.get('d1')).toEqual(data);
     expect(setStatus).toHaveBeenLastCalledWith('error');
   });
 
-  it('clears localStorage queue on successful save', async () => {
-    localStorage.setItem(QUEUE_KEY, JSON.stringify({ stale: true }));
+  it('clears offline queue on successful save', async () => {
+    queueStore.__store.set('d1', data);
     const { hook } = setup();
     act(() => { hook.result.current.save.scheduleSave(); });
     await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
-    expect(localStorage.getItem(QUEUE_KEY)).toBeNull();
+    expect(dequeueMock).toHaveBeenCalledWith('d1');
+    expect(queueStore.__store.has('d1')).toBe(false);
   });
 
   it('flushes pending queue on mount when online', async () => {
-    localStorage.setItem(QUEUE_KEY, JSON.stringify(data));
+    queueStore.__store.set('d1', data);
     const { setStatus } = setup();
     await act(async () => { await vi.advanceTimersByTimeAsync(0); });
     expect(updateMock).toHaveBeenCalledWith('d1', data);
-    expect(localStorage.getItem(QUEUE_KEY)).toBeNull();
+    expect(queueStore.__store.has('d1')).toBe(false);
     expect(setStatus).toHaveBeenCalledWith('ready');
   });
 
   it('does not flush on mount when offline', async () => {
     Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
-    localStorage.setItem(QUEUE_KEY, JSON.stringify(data));
+    queueStore.__store.set('d1', data);
     setup();
     await act(async () => { await vi.advanceTimersByTimeAsync(0); });
     expect(updateMock).not.toHaveBeenCalled();
-    expect(localStorage.getItem(QUEUE_KEY)).not.toBeNull();
+    expect(queueStore.__store.has('d1')).toBe(true);
   });
 
   it('retries on online event', async () => {
     Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
-    localStorage.setItem(QUEUE_KEY, JSON.stringify(data));
+    queueStore.__store.set('d1', data);
     setup();
     await act(async () => { await vi.advanceTimersByTimeAsync(0); });
     expect(updateMock).not.toHaveBeenCalled();
@@ -125,15 +141,15 @@ describe('useSave', () => {
       await vi.advanceTimersByTimeAsync(0);
     });
     expect(updateMock).toHaveBeenCalledWith('d1', data);
-    expect(localStorage.getItem(QUEUE_KEY)).toBeNull();
+    expect(queueStore.__store.has('d1')).toBe(false);
   });
 
   it('keeps queue when retry still fails', async () => {
     updateMock.mockRejectedValueOnce(new Error('still down'));
-    localStorage.setItem(QUEUE_KEY, JSON.stringify(data));
+    queueStore.__store.set('d1', data);
     setup();
     await act(async () => { await vi.advanceTimersByTimeAsync(0); });
-    expect(localStorage.getItem(QUEUE_KEY)).not.toBeNull();
+    expect(queueStore.__store.has('d1')).toBe(true);
   });
 
   it('does nothing when id is undefined', () => {

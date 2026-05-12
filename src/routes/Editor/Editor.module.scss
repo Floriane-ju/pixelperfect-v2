@@ -31,11 +31,19 @@
 .leftSidebar {
   display: flex;
   flex-direction: column;
+  gap: $space-sm;
   padding: $space-sm;
   flex-shrink: 0;
   background: $neutral-0;
   box-shadow: 8px 8px 0 0 #{$accent-1-600};
   border: $border-m-accent-1;
+}
+
+.leftSidebarTools {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+  flex-shrink: 0;
 }
 
 .rightSidebar {

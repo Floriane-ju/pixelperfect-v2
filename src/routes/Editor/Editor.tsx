@@ -5,6 +5,7 @@ import type { DrawingRow, HexColor } from '@/types';
 import { ColorSwatch } from '@/components/ColorSwatch';
 import { ColorWheelIcon } from '@/components/ColorWheelIcon';
 import { BrushSizeSlider } from '@/components/BrushSizeSlider';
+import { Button } from '@/components/Button';
 import { ColorPicker } from './ColorPicker/ColorPicker';
 import { ContextMenu } from './ContextMenu/ContextMenu';
 import { Canvas } from './Canvas/Canvas';
@@ -198,10 +199,6 @@ export function Editor() {
     canRedo,
     onUndo: handleUndo,
     onRedo: handleRedo,
-    mirrorH,
-    mirrorV,
-    onMirrorHChange: setMirrorH,
-    onMirrorVChange: setMirrorV,
     activeLayerId,
     layers: drawing.data.layers,
     canvasWidth: drawing.data.width,
@@ -225,8 +222,6 @@ export function Editor() {
     onRefImageCapture: handleCapturePixels,
     canvasDisplaySize,
     onCopySvg: handleCopySvg,
-    showGrid,
-    onShowGridToggle: handleShowGridToggle,
   };
 
   return (
@@ -236,8 +231,40 @@ export function Editor() {
         <Topbar />
 
         <div className={styles.body}>
-          <aside className={styles.leftSidebar} aria-label="Taille de brosse">
+          <aside className={styles.leftSidebar} aria-label="Outils d'affichage">
             <BrushSizeSlider value={brushSize} onChange={setBrushSize} min={1} max={16} />
+            <div className={styles.leftSidebarTools}>
+              <Button
+                variant={mirrorH ? 'selected' : 'selectable'}
+                size="md"
+                iconOnly
+                iconLeft="mirror"
+                title="Miroir horizontal"
+                aria-label="Miroir horizontal"
+                aria-pressed={mirrorH}
+                onClick={() => setMirrorH(v => !v)}
+              />
+              <Button
+                variant={mirrorV ? 'selected' : 'selectable'}
+                size="md"
+                iconOnly
+                iconLeft="mirror-v"
+                title="Miroir vertical"
+                aria-label="Miroir vertical"
+                aria-pressed={mirrorV}
+                onClick={() => setMirrorV(v => !v)}
+              />
+              <Button
+                variant={showGrid ? 'selected' : 'selectable'}
+                size="md"
+                iconOnly
+                iconLeft="grid"
+                title="Afficher la grille"
+                aria-label="Afficher la grille"
+                aria-pressed={showGrid}
+                onClick={handleShowGridToggle}
+              />
+            </div>
           </aside>
           <div
             ref={canvasAreaRef}

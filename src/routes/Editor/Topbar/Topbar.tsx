@@ -7,11 +7,10 @@ import styles from './Topbar.module.scss';
 export function Topbar() {
   const {
     title, tool, onToolChange, canUndo, canRedo, onUndo, onRedo,
-    mirrorH, mirrorV, onMirrorHChange, onMirrorVChange,
     activeLayerId, layers, canvasWidth, canvasHeight, openPanel, onPanelToggle, onPanelClose,
     onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete, onLayerReorder,
     onBack, refImage, refImageError, onRefImageImport, onRefImageErrorClear, onRefImageRemove, onRefImageTransform, onRefImageCapture,
-    canvasDisplaySize, onCopySvg, showGrid, onShowGridToggle,
+    canvasDisplaySize, onCopySvg,
   } = useEditorContext();
 
   const topbarRef = useRef<HTMLElement>(null);
@@ -236,39 +235,6 @@ export function Topbar() {
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
             }}
-          />
-        </div>
-
-        <div className={styles.buttonGroup}>
-          <Button
-            variant={mirrorH ? 'selected' : 'selectable'}
-            size="md"
-            iconOnly
-            iconLeft="mirror"
-            title="Miroir horizontal"
-            aria-label="Miroir horizontal"
-            aria-pressed={mirrorH}
-            onClick={() => onMirrorHChange(!mirrorH)}
-          />
-          <Button
-            variant={mirrorV ? 'selected' : 'selectable'}
-            size="md"
-            iconOnly
-            iconLeft="mirror-v"
-            title="Miroir vertical"
-            aria-label="Miroir vertical"
-            aria-pressed={mirrorV}
-            onClick={() => onMirrorVChange(!mirrorV)}
-          />
-          <Button
-            variant={showGrid ? 'selected' : 'selectable'}
-            size="md"
-            iconOnly
-            iconLeft="grid"
-            title="Afficher la grille"
-            aria-label="Afficher la grille"
-            aria-pressed={showGrid}
-            onClick={onShowGridToggle}
           />
         </div>
 

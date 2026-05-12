@@ -20,10 +20,6 @@ export interface EditorContextValue {
   canRedo: boolean;
   onUndo: () => void;
   onRedo: () => void;
-  mirrorH: boolean;
-  mirrorV: boolean;
-  onMirrorHChange: (v: boolean) => void;
-  onMirrorVChange: (v: boolean) => void;
   activeLayerId: string;
   layers: PixelLayer[];
   canvasWidth: number;
@@ -47,8 +43,6 @@ export interface EditorContextValue {
   onRefImageCapture: () => void;
   canvasDisplaySize: { w: number; h: number };
   onCopySvg: () => void;
-  showGrid: boolean;
-  onShowGridToggle: () => void;
 }
 
 const EditorContext = createContext<EditorContextValue | null>(null);
