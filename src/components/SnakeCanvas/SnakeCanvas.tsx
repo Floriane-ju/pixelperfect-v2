@@ -42,6 +42,7 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
   const pendingGrowRef = useRef(0);
   const gameOverRef = useRef(false);
   const [gameOver, setGameOver] = useState(false);
+  const [showHint, setShowHint] = useState(true);
   const borderActiveRef = useRef(false);
 
   const isBorderCell = useCallback((x: number, y: number): boolean => {
@@ -275,6 +276,7 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
     resetSnake();
     gameOverRef.current = false;
     setGameOver(false);
+    setShowHint(false);
     if (canvas) {
       if (styles.dormant) canvas.classList.remove(styles.dormant);
       if (styles.active) canvas.classList.add(styles.active);
@@ -289,6 +291,7 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
     resetSnake();
     gameOverRef.current = false;
     setGameOver(false);
+    setShowHint(true);
     if (canvas) {
       if (styles.active) canvas.classList.remove(styles.active);
       if (styles.dormant) canvas.classList.add(styles.dormant);
@@ -338,6 +341,7 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
           if (styles.dormant) canvas.classList.add(styles.dormant);
           movesUntilTurnRef.current = 4 + Math.floor(Math.random() * 8);
           draw();
+          setShowHint(true);
           onModeChange?.(false);
           return;
       }
@@ -350,6 +354,7 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
           if (styles.dormant) canvas.classList.remove(styles.dormant);
           if (styles.active) canvas.classList.add(styles.active);
           draw();
+          setShowHint(false);
           onModeChange?.(true);
         }
         e.preventDefault();
@@ -385,6 +390,16 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
   return (
     <>
       <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
+      {showHint && !gameOver && (
+        <div className={styles.keyHint} aria-hidden="true">
+          <div className={styles.keyHintGrid}>
+            <div className={`${styles.key} ${styles.keyZ}`}>Z</div>
+            <div className={`${styles.key} ${styles.keyQ}`}>Q</div>
+            <div className={`${styles.key} ${styles.keyS}`}>S</div>
+            <div className={`${styles.key} ${styles.keyD}`}>D</div>
+          </div>
+        </div>
+      )}
       {gameOver ? (
         <div className={styles.gameOver} role="dialog" aria-modal="true" aria-labelledby="snake-gameover-title">
           <h2 id="snake-gameover-title" className={styles.title}>Game Over</h2>

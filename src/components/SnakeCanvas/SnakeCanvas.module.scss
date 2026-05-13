@@ -45,3 +45,49 @@
     flex-direction: row;
   }
 }
+
+.keyHint {
+  position: fixed;
+  bottom: $space-s;
+  right: $space-s;
+  pointer-events: none;
+  z-index: $z-snake-hint;
+}
+
+.keyHintGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 32px);
+  grid-template-rows: repeat(2, 32px);
+  gap: $space-xs;
+}
+
+.key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid $accent-1-300;
+  font-family: $font-family-base;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $accent-1-300;
+}
+
+.keyZ {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.keyQ {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.keyS {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.keyD {
+  grid-column: 3;
+  grid-row: 2;
+}
