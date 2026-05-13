@@ -119,6 +119,7 @@ $pipette-indicator-delay:    200ms;
 $pipette-indicator-duration: 300ms; // hold - delay
 $pipette-indicator-size:     40px;
 $pipette-indicator-stroke:   3px;
+$pipette-indicator-track:    rgba($color-black, 0.35);
 
 // Selection (rectangular)
 $selection-fill:           $accent-2-500;

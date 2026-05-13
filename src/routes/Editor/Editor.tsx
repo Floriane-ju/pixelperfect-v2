@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, ReactNode, RefObject } from 'react';
+import type { CSSProperties } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchDrawing } from '@/lib/drawings';
 import type { DrawingRow, HexColor } from '@/types';
@@ -9,6 +9,8 @@ import { BrushSizeSlider } from '@/components/BrushSizeSlider';
 import { Button } from '@/components/Button';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { ColorPicker } from './ColorPicker/ColorPicker';
+import { ColorPanel } from './ColorPanel';
+import { EditorLoading, EditorError } from './EditorStates';
 import { SettingsPanel } from './SettingsPanel';
 import type { EditorBgColor } from './SettingsPanel';
 import { ContextMenu } from '@/components/ContextMenu';
@@ -24,29 +26,9 @@ import { useReferenceImage } from './hooks/useReferenceImage';
 import { useColorPalette } from './hooks/useColorPalette';
 import { useEditorShortcuts } from './hooks/useEditorShortcuts';
 import { useSelection } from './hooks/useSelection';
-import { useModalA11y } from '@/hooks/useModalA11y';
 import { EditorContext } from './EditorContext';
 import type { EditorContextValue } from './EditorContext';
 import styles from './Editor.module.scss';
-
-interface ColorPanelProps {
-  children: ReactNode;
-  onClose: () => void;
-  className?: string;
-  style?: CSSProperties;
-  panelRef?: RefObject<HTMLDivElement>;
-}
-
-function ColorPanel({ children, onClose, className, style, panelRef }: ColorPanelProps) {
-  const localRef = useRef<HTMLDivElement>(null);
-  const ref = panelRef ?? localRef;
-  useModalA11y({ modalRef: ref, onClose, closeOnEscape: false });
-  return (
-    <div ref={ref} className={className} style={style}>
-      {children}
-    </div>
-  );
-}
 
 type Status = 'loading' | 'ready' | 'error' | 'saving';
 
@@ -191,28 +173,8 @@ export function Editor() {
     handleCapturePixels();
   }, [drawing, activeLayerId, handleCapturePixels]);
 
-  if (status === 'loading') {
-    return (
-      <main className={styles.editor}>
-        <div className={styles.centered}>
-          <span className={styles.muted} role="status" aria-live="polite">Chargement…</span>
-        </div>
-      </main>
-    );
-  }
-
-  if (status === 'error' || !drawing) {
-    return (
-      <main className={styles.editor}>
-        <div className={styles.centered}>
-          <span className={styles.danger} role="alert">Impossible de charger le dessin.</span>
-          <Button variant="ghost" size="sm" iconLeft="back" onClick={() => navigate('/')}>
-            Retour à la galerie
-          </Button>
-        </div>
-      </main>
-    );
-  }
+  if (status === 'loading') return <EditorLoading />;
+  if (status === 'error' || !drawing) return <EditorError />;
 
   const editorCtx: EditorContextValue = {
     title: drawing.title,

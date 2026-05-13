@@ -14,22 +14,13 @@ import { stampBrush, restoreLayerFromSnapshot, pickColorAt as pickColorFrom } fr
 import { CanvasStack } from './CanvasStack';
 import { PickerIndicator } from './PickerIndicator';
 import type { UseSelectionApi } from '@/routes/Editor/hooks/useSelection';
+import type { RefImageState } from '@/routes/Editor/hooks/useReferenceImage';
 import styles from './Canvas.module.scss';
 
 export type { Tool };
 
 const PIPETTE_HOLD_MS = 500;
 const PIPETTE_INDICATOR_DELAY_MS = 200;
-
-interface RefImageState {
-  src: string;
-  x: number;
-  y: number;
-  scale: number;
-  opacity: number;
-  naturalWidth: number;
-  naturalHeight: number;
-}
 
 interface CanvasProps {
   data: DrawingData;

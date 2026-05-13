@@ -19,7 +19,7 @@
 
 .pickerIndicatorBg {
   fill: none;
-  stroke: rgba(0, 0, 0, 0.35);
+  stroke: $pipette-indicator-track;
   stroke-width: $pipette-indicator-stroke;
 }
 
@@ -42,7 +42,7 @@
 .stack {
   position: relative;
   overflow: hidden;
-  border:2px solid black;
+  border: $outline-width solid $color-black;
 }
 
 .checker {

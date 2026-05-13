@@ -1,17 +1,8 @@
 import type { RefObject } from 'react';
 import type { SelectionRect } from './selectionRect';
+import type { RefImageState } from '@/routes/Editor/hooks/useReferenceImage';
 import { GridOverlay } from './GridOverlay';
 import styles from './Canvas.module.scss';
-
-interface RefImageState {
-  src: string;
-  x: number;
-  y: number;
-  scale: number;
-  opacity: number;
-  naturalWidth: number;
-  naturalHeight: number;
-}
 
 interface CanvasStackProps {
   checkerRef: RefObject<HTMLCanvasElement>;
