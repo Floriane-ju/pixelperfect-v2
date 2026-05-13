@@ -5,16 +5,6 @@
   pointer-events: none;
 }
 
-.overlayDragActive {
-  pointer-events: auto;
-}
-
-.overlayDropTarget {
-  background: rgba($accent-1-500, $opacity-drop-target);
-  outline: 3px dashed $accent-2-500;
-  outline-offset: -6px;
-}
-
 .panel {
   position: fixed;
   pointer-events: auto;
@@ -27,10 +17,10 @@
   max-height: calc(100dvh - #{$space-m});
   overflow: hidden;
   box-shadow: $shadow-modal;
-  border:$border-m-accent-1;
+  border: $border-m-accent-1;
 
   @include tablet-up {
-    width: 620px;
+    width: 480px;
     max-height: 80dvh;
   }
 }
@@ -67,14 +57,7 @@
   flex: 1;
   overflow-y: auto;
   display: flex;
-  flex-wrap: wrap;
-  gap: $space-sm;
-  padding: $space-sm;
-  align-content: flex-start;
-}
-
-.empty {
-  color: $color-text-muted;
-  font-size: $font-size-sm;
+  flex-direction: column;
+  gap: $space-l;
   padding: $space-m;
 }

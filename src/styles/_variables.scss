@@ -188,10 +188,14 @@ $border-s-accent-2:1px solid $accent-2-600;
 // ─────────────────────────────────────────────
 // Z-index
 // ─────────────────────────────────────────────
-$z-dropdown: 100;
-$z-modal:    200;
-$z-popover:  250;
-$z-toast:    300;
+$z-dropdown:      100;
+$z-modal:         200;
+$z-popover:       250;
+$z-toast:         300;
+$z-snake-dormant:  -1;
+$z-snake-bg:        0;
+$z-gallery:         1;
+$z-snake-active:  400;
 
 // ─────────────────────────────────────────────
 // Transitions

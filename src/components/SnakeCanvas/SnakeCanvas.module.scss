@@ -1,0 +1,14 @@
+.canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: $z-snake-bg;
+}
+
+.active {
+  z-index: $z-snake-active;
+}
+
+.dormant {
+  z-index: $z-snake-dormant;
+}

@@ -1,4 +1,6 @@
 .gallery {
+  position: relative;
+  z-index: $z-gallery;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -9,18 +11,6 @@
 }
 
 .decoLeft {
-  display:block;
-  position: absolute;
-  top:0;
-  left:$space-l;
-  height:100%;
-  width:$space-l;
-
-  $size:20%;
-
-  background: linear-gradient(-45deg, $accent-1-400 calc($size / 2), transparent calc($size / 2), transparent calc(50% - $size / 2), $accent-1-400 calc(50% - $size / 2), $accent-1-400 calc(50% + $size / 2), transparent calc(50% + $size / 2), transparent calc(100% - $size / 2), $accent-1-400 calc(100% - $size / 2));
-  background-size: $checker-size-lg $checker-size-lg;
-  background-position: calc($checker-size-lg / 2) calc($checker-size-lg / 2);
   .version {
     font-size: $font-size-sm;
     color: $accent-1-400;
@@ -67,6 +57,21 @@
   white-space: nowrap;
   flex-shrink: 0;
   text-shadow: $text-shadow-display;
+}
+
+.galleryBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+  transition: opacity $transition-base;
+}
+
+.galleryBodyDimmed {
+  opacity: 0.8;
+  pointer-events: none;
 }
 
 .content {

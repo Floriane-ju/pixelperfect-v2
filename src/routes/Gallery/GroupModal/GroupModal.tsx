@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import { DrawingCard } from '@/routes/Gallery/DrawingCard/DrawingCard';
 import { Button } from '@/components/Button';
 import { useModalA11y } from '@/hooks/useModalA11y';
+import { useModalZIndex } from '@/lib/modalStack';
 import type { DrawingRow } from '@/types';
 import styles from './GroupModal.module.scss';
 
@@ -31,13 +32,26 @@ export function GroupModal({
   onInvite,
   onCollaboratorRemoved,
 }: Props) {
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const { zIndex, raise, initialOffset } = useModalZIndex();
+  const [offset, setOffset] = useState(initialOffset);
   const [isOverlayDragOver, setIsOverlayDragOver] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const drag = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = `group-modal-title-${name.replace(/\s+/g, '-')}`;
 
   useModalA11y({ modalRef: panelRef, onClose });
+
+  useEffect(() => {
+    const start = () => setIsDragging(true);
+    const end = () => { setIsDragging(false); setIsOverlayDragOver(false); };
+    window.addEventListener('dragstart', start);
+    window.addEventListener('dragend', end);
+    return () => {
+      window.removeEventListener('dragstart', start);
+      window.removeEventListener('dragend', end);
+    };
+  }, []);
 
   const onDragStart = (e: PointerEvent<HTMLElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -58,8 +72,8 @@ export function GroupModal({
 
   return (
     <div
-      className={`${styles.overlay}${isOverlayDragOver ? ` ${styles.overlayDropTarget}` : ''}`}
-      onClick={onClose}
+      className={`${styles.overlay}${isDragging ? ` ${styles.overlayDragActive}` : ''}${isOverlayDragOver ? ` ${styles.overlayDropTarget}` : ''}`}
+      style={{ zIndex }}
       onDragOver={(e) => { e.preventDefault(); setIsOverlayDragOver(true); }}
       onDragLeave={() => setIsOverlayDragOver(false)}
       onDrop={(e) => {
@@ -72,8 +86,9 @@ export function GroupModal({
       <div
         ref={panelRef}
         className={styles.panel}
-        style={{ transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))` }}
-        onClick={(e) => e.stopPropagation()}
+        style={{ transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))`, zIndex }}
+        onPointerDownCapture={raise}
+        onFocusCapture={raise}
         onDragOver={(e) => e.stopPropagation()}
         onDrop={(e) => e.stopPropagation()}
         role="dialog"

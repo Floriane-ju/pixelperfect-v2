@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { useModalA11y } from '@/hooks/useModalA11y';
+import { useModalZIndex } from '@/lib/modalStack';
 import { addCollaboratorByHandle } from '@/lib/drawings';
 import { USERNAME_RE, searchUsersByUsernamePrefix, type UserSuggestion } from '@/lib/profiles';
 import styles from './InviteCollaboratorModal.module.scss';
@@ -42,6 +43,7 @@ export function InviteCollaboratorModal({ drawingId, drawingTitle, onClose, onIn
   const listboxId = useId();
 
   useModalA11y({ modalRef, onClose, initialFocusRef: inputRef });
+  const { zIndex, raise } = useModalZIndex();
 
   const normalized = normalize(handle);
   const isValid = isValidHandle(normalized);
@@ -126,11 +128,13 @@ export function InviteCollaboratorModal({ drawingId, drawingTitle, onClose, onIn
   const showList = showSuggestions && suggestions.length > 0;
 
   return (
-    <div className={styles.overlay} onPointerDown={onClose}>
+    <div className={styles.overlay} style={{ zIndex }} onPointerDown={onClose}>
       <div
         ref={modalRef}
         className={styles.modal}
         onPointerDown={(e) => e.stopPropagation()}
+        onPointerDownCapture={raise}
+        onFocusCapture={raise}
         role="dialog"
         aria-modal="true"
         aria-labelledby="invite-collab-title"

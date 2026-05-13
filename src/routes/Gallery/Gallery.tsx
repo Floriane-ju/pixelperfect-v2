@@ -14,6 +14,7 @@ import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { groupDrawings } from '@/lib/groupDrawings';
 import type { DrawingRow } from '@/types';
+import { SnakeCanvas } from '@/components/SnakeCanvas';
 import { version as appVersion } from '../../../package.json';
 import styles from './Gallery.module.scss';
 
@@ -26,12 +27,13 @@ export function Gallery() {
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
-  const [activeGroup, setActiveGroup] = useState<string | null>(null);
+  const [activeGroups, setActiveGroups] = useState<string[]>([]);
   const [pendingGroup, setPendingGroup] = useState<{ sourceId: string; targetId: string } | null>(null);
   const [isContentDragOver, setIsContentDragOver] = useState(false);
   const [inviteTarget, setInviteTarget] = useState<DrawingRow | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [snakeActive, setSnakeActive] = useState(false);
 
   useEffect(() => {
     setStatus('loading');
@@ -104,7 +106,7 @@ export function Gallery() {
     setDrawings((prev) =>
       prev.map((d) => (d.group === oldName ? { ...d, group: newName } : d)),
     );
-    setActiveGroup((g) => (g === oldName ? newName : g));
+    setActiveGroups((arr) => arr.map((n) => (n === oldName ? newName : n)));
     renameGroup(oldName, newName).catch(refetchSilent);
   };
 
@@ -128,17 +130,21 @@ export function Gallery() {
 
   const { groups, ungrouped } = useMemo(() => groupDrawings(drawings), [drawings]);
   const hasContent = drawings.length > 0;
-  const activeGroupData = useMemo(
-    () => (activeGroup ? (groups.find((g) => g.name === activeGroup) ?? null) : null),
-    [activeGroup, groups],
+  const openGroups = useMemo(
+    () => activeGroups
+      .map((name) => groups.find((g) => g.name === name))
+      .filter((g): g is { name: string; drawings: DrawingRow[] } => g !== undefined),
+    [activeGroups, groups],
   );
 
   return (
     <main className={styles.gallery}>
-      <a className="skip-link" href="#gallery-content">Aller au contenu</a>
+      <SnakeCanvas onModeChange={setSnakeActive} />
       <div className={styles.decoLeft}>
         <div className={styles.version}>v{appVersion}</div>
       </div>
+      <div className={`${styles.galleryBody}${snakeActive ? ` ${styles.galleryBodyDimmed}` : ''}`}>
+      <a className="skip-link" href="#gallery-content">Aller au contenu</a>
       <header className={styles.header}>
         <div className={styles.titleGroup}>
           <h1 className={styles.title}>Pixel Perfect</h1>
@@ -193,7 +199,7 @@ export function Gallery() {
               key={g.name}
               name={g.name}
               drawings={g.drawings}
-              onOpen={() => setActiveGroup(g.name)}
+              onOpen={() => setActiveGroups((arr) => (arr.includes(g.name) ? arr : [...arr, g.name]))}
               onDropDrawing={(drawingId) => handleMoveToGroup(drawingId, g.name)}
               onRename={(newName) => handleRenameGroup(g.name, newName)}
               onUngroup={() => handleUngroupAll(g.name)}
@@ -227,12 +233,13 @@ export function Gallery() {
         />
       )}
 
-      {activeGroupData && (
+      {openGroups.map((g) => (
         <GroupModal
-          name={activeGroupData.name}
-          drawings={activeGroupData.drawings}
+          key={g.name}
+          name={g.name}
+          drawings={g.drawings}
           currentUserId={currentUserId}
-          onClose={() => setActiveGroup(null)}
+          onClose={() => setActiveGroups((arr) => arr.filter((n) => n !== g.name))}
           onCardClick={(id) => navigate(`/editor/${id}`)}
           onRename={handleRename}
           onDelete={handleDelete}
@@ -240,7 +247,7 @@ export function Gallery() {
           onInvite={(d) => setInviteTarget(d)}
           onCollaboratorRemoved={handleCollaboratorRemoved}
         />
-      )}
+      ))}
 
       {inviteTarget && (
         <InviteCollaboratorModal
@@ -265,6 +272,7 @@ export function Gallery() {
           onUpdated={(p) => snackbar.show(`Pseudo mis à jour : ${p.username}`)}
         />
       )}
+      </div>
     </main>
   );
 }

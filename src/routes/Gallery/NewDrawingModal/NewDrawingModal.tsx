@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { useModalA11y } from '@/hooks/useModalA11y';
+import { useModalZIndex } from '@/lib/modalStack';
 import styles from './NewDrawingModal.module.scss';
 
 interface Preset {
@@ -36,6 +37,7 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
   useModalA11y({ modalRef, onClose, initialFocusRef: nameRef });
+  const { zIndex, raise } = useModalZIndex();
 
   const parseDimension = (value: string, fallback: number): number => {
     const n = parseInt(value, 10);
@@ -68,11 +70,13 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
   };
 
   return (
-    <div className={styles.overlay} onPointerDown={onClose}>
+    <div className={styles.overlay} style={{ zIndex }} onPointerDown={onClose}>
       <div
         ref={modalRef}
         className={styles.modal}
         onPointerDown={(e) => e.stopPropagation()}
+        onPointerDownCapture={raise}
+        onFocusCapture={raise}
         role="dialog"
         aria-modal="true"
         aria-labelledby="new-drawing-title"
