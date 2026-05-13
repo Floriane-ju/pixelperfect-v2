@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { SnackbarContext, type SnackbarContextValue } from './SnackbarProvider';
+import { SnackbarContext, type SnackbarContextValue } from './SnackbarContext';
 
 export function useSnackbar(): SnackbarContextValue {
   const ctx = useContext(SnackbarContext);

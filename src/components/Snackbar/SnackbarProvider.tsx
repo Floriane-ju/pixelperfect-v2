@@ -1,6 +1,7 @@
-import { createContext, useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import type { IconName } from '@/components/Icons';
 import { Snackbar } from './Snackbar';
+import { SnackbarContext, type ShowSnackbarOptions, type SnackbarContextValue } from './SnackbarContext';
 
 interface SnackbarItem {
   id: number;
@@ -8,17 +9,6 @@ interface SnackbarItem {
   icon?: IconName;
   duration?: number;
 }
-
-export interface ShowSnackbarOptions {
-  icon?: IconName;
-  duration?: number;
-}
-
-export interface SnackbarContextValue {
-  show: (message: string, options?: ShowSnackbarOptions) => void;
-}
-
-export const SnackbarContext = createContext<SnackbarContextValue | null>(null);
 
 interface Props {
   children: ReactNode;

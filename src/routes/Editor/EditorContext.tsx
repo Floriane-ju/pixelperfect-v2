@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext } from 'react';
 import type { PixelLayer } from '@/types';
 import type { OpenPanel } from './hooks/useColorPalette';
 import type { Tool } from './Canvas/Canvas';
@@ -46,12 +46,4 @@ export interface EditorContextValue {
   onCopyPng: () => void;
 }
 
-const EditorContext = createContext<EditorContextValue | null>(null);
-
-export function useEditorContext(): EditorContextValue {
-  const ctx = useContext(EditorContext);
-  if (!ctx) throw new Error('useEditorContext must be used within EditorContext.Provider');
-  return ctx;
-}
-
-export { EditorContext };
+export const EditorContext = createContext<EditorContextValue | null>(null);

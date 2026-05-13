@@ -1,6 +1,6 @@
 import { useContext, useRef } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { SnackbarContext } from '@/components/Snackbar/SnackbarProvider';
+import { SnackbarContext } from '@/components/Snackbar/SnackbarContext';
 
 const LONG_PRESS_MS = 500;
 const MOVE_TOLERANCE_SQ = 100;

@@ -7,6 +7,7 @@ import { ColorSwatch } from '@/components/ColorSwatch';
 import { ColorWheelIcon } from '@/components/ColorWheelIcon';
 import { BrushSizeSlider } from '@/components/BrushSizeSlider';
 import { Button } from '@/components/Button';
+import { ConfirmModal } from '@/components/ConfirmModal';
 import { ColorPicker } from './ColorPicker/ColorPicker';
 import { SettingsPanel } from './SettingsPanel';
 import type { EditorBgColor } from './SettingsPanel';
@@ -28,40 +29,6 @@ import { EditorContext } from './EditorContext';
 import type { EditorContextValue } from './EditorContext';
 import styles from './Editor.module.scss';
 
-interface InvisibleLayerModalProps {
-  onCancel: () => void;
-  onConfirm: () => void;
-}
-
-function InvisibleLayerModal({ onCancel, onConfirm }: InvisibleLayerModalProps) {
-  const modalRef = useRef<HTMLDivElement>(null);
-  useModalA11y({ modalRef, onClose: onCancel });
-  return (
-    <div className={styles.modalOverlay} onClick={onCancel}>
-      <div
-        ref={modalRef}
-        className={styles.modal}
-        onClick={e => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="invisible-layer-text"
-      >
-        <p id="invisible-layer-text" className={styles.modalText}>
-          Ce calque est masqué. Voulez-vous l'afficher pour pouvoir dessiner dessus ?
-        </p>
-        <div className={styles.modalActions}>
-          <Button variant="secondary" size="sm" onClick={onCancel}>
-            Annuler
-          </Button>
-          <Button variant="primary" size="sm" onClick={onConfirm}>
-            Afficher le calque
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 interface ColorPanelProps {
   children: ReactNode;
   onClose: () => void;
@@ -77,40 +44,6 @@ function ColorPanel({ children, onClose, className, style, panelRef }: ColorPane
   return (
     <div ref={ref} className={className} style={style}>
       {children}
-    </div>
-  );
-}
-
-interface CapturePixelsModalProps {
-  onCancel: () => void;
-  onConfirm: () => void;
-}
-
-function CapturePixelsModal({ onCancel, onConfirm }: CapturePixelsModalProps) {
-  const modalRef = useRef<HTMLDivElement>(null);
-  useModalA11y({ modalRef, onClose: onCancel });
-  return (
-    <div className={styles.modalOverlay} onClick={onCancel}>
-      <div
-        ref={modalRef}
-        className={styles.modal}
-        onClick={e => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="capture-pixels-text"
-      >
-        <p id="capture-pixels-text" className={styles.modalText}>
-          Cette action remplit le calque actif avec les couleurs de la référence et écrase les pixels existants. Continuer ?
-        </p>
-        <div className={styles.modalActions}>
-          <Button variant="secondary" size="sm" onClick={onCancel}>
-            Annuler
-          </Button>
-          <Button variant="primary" size="sm" onClick={onConfirm}>
-            Capturer
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -476,14 +409,18 @@ export function Editor() {
         {status === 'saving' && <div className={styles.savingBadge} aria-live="polite">Enregistrement…</div>}
 
         {showInvisibleModal && (
-          <InvisibleLayerModal
+          <ConfirmModal
+            message="Ce calque est masqué. Voulez-vous l'afficher pour pouvoir dessiner dessus ?"
+            confirmLabel="Afficher le calque"
             onCancel={() => setShowInvisibleModal(false)}
             onConfirm={() => { handleLayerVisibilityToggle(activeLayerId); setShowInvisibleModal(false); }}
           />
         )}
 
         {showCaptureModal && (
-          <CapturePixelsModal
+          <ConfirmModal
+            message="Cette action remplit le calque actif avec les couleurs de la référence et écrase les pixels existants. Continuer ?"
+            confirmLabel="Capturer"
             onCancel={() => setShowCaptureModal(false)}
             onConfirm={() => { setShowCaptureModal(false); handleCapturePixels(); }}
           />

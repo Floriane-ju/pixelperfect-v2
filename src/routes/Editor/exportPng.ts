@@ -11,7 +11,7 @@ function hexToRgb(hex: string): [number, number, number] {
   ];
 }
 
-export async function buildLayersPngBlob(
+async function buildLayersPngBlob(
   layers: PixelLayer[],
   width: number,
   height: number,

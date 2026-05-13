@@ -3,7 +3,7 @@ import { Button } from '@/components/Button';
 import { Menu } from '@/components/Menu';
 import { Slider } from '@/components/Slider';
 import { LayerPanel } from '@/routes/Editor/LayerPanel/LayerPanel';
-import { useEditorContext } from '../EditorContext';
+import { useEditorContext } from '../useEditorContext';
 import styles from './Topbar.module.scss';
 
 export function Topbar() {
