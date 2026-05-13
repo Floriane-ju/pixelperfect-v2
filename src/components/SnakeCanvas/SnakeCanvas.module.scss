@@ -12,3 +12,36 @@
 .dormant {
   z-index: $z-snake-dormant;
 }
+
+.gameOver {
+  position: fixed;
+  inset: 0;
+  z-index: $z-snake-gameover;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-l;
+  background: rgba(0, 0, 0, $opacity-overlay);
+  padding: $space-l;
+}
+
+.title {
+  font-family: $font-family-display;
+  font-size: $font-size-display;
+  color: $accent-2-500;
+  text-align: center;
+  text-shadow: $text-shadow-display;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: $space-m;
+  align-items: center;
+
+  @include tablet-up {
+    flex-direction: row;
+  }
+}

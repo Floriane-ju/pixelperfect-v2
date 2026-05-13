@@ -1,5 +1,6 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import styles from './SnakeCanvas.module.scss';
+import { Button } from '@/components/Button';
 
 const CELL = 24;
 const GAP = 3;
@@ -13,6 +14,7 @@ const COLOR_AUTO = '#A28EFD';
 const COLOR_USER = '#FFF8A9';
 const COLOR_FOOD_AUTO = '#A28EFD';
 const COLOR_FOOD_USER = '#FFFBD4';
+const BORDER_INSET = 1;
 
 type Dir = 'up' | 'down' | 'left' | 'right';
 
@@ -38,15 +40,31 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
   const movesUntilTurnRef = useRef(5);
   const foodRef = useRef<{ x: number; y: number } | null>(null);
   const pendingGrowRef = useRef(0);
+  const gameOverRef = useRef(false);
+  const [gameOver, setGameOver] = useState(false);
+  const borderActiveRef = useRef(false);
+
+  const isBorderCell = useCallback((x: number, y: number): boolean => {
+    return (
+      x < BORDER_INSET ||
+      y < BORDER_INSET ||
+      x >= colsRef.current - BORDER_INSET ||
+      y >= rowsRef.current - BORDER_INSET
+    );
+  }, []);
 
   const placeFood = useCallback(() => {
     const occupied = new Set(snakeRef.current.map((s) => `${s.x},${s.y}`));
-    let x = 0;
-    let y = 0;
+    const minX = BORDER_INSET;
+    const minY = BORDER_INSET;
+    const maxX = Math.max(minX, colsRef.current - BORDER_INSET - 1);
+    const maxY = Math.max(minY, rowsRef.current - BORDER_INSET - 1);
+    let x = minX;
+    let y = minY;
     let attempts = 0;
     do {
-      x = Math.floor(Math.random() * colsRef.current);
-      y = Math.floor(Math.random() * rowsRef.current);
+      x = minX + Math.floor(Math.random() * (maxX - minX + 1));
+      y = minY + Math.floor(Math.random() * (maxY - minY + 1));
       attempts++;
     } while (occupied.has(`${x},${y}`) && attempts < 200);
     foodRef.current = { x, y };
@@ -59,6 +77,34 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
     if (!ctx) return;
     const isUser = modeRef.current === 'user';
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (borderActiveRef.current) {
+      ctx.fillStyle = COLOR_USER;
+      const cols = colsRef.current;
+      const rows = rowsRef.current;
+      const drawBorderCell = (cx: number, cy: number) => {
+        const px = cx * STEP;
+        const py = cy * STEP;
+        ctx.fillRect(px,                       py,                       MINI_CELL, MINI_CELL);
+        ctx.fillRect(px + MINI_CELL + GAP,     py,                       MINI_CELL, MINI_CELL);
+        ctx.fillRect(px + MINI_CELL*2 + GAP*2, py,                       MINI_CELL, MINI_CELL);
+        ctx.fillRect(px,                       py + MINI_CELL + GAP,     MINI_CELL, MINI_CELL);
+        ctx.fillRect(px + MINI_CELL*2 + GAP*2, py + MINI_CELL + GAP,     MINI_CELL, MINI_CELL);
+        ctx.fillRect(px,                       py + MINI_CELL*2 + GAP*2, MINI_CELL, MINI_CELL);
+        ctx.fillRect(px + MINI_CELL + GAP,     py + MINI_CELL*2 + GAP*2, MINI_CELL, MINI_CELL);
+        ctx.fillRect(px + MINI_CELL*2 + GAP*2, py + MINI_CELL*2 + GAP*2, MINI_CELL, MINI_CELL);
+        ctx.fillRect(px + MINI_CELL + GAP,     py + MINI_CELL + GAP,     MINI_CELL, MINI_CELL);
+      };
+      for (let x = 0; x < cols; x++) {
+        drawBorderCell(x, 0);
+        drawBorderCell(x, rows - 1);
+      }
+      for (let y = 1; y < rows - 1; y++) {
+        drawBorderCell(0, y);
+        drawBorderCell(cols - 1, y);
+      }
+    }
+
     ctx.fillStyle = isUser ? COLOR_USER : COLOR_AUTO;
     for (const seg of snakeRef.current) {
       ctx.fillRect(seg.x * STEP,                          seg.y * STEP, MINI_CELL, MINI_CELL);
@@ -110,24 +156,82 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
   }, []);
 
   const tick = useCallback(() => {
-    dirRef.current = nextDirRef.current;
-    const dir = dirRef.current;
+    if (gameOverRef.current) return;
     const head = snakeRef.current[0];
     if (!head) return;
-    let nx = head.x;
-    let ny = head.y;
-    if (dir === 'right') nx++;
-    else if (dir === 'left') nx--;
-    else if (dir === 'up') ny--;
-    else ny++;
-    nx = ((nx % colsRef.current) + colsRef.current) % colsRef.current;
-    ny = ((ny % rowsRef.current) + rowsRef.current) % rowsRef.current;
+
+    const step = (d: Dir): { x: number; y: number } => {
+      let x = head.x;
+      let y = head.y;
+      if (d === 'right') x++;
+      else if (d === 'left') x--;
+      else if (d === 'up') y--;
+      else y++;
+      x = ((x % colsRef.current) + colsRef.current) % colsRef.current;
+      y = ((y % rowsRef.current) + rowsRef.current) % rowsRef.current;
+      return { x, y };
+    };
 
     const food = foodRef.current;
+    const wouldCollide = (x: number, y: number): boolean => {
+      if (isBorderCell(x, y)) return true;
+      const willEat = food !== null && x === food.x && y === food.y;
+      const growing = pendingGrowRef.current > 0 || willEat;
+      const body = growing ? snakeRef.current : snakeRef.current.slice(0, -1);
+      for (const seg of body) {
+        if (seg.x === x && seg.y === y) return true;
+      }
+      return false;
+    };
+
+    if (modeRef.current === 'auto') {
+      const curDir = nextDirRef.current;
+      const planned = step(curDir);
+      if (wouldCollide(planned.x, planned.y)) {
+        const left = TURN_LEFT[curDir];
+        const right = TURN_RIGHT[curDir];
+        const leftPos = step(left);
+        const rightPos = step(right);
+        const leftSafe = !wouldCollide(leftPos.x, leftPos.y);
+        const rightSafe = !wouldCollide(rightPos.x, rightPos.y);
+        if (leftSafe && rightSafe) {
+          nextDirRef.current = Math.random() < 0.5 ? left : right;
+        } else if (leftSafe) {
+          nextDirRef.current = left;
+        } else if (rightSafe) {
+          nextDirRef.current = right;
+        }
+        movesUntilTurnRef.current = 4 + Math.floor(Math.random() * 8);
+      }
+    }
+
+    dirRef.current = nextDirRef.current;
+    const dir = dirRef.current;
+    const next = step(dir);
+    const nx = next.x;
+    const ny = next.y;
+
     const ate = food !== null && nx === food.x && ny === food.y;
     if (ate) {
       pendingGrowRef.current++;
       foodRef.current = null;
+    }
+
+    if (modeRef.current === 'user') {
+      if (isBorderCell(nx, ny)) {
+        gameOverRef.current = true;
+        setGameOver(true);
+        return;
+      }
+      const growing = pendingGrowRef.current > 0;
+      const body = growing ? snakeRef.current : snakeRef.current.slice(0, -1);
+      for (const seg of body) {
+        if (seg.x === nx && seg.y === ny) {
+          gameOverRef.current = true;
+          setGameOver(true);
+          return;
+        }
+      }
     }
 
     if (pendingGrowRef.current > 0) {
@@ -148,7 +252,49 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
     }
 
     draw();
+  }, [draw, placeFood, isBorderCell]);
+
+  const resetSnake = useCallback(() => {
+    const c = colsRef.current;
+    const r = rowsRef.current;
+    const midX = Math.floor(c / 2);
+    const midY = Math.floor(r / 2);
+    snakeRef.current = Array.from({ length: INITIAL_LENGTH }, (_, i) => ({ x: midX - i, y: midY }));
+    dirRef.current = 'right';
+    nextDirRef.current = 'right';
+    pendingGrowRef.current = 0;
+    movesUntilTurnRef.current = 4 + Math.floor(Math.random() * 8);
+    placeFood();
+    draw();
   }, [draw, placeFood]);
+
+  const handleReplay = useCallback(() => {
+    const canvas = canvasRef.current;
+    modeRef.current = 'user';
+    borderActiveRef.current = true;
+    resetSnake();
+    gameOverRef.current = false;
+    setGameOver(false);
+    if (canvas) {
+      if (styles.dormant) canvas.classList.remove(styles.dormant);
+      if (styles.active) canvas.classList.add(styles.active);
+    }
+    onModeChange?.(true);
+  }, [resetSnake, onModeChange]);
+
+  const handleBackToGallery = useCallback(() => {
+    const canvas = canvasRef.current;
+    modeRef.current = 'auto';
+    borderActiveRef.current = false;
+    resetSnake();
+    gameOverRef.current = false;
+    setGameOver(false);
+    if (canvas) {
+      if (styles.active) canvas.classList.remove(styles.active);
+      if (styles.dormant) canvas.classList.add(styles.dormant);
+    }
+    onModeChange?.(false);
+  }, [resetSnake, onModeChange]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -177,6 +323,7 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as Element | null;
       if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return;
+      if (gameOverRef.current) return;
 
       let newDir: Dir | null = null;
       switch (e.key) {
@@ -186,9 +333,11 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
         case 'ArrowRight': case 'd': case 'D':                      newDir = 'right'; break;
         case 'Escape':
           modeRef.current = 'auto';
+          borderActiveRef.current = false;
           if (styles.active) canvas.classList.remove(styles.active);
           if (styles.dormant) canvas.classList.add(styles.dormant);
           movesUntilTurnRef.current = 4 + Math.floor(Math.random() * 8);
+          draw();
           onModeChange?.(false);
           return;
       }
@@ -197,8 +346,10 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
         nextDirRef.current = newDir;
         if (modeRef.current !== 'user') {
           modeRef.current = 'user';
+          borderActiveRef.current = true;
           if (styles.dormant) canvas.classList.remove(styles.dormant);
           if (styles.active) canvas.classList.add(styles.active);
+          draw();
           onModeChange?.(true);
         }
         e.preventDefault();
@@ -207,14 +358,16 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
 
     const onResize = () => {
       resize();
+      const maxX = Math.max(BORDER_INSET, colsRef.current - BORDER_INSET - 1);
+      const maxY = Math.max(BORDER_INSET, rowsRef.current - BORDER_INSET - 1);
       snakeRef.current = snakeRef.current.map((seg) => ({
-        x: Math.min(seg.x, colsRef.current - 1),
-        y: Math.min(seg.y, rowsRef.current - 1),
+        x: Math.min(Math.max(seg.x, BORDER_INSET), maxX),
+        y: Math.min(Math.max(seg.y, BORDER_INSET), maxY),
       }));
       if (foodRef.current) {
         foodRef.current = {
-          x: Math.min(foodRef.current.x, colsRef.current - 1),
-          y: Math.min(foodRef.current.y, rowsRef.current - 1),
+          x: Math.min(Math.max(foodRef.current.x, BORDER_INSET), maxX),
+          y: Math.min(Math.max(foodRef.current.y, BORDER_INSET), maxY),
         };
       }
     };
@@ -227,7 +380,20 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('resize', onResize);
     };
-  }, [tick, draw, placeFood]);
+  }, [tick, draw, placeFood, onModeChange]);
 
-  return <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />;
+  return (
+    <>
+      <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
+      {gameOver ? (
+        <div className={styles.gameOver} role="dialog" aria-modal="true" aria-labelledby="snake-gameover-title">
+          <h2 id="snake-gameover-title" className={styles.title}>Game Over</h2>
+          <div className={styles.actions}>
+            <Button variant="primary" size="lg" onClick={handleReplay}>Rejouer</Button>
+            <Button variant="secondary" size="lg" onClick={handleBackToGallery}>Revenir à la galerie</Button>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
 }
