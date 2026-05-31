@@ -25,8 +25,8 @@
 
 .header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
   gap: $space-l;
   padding: $space-4xl 0;
   padding-top: max(#{$space-4xl}, env(safe-area-inset-top));
@@ -36,6 +36,7 @@
 .headerActions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: $space-sm;
   flex-shrink: 0;
 }
@@ -102,4 +103,8 @@
   @extend .state;
   color: $color-danger;
   opacity: 1;
+}
+
+.hiddenInput {
+  display: none;
 }

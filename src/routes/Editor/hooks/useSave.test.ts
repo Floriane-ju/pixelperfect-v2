@@ -3,11 +3,16 @@ import { renderHook, act } from '@testing-library/react';
 import { useState } from 'react';
 import { useSave } from './useSave';
 import { updateDrawingData } from '@/lib/drawings';
+import { localUpdateDrawingData } from '@/lib/localLibrary';
 import * as offlineQueue from '@/lib/offlineQueue';
 import type { DrawingData, DrawingRow } from '@/types';
 
 vi.mock('@/lib/drawings', () => ({
   updateDrawingData: vi.fn(),
+}));
+
+vi.mock('@/lib/localLibrary', () => ({
+  localUpdateDrawingData: vi.fn(),
 }));
 
 vi.mock('@/lib/offlineQueue', () => {
@@ -21,6 +26,7 @@ vi.mock('@/lib/offlineQueue', () => {
 });
 
 const updateMock = vi.mocked(updateDrawingData);
+const localUpdateMock = vi.mocked(localUpdateDrawingData);
 const enqueueMock = vi.mocked(offlineQueue.enqueue);
 const dequeueMock = vi.mocked(offlineQueue.dequeue);
 const getPendingMock = vi.mocked(offlineQueue.getPending);
@@ -43,11 +49,11 @@ const row = (d: DrawingData): DrawingRow => ({
   collaborator_count: 1,
 });
 
-function setup(initial: DrawingRow | null = row(data)) {
+function setup(initial: DrawingRow | null = row(data), authed = true) {
   const setStatus = vi.fn();
   const hook = renderHook(() => {
     const [drawing, setDrawing] = useState<DrawingRow | null>(initial);
-    const save = useSave({ id: drawing?.id, drawing, setStatus });
+    const save = useSave({ id: drawing?.id, drawing, authed, setStatus });
     return { save, setDrawing };
   });
   return { hook, setStatus };
@@ -57,6 +63,8 @@ beforeEach(() => {
   vi.useFakeTimers();
   updateMock.mockReset();
   updateMock.mockResolvedValue(undefined);
+  localUpdateMock.mockReset();
+  localUpdateMock.mockResolvedValue(undefined);
   enqueueMock.mockClear();
   dequeueMock.mockClear();
   getPendingMock.mockClear();
@@ -157,5 +165,43 @@ describe('useSave', () => {
     const { hook, setStatus } = setup(null);
     act(() => { hook.result.current.save.scheduleSave(); });
     expect(setStatus).not.toHaveBeenCalled();
+  });
+
+  it('saves to the local library (no offline queue) when not authenticated', async () => {
+    const { hook, setStatus } = setup(row(data), false);
+    act(() => { hook.result.current.save.scheduleSave(); });
+    expect(setStatus).toHaveBeenCalledWith('saving');
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    expect(localUpdateMock).toHaveBeenCalledWith('d1', data);
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(enqueueMock).not.toHaveBeenCalled();
+    expect(setStatus).toHaveBeenLastCalledWith('ready');
+  });
+
+  it('does not flush the offline queue when not authenticated', async () => {
+    queueStore.__store.set('d1', data);
+    setup(row(data), false);
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(queueStore.__store.has('d1')).toBe(true);
+  });
+
+  it('flushes a pending edit to the local library on unmount when anonymous', async () => {
+    const { hook } = setup(row(data), false);
+    act(() => { hook.result.current.save.scheduleSave(); });
+    act(() => { hook.unmount(); });
+    expect(localUpdateMock).toHaveBeenCalledWith('d1', data);
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(enqueueMock).not.toHaveBeenCalled();
+  });
+
+  it('flushes a pending edit to the remote backend on unmount when authenticated', async () => {
+    const { hook } = setup(row(data), true);
+    act(() => { hook.result.current.save.scheduleSave(); });
+    act(() => { hook.unmount(); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(updateMock).toHaveBeenCalledWith('d1', data);
+    expect(localUpdateMock).not.toHaveBeenCalled();
   });
 });

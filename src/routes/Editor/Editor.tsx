@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchDrawing } from '@/lib/drawings';
+import { fetchDrawing } from '@/lib/drawingStore';
+import { LOCAL_OWNER } from '@/lib/localLibrary';
 import type { DrawingRow, HexColor } from '@/types';
 import { ColorSwatch } from '@/components/ColorSwatch';
 import { ColorWheelIcon } from '@/components/ColorWheelIcon';
@@ -69,7 +70,14 @@ export function Editor() {
       .catch(() => setStatus('error'));
   }, [id]);
 
-  const { scheduleSave, latestDataRef } = useSave({ id, drawing, setStatus });
+  // Le backend est lié au dessin chargé (immuable), pas à la session vivante : un changement
+  // d'auth en cours d'édition ne doit pas réorienter les sauvegardes vers le mauvais backend.
+  const { scheduleSave, latestDataRef } = useSave({
+    id,
+    drawing,
+    authed: drawing !== null && drawing.owner_id !== LOCAL_OWNER,
+    setStatus,
+  });
   const { canUndo, canRedo, pushHistory, handleDrawStart, handleDrawEnd, handleUndo, handleRedo } = useUndoRedo({ latestDataRef, setDrawing, scheduleSave });
   const { handleLayerChange, handleLayerVisibilityToggle, handleLayerDuplicate, handleLayerAdd, handleLayerDelete, handleLayerReorder } = useLayers({ drawing, setDrawing, activeLayerId, setActiveLayerId, scheduleSave, pushHistory, latestDataRef });
   const { refImage, refImageError, clearRefImageError, handleRefImageImport, handleRefImageRemove, handleRefImageTransform, handleCapturePixels } = useReferenceImage({ canvasDisplaySize, activeLayerId, drawing, handleLayerChange, pushHistory, latestDataRef });

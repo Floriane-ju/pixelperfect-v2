@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { updateDrawingData } from '@/lib/drawings';
+import { localUpdateDrawingData } from '@/lib/localLibrary';
 import { enqueue, dequeue, getPending } from '@/lib/offlineQueue';
 import type { DrawingData, DrawingRow } from '@/types';
 
@@ -10,10 +11,11 @@ type Status = 'loading' | 'ready' | 'error' | 'saving';
 interface UseSaveParams {
   id: string | undefined;
   drawing: DrawingRow | null;
+  authed: boolean;
   setStatus: (s: Status) => void;
 }
 
-export function useSave({ id, drawing, setStatus }: UseSaveParams) {
+export function useSave({ id, drawing, authed, setStatus }: UseSaveParams) {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestDataRef = useRef<DrawingData | null>(null);
 
@@ -21,8 +23,10 @@ export function useSave({ id, drawing, setStatus }: UseSaveParams) {
     if (drawing) latestDataRef.current = drawing.data;
   }, [drawing]);
 
+  // File offline = persistance distante uniquement ; en local, l'écriture IndexedDB
+  // est déjà « hors-ligne » et ne nécessite ni file ni re-sync.
   const flushPending = useCallback(async () => {
-    if (!id) return;
+    if (!id || !authed) return;
     const pending = await getPending(id);
     if (!pending) return;
     try {
@@ -32,7 +36,7 @@ export function useSave({ id, drawing, setStatus }: UseSaveParams) {
     } catch {
       // still offline — keep in queue
     }
-  }, [id, setStatus]);
+  }, [id, authed, setStatus]);
 
   useEffect(() => {
     if (navigator.onLine) void flushPending();
@@ -45,14 +49,21 @@ export function useSave({ id, drawing, setStatus }: UseSaveParams) {
 
   useEffect(() => {
     const currentId = id;
+    const currentAuthed = authed;
     return () => {
       if (saveTimerRef.current !== null && latestDataRef.current && currentId) {
         clearTimeout(saveTimerRef.current);
         const data = latestDataRef.current;
-        updateDrawingData(currentId, data).catch(() => { void enqueue(currentId, data); });
+        if (currentAuthed) {
+          updateDrawingData(currentId, data).catch(() => {
+            void enqueue(currentId, data);
+          });
+        } else {
+          void localUpdateDrawingData(currentId, data);
+        }
       }
     };
-  }, [id]);
+  }, [id, authed]);
 
   const scheduleSave = useCallback(() => {
     if (!id) return;
@@ -60,17 +71,27 @@ export function useSave({ id, drawing, setStatus }: UseSaveParams) {
     setStatus('saving');
     saveTimerRef.current = setTimeout(async () => {
       saveTimerRef.current = null;
-      if (!latestDataRef.current) return;
+      const data = latestDataRef.current;
+      if (!data) return;
+      if (!authed) {
+        try {
+          await localUpdateDrawingData(id, data);
+          setStatus('ready');
+        } catch {
+          setStatus('error');
+        }
+        return;
+      }
       try {
-        await updateDrawingData(id, latestDataRef.current);
+        await updateDrawingData(id, data);
         await dequeue(id);
         setStatus('ready');
       } catch {
-        await enqueue(id, latestDataRef.current);
+        await enqueue(id, data);
         setStatus('error');
       }
     }, SAVE_DELAY);
-  }, [id, setStatus]);
+  }, [id, authed, setStatus]);
 
   return { scheduleSave, latestDataRef };
 }

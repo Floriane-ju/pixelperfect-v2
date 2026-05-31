@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/Button';
 import { useSnackbar } from '@/components/Snackbar';
+import { useSession } from '@/components/SessionProvider';
 import { DrawingCard } from './DrawingCard/DrawingCard';
 import { GroupCard } from './GroupCard/GroupCard';
 import { GroupModal } from './GroupModal/GroupModal';
@@ -9,9 +11,10 @@ import { NewDrawingModal } from './NewDrawingModal/NewDrawingModal';
 import { NewGroupModal } from './NewGroupModal/NewGroupModal';
 import { InviteCollaboratorModal } from './InviteCollaboratorModal/InviteCollaboratorModal';
 import { ProfileModal } from './ProfileModal';
-import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup, moveToGroup, renameGroup } from '@/lib/drawings';
+import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup, moveToGroup, renameGroup } from '@/lib/drawingStore';
 import { signOut } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { LOCAL_OWNER } from '@/lib/localLibrary';
+import { exportLibrary, importLibrary } from '@/lib/libraryTransfer';
 import { groupDrawings } from '@/lib/groupDrawings';
 import type { DrawingRow } from '@/types';
 import { SnakeCanvas } from '@/components/SnakeCanvas';
@@ -20,33 +23,63 @@ import styles from './Gallery.module.scss';
 
 type Status = 'idle' | 'loading' | 'error';
 
+const MAX_IMPORT_BYTES = 20 * 1024 * 1024; // 20 Mo
+
 export function Gallery() {
   const navigate = useNavigate();
   const snackbar = useSnackbar();
+  const { session, loading: sessionLoading } = useSession();
+  const isAuth = session !== null;
+  // Une seule source de vérité pour l'identité : la session du contexte (pas d'appel getUser).
+  const currentUserId = session ? session.user.id : LOCAL_OWNER;
   const [drawings, setDrawings] = useState<DrawingRow[]>([]);
-  const [status, setStatus] = useState<Status>('idle');
+  const [status, setStatus] = useState<Status>('loading');
   const [errorMsg, setErrorMsg] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
   const [activeGroups, setActiveGroups] = useState<string[]>([]);
   const [pendingGroup, setPendingGroup] = useState<{ sourceId: string; targetId: string } | null>(null);
   const [isContentDragOver, setIsContentDragOver] = useState(false);
   const [inviteTarget, setInviteTarget] = useState<DrawingRow | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [snakeActive, setSnakeActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Recharge la bibliothèque à chaque changement d'auth (login/logout) une fois la session résolue.
   useEffect(() => {
+    if (sessionLoading) return;
     setStatus('loading');
     fetchDrawings()
       .then((rows) => { setDrawings(rows); setStatus('idle'); })
       .catch((err: unknown) => {
-        setErrorMsg(err instanceof Error ? err.message : 'Erreur inconnue');
+        const raw = err instanceof Error ? err.message : 'Erreur inconnue';
+        setErrorMsg(raw === 'IndexedDB unavailable' ? 'Stockage local indisponible (navigation privée ?).' : raw);
         setStatus('error');
       });
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id ?? null);
-    });
-  }, []);
+  }, [isAuth, sessionLoading]);
+
+  const handleExport = () => {
+    exportLibrary()
+      .then(() => snackbar.show('Bibliothèque exportée', { icon: 'export' }))
+      .catch(() => snackbar.show('Échec de l’export'));
+  };
+
+  const handleImportFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > MAX_IMPORT_BYTES) {
+      snackbar.show('Fichier trop volumineux (max 20 Mo).');
+      return;
+    }
+    try {
+      const count = await importLibrary(await file.text());
+      const rows = await fetchDrawings();
+      setDrawings(rows);
+      snackbar.show(`${count} dessin${count > 1 ? 's' : ''} importé${count > 1 ? 's' : ''}`);
+    } catch (err) {
+      snackbar.show(err instanceof Error ? err.message : 'Échec de l’import');
+    }
+  };
 
   const handleCollaboratorRemoved = (drawingId: string) => {
     setDrawings((prev) =>
@@ -154,14 +187,40 @@ export function Gallery() {
           <Button variant="primary" onClick={() => setShowNewModal(true)}>
             Nouveau dessin
           </Button>
-          <Button variant="ghost" onClick={() => setShowProfile(true)}>
-            Profil
-          </Button>
-          <Button variant="ghost" onClick={() => void signOut()}>
-            Déconnexion
-          </Button>
+          {isAuth ? (
+            <>
+              <Button variant="ghost" onClick={() => setShowProfile(true)}>
+                Profil
+              </Button>
+              <Button variant="ghost" onClick={() => void signOut()}>
+                Déconnexion
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" onClick={handleExport}>
+                Exporter
+              </Button>
+              <Button variant="ghost" onClick={() => fileInputRef.current?.click()}>
+                Importer
+              </Button>
+              <Button variant="primary" onClick={() => navigate('/login')}>
+                Se connecter
+              </Button>
+            </>
+          )}
         </div>
       </header>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json,.json"
+        className={styles.hiddenInput}
+        onChange={(e) => void handleImportFile(e)}
+        aria-hidden="true"
+        tabIndex={-1}
+      />
 
       {showNewModal && (
         <NewDrawingModal
@@ -217,7 +276,7 @@ export function Gallery() {
                 onClick={() => navigate(`/editor/${d.id}`)}
                 onRename={(title) => handleRename(d.id, title)}
                 onDelete={isOwner ? () => handleDelete(d.id) : undefined}
-                onInvite={isOwner ? () => setInviteTarget(d) : undefined}
+                onInvite={isAuth && isOwner ? () => setInviteTarget(d) : undefined}
                 onCollaboratorRemoved={() => handleCollaboratorRemoved(d.id)}
                 onDropDrawing={(sourceId) => setPendingGroup({ sourceId, targetId: d.id })}
               />
@@ -244,7 +303,7 @@ export function Gallery() {
           onRename={handleRename}
           onDelete={handleDelete}
           onRemoveFromGroup={handleRemoveFromGroup}
-          onInvite={(d) => setInviteTarget(d)}
+          onInvite={isAuth ? (d) => setInviteTarget(d) : undefined}
           onCollaboratorRemoved={handleCollaboratorRemoved}
         />
       ))}

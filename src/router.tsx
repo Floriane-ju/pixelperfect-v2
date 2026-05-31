@@ -3,7 +3,6 @@ import { AppLayout } from './AppLayout';
 import { Gallery } from './routes/Gallery/Gallery';
 import { Editor } from './routes/Editor/Editor';
 import { Login } from './routes/Login';
-import { RequireAuth } from '@/components/RequireAuth';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export const router = createBrowserRouter([
@@ -12,7 +11,7 @@ export const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    element: <RequireAuth><AppLayout /></RequireAuth>,
+    element: <AppLayout />,
     children: [
       { index: true, element: <ErrorBoundary><Gallery /></ErrorBoundary> },
       { path: 'editor/:id', element: <ErrorBoundary><Editor /></ErrorBoundary> },

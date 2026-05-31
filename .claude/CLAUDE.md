@@ -1,7 +1,7 @@
 # PixelPerfect
 
 ## Overview
-Application PWA de dessin pixel art, installable sur iPad, iPhone et Android. Deux espaces : **galerie** (gestion des dessins, groupes, collaborateurs) et **éditeur** (canvas multi-calques avec outils de dessin). Persistance Supabase, file offline IndexedDB.
+Application PWA de dessin pixel art, installable sur iPad, iPhone et Android. Deux espaces : **galerie** (gestion des dessins, groupes, collaborateurs) et **éditeur** (canvas multi-calques avec outils de dessin). **Connexion optionnelle** : connecté → persistance Supabase (+ file offline IndexedDB) ; anonyme → bibliothèque locale durable dans IndexedDB (base `pixelperfect-library`) avec export/import JSON. Le choix du backend passe par le dispatcher `lib/drawingStore.ts`.
 
 ## Stack
 - React 18 + TypeScript (strict)
@@ -34,16 +34,21 @@ ANALYZE=1 npm run build  # rollup-plugin-visualizer → dist/stats.html
 ```
 src/
   main.tsx              # entrée React, RouterProvider
-  router.tsx            # routes (login publique, reste sous RequireAuth + ErrorBoundary)
-  AppLayout.tsx         # layout racine + SnackbarProvider
+  router.tsx            # routes (login publique, reste sous AppLayout + ErrorBoundary ; pas de garde d'auth)
+  AppLayout.tsx         # layout racine + SessionProvider + SnackbarProvider
   components/           # composants réutilisables (Button, Input, Snackbar, ColorSwatch,
-                        #   ColorWheelIcon, BrushSizeSlider, Icons, ErrorBoundary, RequireAuth)
+                        #   ColorWheelIcon, BrushSizeSlider, Icons, ErrorBoundary, SessionProvider)
     <Name>/<Name>.tsx + <Name>.module.scss + index.ts
+    SessionProvider/    # contexte session (useSession) — split Context/Provider/hook (cf. Snackbar)
   hooks/                # hooks transverses (useModalA11y)
   lib/                  # accès Supabase et persistance
     supabase.ts         # client
     auth.ts             # session / login
-    drawings.ts         # CRUD + validation runtime des DrawingRow
+    drawingStore.ts     # dispatcher : route CRUD vers Supabase (connecté) ou local (anonyme)
+    drawings.ts         # CRUD Supabase + collaborateurs
+    drawingValidation.ts # validation runtime partagée des DrawingData (remote + local + import)
+    localLibrary.ts     # bibliothèque locale IndexedDB (base `pixelperfect-library`, owner LOCAL_OWNER)
+    libraryTransfer.ts  # export/import JSON de la bibliothèque locale (fusion, nouveaux IDs)
     groupDrawings.ts    # groupes
     offlineQueue.ts     # file IndexedDB (migre les anciennes entrées localStorage)
   routes/
