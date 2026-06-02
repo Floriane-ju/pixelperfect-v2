@@ -16,6 +16,7 @@ export type IconName =
   | 'add'
   | 'mirror'
   | 'mirror-v'
+  | 'radial'
   | 'undo'
   | 'redo'
   | 'back'
@@ -129,6 +130,12 @@ function renderIcon(icon: IconName): React.ReactNode {
       return (
         <>
           <path d="M0 4L1 4L1 5L0 5zM1 0L7 0L7 2L6 2L6 1L2 1L2 2L1 2zM1 3L2 3L2 4L1 4zM1 6L2 6L2 7L6 7L6 6L7 6L7 8L1 8zM2 4L3 4L3 5L2 5zM3 3L4 3L4 4L3 4zM4 4L5 4L5 5L4 5zM5 3L6 3L6 4L5 4zM6 4L7 4L7 5L6 5zM7 3L8 3L8 4L7 4z"/>
+        </>
+      );
+    case 'radial':
+      return (
+        <>
+          <path d="M2 2L3 2L3 3L2 3ZM5 2L6 2L6 3L5 3ZM5 5L6 5L6 6L5 6ZM2 5L3 5L3 6L2 6ZM1 1L2 1L2 2L1 2ZM6 1L7 1L7 2L6 2ZM6 6L7 6L7 7L6 7ZM1 6L2 6L2 7L1 7ZM3 1L4 1L4 2L3 2ZM6 3L7 3L7 4L6 4ZM4 6L5 6L5 7L4 7ZM1 4L2 4L2 5L1 5Z"/>
         </>
       );
     case 'undo':

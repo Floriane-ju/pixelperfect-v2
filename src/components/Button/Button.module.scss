@@ -8,6 +8,7 @@
   font-weight: $font-weight-bold;
   transition: background-color $transition-fast, color $transition-fast,
     box-shadow $transition-fast;
+  cursor: pointer;
   @include no-select;
 
   &:focus-visible {
@@ -37,8 +38,8 @@
 
 // Variants
 .variant-primary {
-  background: $accent-2-500;
-  color: $accent-1-600;
+  background: $accent-1-600;
+  color: $accent-1-300;
   box-shadow: $shadow-btn-primary;
 
   &:hover:not(:disabled) {
@@ -51,38 +52,21 @@
 }
 
 .variant-secondary {
-  background: $accent-2-500;
+  background: $accent-1-600;
   color: $accent-1-600;
 }
 
 .variant-ghost {
   background: transparent;
-  color: $accent-2-500;
+  color: $accent-1-700;
 
   &:hover:not(:disabled) {
-    color: $accent-2-400;
-  }
-}
-
-:global(.accent2) .variant-ghost {
-  color: $accent-1-500;
-
-  &:hover:not(:disabled) {
-    color: $accent-1-400;
-  }
-}
-
-.variant-ghost-accent-1 {
-  background: transparent;
-  color: $accent-1-500;
-
-  &:hover:not(:disabled) {
-    color: $accent-1-400;
+    color: $accent-1-600;
   }
 }
 
 .variant-selected {
-  background: $accent-2-500;
+  background: $accent-1-600;
   color: $accent-1-500;
   box-shadow: $shadow-selected;
 
@@ -97,7 +81,7 @@
 
 .variant-selectable {
   background: $accent-1-500;
-  color: $accent-2-500;
+  color: $accent-1-600;
   box-shadow: $shadow-selectable;
   border:$border-s-accent-1;
 

@@ -25,7 +25,7 @@
 
   &.dropTarget {
     box-shadow: $drop-shadow-interactive-hover, $inner-shadow-interactive-purple-hover;
-    outline: $outline-width solid $accent-2-500;
+    outline: $outline-width solid $accent-1-600;
     outline-offset: -$outline-offset;
   }
 }
@@ -43,7 +43,7 @@
   flex: 1;
   min-width: 0;
   font-size: $font-size-md;
-  color: $accent-2-500;
+  color: $accent-1-700;
   font-weight: $font-weight-regular;
   white-space: nowrap;
   overflow: hidden;
@@ -57,7 +57,7 @@
   padding: 0 $space-s;
   background: $accent-1-300;
   font-size: $font-size-md;
-  color: $accent-2-500;
+  color: $accent-1-600;
   font-family: $font-family-base;
   outline: none;
 }
@@ -81,7 +81,7 @@
   width: $thumb-size;
   height: $thumb-size;
   flex-shrink: 0;
-  background: $accent-2-500;
+  background: $accent-1-500;
 }
 
 .thumbInner {

@@ -8,7 +8,6 @@ export type ButtonVariant =
   | 'primary'
   | 'secondary'
   | 'ghost'
-  | 'ghost-accent-1'
   | 'danger'
   | 'selected'
   | 'selectable';

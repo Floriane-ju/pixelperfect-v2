@@ -10,17 +10,16 @@
   padding:0 $space-4xl;
 }
 
-.decoLeft {
-  .version {
-    font-size: $font-size-sm;
-    color: $accent-1-400;
-    font-weight: $font-weight-regular;
-    white-space: nowrap;
-    transform: rotate(90deg);
-    padding:$space-2xl 0px;
-    position:absolute;
-    left:$space-l;
-  }
+.version {
+  font-size: $font-size-sm;
+  color: $accent-1-600;
+  font-weight: $font-weight-regular;
+  white-space: nowrap;
+  position: fixed;
+  bottom: max(#{$space-s}, env(safe-area-inset-bottom));
+  left: $space-s;
+  pointer-events: none;
+  z-index: $z-snake-hint;
 }
 
 .header {
@@ -53,7 +52,7 @@
   font-family: $font-family-display;
   font-size: $font-size-display;
   font-weight: $font-weight-regular;
-  color: $accent-2-500;
+  color: $accent-1-600;
   line-height: 1;
   white-space: nowrap;
   flex-shrink: 0;
@@ -84,7 +83,7 @@
 }
 
 .contentDropTarget {
-  outline: $outline-width dashed $accent-2-500;
+  outline: $outline-width dashed $accent-1-500;
   outline-offset: -$space-xs;
 }
 
@@ -93,7 +92,7 @@
   align-items: center;
   justify-content: center;
   flex: 1;
-  color: $accent-2-500;
+  color: $accent-1-500;
   font-size: $font-size-md;
   opacity: $opacity-overlay;
   padding: $space-2xl;

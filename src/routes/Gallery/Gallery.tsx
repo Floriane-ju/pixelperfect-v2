@@ -173,9 +173,7 @@ export function Gallery() {
   return (
     <main className={styles.gallery}>
       <SnakeCanvas onModeChange={setSnakeActive} />
-      <div className={styles.decoLeft}>
-        <div className={styles.version}>v{appVersion}</div>
-      </div>
+      <div className={styles.version}>v{appVersion}</div>
       <div className={`${styles.galleryBody}${snakeActive ? ` ${styles.galleryBodyDimmed}` : ''}`}>
       <a className="skip-link" href="#gallery-content">Aller au contenu</a>
       <header className={styles.header}>

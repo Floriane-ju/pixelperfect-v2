@@ -1,0 +1,55 @@
+.switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: $touch-target;
+  min-height: $touch-target;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  @include no-select;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.track {
+  position: relative;
+  display: block;
+  width: $switch-width;
+  height: $switch-height;
+  padding: $switch-pad;
+  background: $accent-1-500;
+  border: $border-s-accent-1;
+  box-shadow: $shadow-selectable;
+  transition: background-color $transition-fast, box-shadow $transition-fast;
+}
+
+.thumb {
+  position: absolute;
+  top: $switch-pad;
+  left: $switch-pad;
+  width: $switch-thumb;
+  height: $switch-thumb;
+  background: $accent-1-600;
+  transition: transform $transition-fast, background-color $transition-fast;
+}
+
+.checked {
+  .track {
+    background: $accent-1-600;
+    box-shadow: $shadow-selected;
+  }
+
+  .thumb {
+    background: $accent-1-300;
+    transform: translateX(#{$switch-travel});
+  }
+}

@@ -20,7 +20,6 @@ export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory
   const [recentColors, setRecentColors] = useState<HexColor[]>([]);
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null);
   const [hoveredColor, setHoveredColor] = useState<HexColor | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ color: HexColor; x: number; y: number } | null>(null);
   const [editColorMode, setEditColorMode] = useState<{ originalColor: HexColor; pickerY: number } | null>(null);
   const [drawingColors, setDrawingColors] = useState<HexColor[]>([]);
 
@@ -32,7 +31,7 @@ export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory
   useEffect(() => { openPanelRef.current = openPanel; }, [openPanel]);
 
   useEffect(() => {
-    if (editColorModeRef.current !== null) return;
+    if (editColorMode !== null) return;
     if (!drawing) { setDrawingColors([]); return; }
 
     const colorCounts = new Map<HexColor, number>();
@@ -54,7 +53,7 @@ export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory
       if (newColors.length === 0 && !hasRemovals) return prev;
       return [...newColors, ...prev.filter(c => currentColors.has(c))];
     });
-  }, [drawing]);
+  }, [drawing, editColorMode]);
 
   const handleColorChange = useCallback((newColor: HexColor) => {
     setColor(newColor);
@@ -124,16 +123,17 @@ export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory
     editColorModeRef.current = { originalColor: c, originalData: latestDataRef.current! };
     setEditColorMode({ originalColor: c, pickerY });
     handleColorChange(c);
-    setContextMenu(null);
     setOpenPanel('color');
   }, [latestDataRef, handleColorChange]);
 
   useEffect(() => {
     if (openPanel !== 'color') return;
     const handler = (e: PointerEvent) => {
-      const inSidebar = rightSidebarRef.current?.contains(e.target as Node);
-      const inEditPanel = editColorPanelRef.current?.contains(e.target as Node);
-      if (!inSidebar && !inEditPanel) closeColorPanel();
+      if (editColorPanelRef.current?.contains(e.target as Node)) return;
+      // En édition de couleur, tout clic hors du panneau ferme (et valide) ;
+      // le garde sidebar ne sert qu'au sélecteur normal (clics sur les pastilles).
+      if (editColorModeRef.current) { closeColorPanel(); return; }
+      if (!rightSidebarRef.current?.contains(e.target as Node)) closeColorPanel();
     };
     document.addEventListener('pointerdown', handler);
     return () => document.removeEventListener('pointerdown', handler);
@@ -152,8 +152,6 @@ export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory
     setOpenPanel,
     hoveredColor,
     setHoveredColor,
-    contextMenu,
-    setContextMenu,
     editColorMode,
     editColorPanelRef,
     isNormalPick,

@@ -63,13 +63,13 @@
   padding: $space-s $space-l;
   font-family: $font-family-base;
   font-size: $font-size-md;
-  color: $accent-2-500;
+  color: $accent-1-600;
   cursor: pointer;
   @include no-select;
 }
 
 .suggestionActive {
-  background: $accent-2-500;
+  background: $accent-1-500;
   color: $accent-1-600;
 }
 

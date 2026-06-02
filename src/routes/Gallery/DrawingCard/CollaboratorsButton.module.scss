@@ -31,7 +31,7 @@
   gap: $space-s;
   width: 100%;
   padding: $space-l;
-  color: $accent-2-500;
+  color: $accent-1-600;
   font-family: $font-family-base;
   font-size: $font-size-md;
   font-weight: $font-weight-regular;
@@ -52,7 +52,7 @@
 .role {
   flex-shrink: 0;
   padding: $space-xxs $space-s;
-  border: $border-s-accent-2;
+  border: $border-s-accent-1;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
   text-transform: uppercase;
@@ -60,18 +60,18 @@
 
   &[data-role='owner'] {
     color: $accent-1-600;
-    background: $accent-2-500;
+    background: $accent-1-500;
   }
 
   &[data-role='editor'] {
-    color: $accent-2-500;
+    color: $accent-1-600;
     background: transparent;
   }
 }
 
 .state {
   padding: $space-l;
-  color: $accent-2-500;
+  color: $accent-1-600;
   font-family: $font-family-base;
   font-size: $font-size-md;
   font-weight: $font-weight-regular;
@@ -91,7 +91,7 @@
   gap: $space-s;
   width: 100%;
   padding: $space-l;
-  color: $accent-2-500;
+  color: $accent-1-600;
   font-family: $font-family-base;
   font-size: $font-size-md;
   @include no-select;
@@ -105,9 +105,9 @@
 .confirmYes,
 .confirmNo {
   padding: $space-xs $space-sm;
-  border: $border-s-accent-2;
+  border: $border-s-accent-1;
   background: transparent;
-  color: $accent-2-500;
+  color: $accent-1-600;
   font-family: $font-family-base;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
@@ -120,6 +120,6 @@
 }
 
 .confirmYes {
-  background: $accent-2-500;
+  background: $accent-1-500;
   color: $accent-1-600;
 }

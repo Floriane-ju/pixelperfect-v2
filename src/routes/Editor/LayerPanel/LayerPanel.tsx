@@ -147,7 +147,7 @@ export function LayerPanel({
                 <Icons icon="drag" size={24} />
               </span>
               <Button
-                variant={isActive ? 'ghost-accent-1' : 'ghost'}
+                variant="ghost"
                 size="md"
                 iconOnly
                 iconLeft={layer.visible ? 'eye' : 'eye-off'}
@@ -158,7 +158,7 @@ export function LayerPanel({
               <LayerThumbnail layer={layer} width={canvasWidth} height={canvasHeight} size={40} />
               <span className={styles.layerName}>{layer.name}</span>
               <Button
-                variant={isActive ? 'ghost-accent-1' : 'ghost'}
+                variant="ghost"
                 size="md"
                 iconOnly
                 iconLeft="duplicate"
@@ -167,7 +167,7 @@ export function LayerPanel({
                 onClick={e => { e.stopPropagation(); onDuplicate(layer.id); }}
               />
               <Button
-                variant={isActive ? 'ghost-accent-1' : 'ghost'}
+                variant="ghost"
                 size="md"
                 iconOnly
                 iconLeft="trash"

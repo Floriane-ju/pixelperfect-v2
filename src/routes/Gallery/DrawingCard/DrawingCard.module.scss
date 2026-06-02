@@ -2,20 +2,20 @@
   display: flex;
   flex-direction: column;
   width: $card-width;
-  background: $accent-2-500;
+  background: $accent-1-450;
   cursor: pointer;
   flex-shrink: 0;
-  box-shadow: $drop-shadow-interactive,$inner-shadow-interactive-cyan;
+  box-shadow: $drop-shadow-interactive,$inner-shadow-interactive-purple;
   transition: box-shadow $transition-fast;
   border:$border-m-accent-1;
   @include no-select;
 
   &:hover {
-    box-shadow: $drop-shadow-interactive-hover,$inner-shadow-interactive-cyan-hover;
+    box-shadow: $drop-shadow-interactive-hover,$inner-shadow-interactive-purple-hover;
   }
 
   &:active:not(:has(header:active)) {
-    box-shadow: $drop-shadow-interactive-active,$inner-shadow-interactive-cyan-active;
+    box-shadow: $drop-shadow-interactive-active,$inner-shadow-interactive-purple-active;
   }
 
   &:focus-visible {
@@ -29,8 +29,8 @@
   }
 
   &.dropTarget {
-    box-shadow: $drop-shadow-interactive-hover, $inner-shadow-interactive-cyan-hover;
-    outline: $outline-width solid $accent-2-500;
+    box-shadow: $drop-shadow-interactive-hover, $inner-shadow-interactive-purple-hover;
+    outline: $outline-width solid $accent-1-600;
     outline-offset: -$outline-offset;
   }
 }
@@ -48,7 +48,7 @@
   flex: 1;
   min-width: 0;
   font-size: $font-size-md;
-  color: $accent-1-600;
+  color: $accent-1-700;
   font-weight: $font-weight-regular;
   white-space: nowrap;
   overflow: hidden;
@@ -60,7 +60,7 @@
   min-width: 0;
   height: $space-l;
   padding: 0 $space-s;
-  background: $accent-2-400;
+  background: $accent-1-400;
   font-size: $font-size-md;
   color: $accent-1-600;
   font-family: $font-family-base;
@@ -87,7 +87,7 @@
   padding: $space-sm;
   flex: 1;
   min-height: 100px;
-  background: $accent-2-500;
+  background: $accent-1-500;
 }
 
 .confirmLabel {
@@ -117,7 +117,7 @@
 .cancelBtn {
   flex: 1;
   height: $space-xl;
-  background: $accent-2-400;
+  background: $accent-1-400;
   color: $accent-1-600;
   font-size: $font-size-sm;
   font-family: $font-family-base;

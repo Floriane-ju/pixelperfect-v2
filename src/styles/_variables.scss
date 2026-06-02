@@ -15,17 +15,18 @@ $color-white: $neutral-0;
 $color-black: $neutral-1000;
 
 // Accent 1 (violet)
-$accent-1-300: #CDC2FF;
-$accent-1-400: #A28EFD;
-$accent-1-450: #836EE4;
-$accent-1-500: #6E59CF;
-$accent-1-600: #47339D;
+$accent-1-300: #FFF7E5;
+$accent-1-350: #FFF5DE;
+$accent-1-400: #FEF2D6;
+$accent-1-450: #FEEBCF;
+$accent-1-500: #FDE1B5;
+$accent-1-550: #FEC27F;
+$accent-1-600: #FEA348;
+$accent-1-650: #F79238;
+$accent-1-700: #F08028;
+$accent-1-750: #DC6E1C;
+$accent-1-800: #C85C10;
 
-// Accent 2 (cyan)
-$accent-2-300: #FFFEF2;
-$accent-2-400: #FFFBD4;
-$accent-2-500: #FFF8A9;
-$accent-2-600: #BDB451;
 
 // ─────────────────────────────────────────────
 // Couleurs sémantiques (mappées à la palette)
@@ -110,8 +111,16 @@ $touch-target: 44px;
 // Composants
 // ─────────────────────────────────────────────
 $size-slider-thumb: 18px;
+$size-slider-max-height: 300px;
 $size-cursor-sv:    14px;
 $size-swatch:       28px;
+
+// Switch (toggle)
+$switch-width:  $space-3xl; // 40
+$switch-height: $space-l;   // 24
+$switch-thumb:  $space-m;   // 16
+$switch-pad:    $space-xxs; // 2
+$switch-travel: calc(#{$switch-width} - #{$switch-thumb} - 2 * #{$switch-pad});
 
 // Pipette long-press
 $pipette-hold-duration:      500ms;
@@ -122,7 +131,7 @@ $pipette-indicator-stroke:   3px;
 $pipette-indicator-track:    rgba($color-black, 0.35);
 
 // Selection (rectangular)
-$selection-fill:           $accent-2-500;
+$selection-fill:           $accent-1-500;
 $selection-fill-opacity:   0.15;
 $selection-stroke:         $color-black;
 $selection-stroke-width:   1;
@@ -144,17 +153,17 @@ $checker-size-lg: 24px;
 $shadow-modal:8px 8px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-400};
 
 //Shadows selectables
-$shadow-selectable:4px 4px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-400};
-$shadow-selectable-hover: 6px 6px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-300};
+$shadow-selectable:2px 2px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-400};
+$shadow-selectable-hover: 4px 4px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-300};
 $shadow-selectable-active: inset -2px -2px 0 0 #{$accent-1-400}, inset 2px 2px 0 0 #{$accent-1-600};
 
-$shadow-selected:inset -2px -2px 0 0 #{$accent-2-400}, inset 2px 2px 0 0 #{$accent-2-600};
-$shadow-selected-hover: inset -2px -2px 0 0 #{$accent-2-300}, inset 2px 2px 0 0 #{$accent-2-600};
-$shadow-selected-active: inset -2px -2px 0 0 #{$accent-2-300}, inset 2px 2px 0 0 #{$accent-2-600};
+$shadow-selected:inset -2px -2px 0 0 #{$accent-1-400}, inset 2px 2px 0 0 #{$accent-1-600};
+$shadow-selected-hover: inset -2px -2px 0 0 #{$accent-1-300}, inset 2px 2px 0 0 #{$accent-1-600};
+$shadow-selected-active: inset -2px -2px 0 0 #{$accent-1-300}, inset 2px 2px 0 0 #{$accent-1-600};
 
 // Rows (layer panel, list rows)
-$shadow-row-selected: inset 4px 4px 0 0 #{$accent-2-600}, inset -4px -4px 0 0 #{$accent-2-400};
-$color-row-selected-bg:   $accent-2-500;
+$shadow-row-selected: inset 4px 4px 0 0 #{$accent-1-600}, inset -4px -4px 0 0 #{$accent-1-400};
+$color-row-selected-bg:   $accent-1-500;
 $color-row-selected-text: $accent-1-600;
 
 //Inner shadows interactive purple
@@ -162,20 +171,15 @@ $inner-shadow-interactive-purple:inset 2px 2px 0 0 #{$accent-1-400};
 $inner-shadow-interactive-purple-hover:inset 2px 2px 0 0 #{$accent-1-300};
 $inner-shadow-interactive-purple-active:inset 2px 2px 0 0 #{$accent-1-600}, inset -2px -2px 0 0 #{$accent-1-400};
 
-//Inner shadows interactive cyan
-$inner-shadow-interactive-cyan:inset 2px 2px 0 0 #{$accent-2-400};
-$inner-shadow-interactive-cyan-hover:inset 2px 2px 0 0 #{$accent-2-300};
-$inner-shadow-interactive-cyan-active:inset 2px 2px 0 0 #{$accent-2-600}, inset -2px -2px 0 0 #{$accent-2-400};
-
 //Drop shadows interactive
 $drop-shadow-interactive:8px 8px 0 0 #{$accent-1-600};
 $drop-shadow-interactive-hover:16px 16px 0 0 #{$accent-1-600};
 $drop-shadow-interactive-active:0px 0px 0 0 #{$accent-1-600};
 
 // Button primary shadows
-$shadow-btn-primary:        4px 4px 0 0 #{$accent-1-400}, 8px 8px 0 0 #{$accent-1-600}, inset 4px 4px 0 0 #{$accent-2-400};
-$shadow-btn-primary-hover:  8px 8px 0 0 #{$accent-1-400}, 16px 16px 0 0 #{$accent-1-600}, inset 4px 4px 0 0 #{$accent-2-300};
-$shadow-btn-primary-active: 0px 0px 0 0 #{$accent-1-400}, 0px 0px 0 0 #{$accent-1-600}, inset 4px 4px 0 0 #{$accent-2-600};
+$shadow-btn-primary:        4px 4px 0 0 #{$accent-1-500}, 8px 8px 0 0 #{$accent-1-600};
+$shadow-btn-primary-hover:  8px 8px 0 0 #{$accent-1-500}, 16px 16px 0 0 #{$accent-1-600};
+$shadow-btn-primary-active: 0px 0px 0 0 #{$accent-1-500}, 0px 0px 0 0 #{$accent-1-600};
 
 // Display text shadow
 $text-shadow-display: 4px 4px 0 #{$accent-1-400}, 8px 8px 0 #{$accent-1-600};
@@ -183,8 +187,6 @@ $text-shadow-display: 4px 4px 0 #{$accent-1-400}, 8px 8px 0 #{$accent-1-600};
 //Border
 $border-m-accent-1:2px solid $accent-1-600;
 $border-s-accent-1:1px solid $accent-1-600;
-$border-m-accent-2:2px solid $accent-2-600;
-$border-s-accent-2:1px solid $accent-2-600;
 
 // ─────────────────────────────────────────────
 // Z-index

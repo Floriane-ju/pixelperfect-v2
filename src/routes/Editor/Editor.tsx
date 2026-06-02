@@ -14,7 +14,9 @@ import { ColorPanel } from './ColorPanel';
 import { EditorLoading, EditorError } from './EditorStates';
 import { SettingsPanel } from './SettingsPanel';
 import type { EditorBgColor } from './SettingsPanel';
-import { ContextMenu } from '@/components/ContextMenu';
+import { MirrorPanel } from './MirrorPanel';
+import type { RadialSegments } from './MirrorPanel';
+import type { MirrorAxis, SymmetryConfig } from './shapePixels';
 import { Canvas } from './Canvas/Canvas';
 import type { Tool } from './Canvas/Canvas';
 import { buildLayersSvg } from './exportSvg';
@@ -44,15 +46,18 @@ export function Editor() {
   const [activeLayerId, setActiveLayerId] = useState<string>('');
   const [showInvisibleModal, setShowInvisibleModal] = useState(false);
   const [showCaptureModal, setShowCaptureModal] = useState(false);
-  const [mirrorH, setMirrorH] = useState(false);
-  const [mirrorV, setMirrorV] = useState(false);
+  const [mirrorAxis, setMirrorAxis] = useState<MirrorAxis>('none');
+  const [mirrorRotation, setMirrorRotation] = useState(false);
+  const [radialSegments, setRadialSegments] = useState<RadialSegments>(4);
+  const [showMirror, setShowMirror] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [gridOpacity, setGridOpacity] = useState(1);
+  const [gridOpacity, setGridOpacity] = useState(0.4);
   const [bgColor, setBgColor] = useState<EditorBgColor>('white');
   const [canvasDisplaySize, setCanvasDisplaySize] = useState({ w: 256, h: 256 });
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const leftSidebarRef = useRef<HTMLElement>(null);
+  const mirrorContainerRef = useRef<HTMLDivElement>(null);
   const settingsContainerRef = useRef<HTMLDivElement>(null);
   const rightSidebarRef = useRef<HTMLElement>(null);
 
@@ -83,7 +88,7 @@ export function Editor() {
   const { refImage, refImageError, clearRefImageError, handleRefImageImport, handleRefImageRemove, handleRefImageTransform, handleCapturePixels } = useReferenceImage({ canvasDisplaySize, activeLayerId, drawing, handleLayerChange, pushHistory, latestDataRef });
   const {
     color, drawingColors, openPanel, setOpenPanel, hoveredColor, setHoveredColor,
-    contextMenu, setContextMenu, editColorMode, editColorPanelRef,
+    editColorMode, editColorPanelRef,
     isNormalPick, displayedRecentColors,
     handleColorChange, commitRecentColor, handlePanelToggle, handleEditDrawingColor,
   } = useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory, latestDataRef, rightSidebarRef });
@@ -110,6 +115,15 @@ export function Editor() {
   const handleShowGridToggle = useCallback(() => setShowGrid(v => !v), []);
   const handleSettingsToggle = useCallback(() => setShowSettings(v => !v), []);
   const handleSettingsClose = useCallback(() => setShowSettings(false), []);
+  const handleMirrorToggle = useCallback(() => setShowMirror(v => !v), []);
+  const handleMirrorClose = useCallback(() => setShowMirror(false), []);
+  const handleMirrorRotationToggle = useCallback(() => setMirrorRotation(v => !v), []);
+
+  const symmetry = useMemo<SymmetryConfig>(() => ({
+    axis: mirrorAxis,
+    rotation: mirrorRotation,
+    radialSegments,
+  }), [mirrorAxis, mirrorRotation, radialSegments]);
 
   useEffect(() => {
     if (!showSettings) return;
@@ -120,6 +134,16 @@ export function Editor() {
     document.addEventListener('pointerdown', handler);
     return () => document.removeEventListener('pointerdown', handler);
   }, [showSettings]);
+
+  useEffect(() => {
+    if (!showMirror) return;
+    const handler = (e: PointerEvent) => {
+      const inPanel = mirrorContainerRef.current?.contains(e.target as Node);
+      if (!inPanel) setShowMirror(false);
+    };
+    document.addEventListener('pointerdown', handler);
+    return () => document.removeEventListener('pointerdown', handler);
+  }, [showMirror]);
 
   const topbarRefImage = useMemo(() =>
     refImage ? { x: refImage.x, y: refImage.y, scale: refImage.scale, opacity: refImage.opacity, naturalWidth: refImage.naturalWidth, naturalHeight: refImage.naturalHeight } : null,
@@ -150,9 +174,9 @@ export function Editor() {
     return () => document.removeEventListener('paste', handler);
   }, [handleColorChange, commitRecentColor]);
 
-  const handleSwatchContextMenu = useCallback((c: string, x: number, y: number) => {
-    setContextMenu({ color: c as HexColor, x, y });
-  }, [setContextMenu]);
+  const handleSwatchEdit = useCallback((c: string, y: number) => {
+    handleEditDrawingColor(c as HexColor, y);
+  }, [handleEditDrawingColor]);
 
   const handleHoverLeave = useCallback(() => setHoveredColor(null), [setHoveredColor]);
   const handleHoverEnter = useCallback((c: string) => setHoveredColor(c as HexColor), [setHoveredColor]);
@@ -225,56 +249,6 @@ export function Editor() {
         <Topbar />
 
         <div className={styles.body}>
-          <aside ref={leftSidebarRef} className={styles.leftSidebar} aria-label="Outils d'affichage">
-            <BrushSizeSlider value={brushSize} onChange={setBrushSize} min={1} max={16} />
-            <div className={styles.leftSidebarTools}>
-              <Button
-                variant={mirrorH ? 'selected' : 'selectable'}
-                size="md"
-                iconOnly
-                iconLeft="mirror"
-                title="Miroir horizontal"
-                aria-label="Miroir horizontal"
-                aria-pressed={mirrorH}
-                onClick={() => setMirrorH(v => !v)}
-              />
-              <Button
-                variant={mirrorV ? 'selected' : 'selectable'}
-                size="md"
-                iconOnly
-                iconLeft="mirror-v"
-                title="Miroir vertical"
-                aria-label="Miroir vertical"
-                aria-pressed={mirrorV}
-                onClick={() => setMirrorV(v => !v)}
-              />
-              <div ref={settingsContainerRef} className={styles.settingsContainer}>
-                <Button
-                  variant={showSettings ? 'selected' : 'selectable'}
-                  size="md"
-                  iconOnly
-                  iconLeft="settings"
-                  title="Paramètres"
-                  aria-label="Paramètres"
-                  aria-expanded={showSettings}
-                  onClick={handleSettingsToggle}
-                />
-                {showSettings && (
-                  <div className={styles.settingsPanelAnchor}>
-                    <SettingsPanel
-                      showGrid={showGrid}
-                      gridOpacity={gridOpacity}
-                      bgColor={bgColor}
-                      onShowGridToggle={handleShowGridToggle}
-                      onGridOpacityChange={setGridOpacity}
-                      onBgColorChange={setBgColor}
-                      onClose={handleSettingsClose}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          </aside>
           <div
             ref={canvasAreaRef}
             id="canvas"
@@ -284,14 +258,70 @@ export function Editor() {
             role="img"
             aria-label={`Dessin « ${drawing.title} » : ${drawing.data.width}×${drawing.data.height} pixels, ${drawing.data.layers.length} calque${drawing.data.layers.length > 1 ? 's' : ''}`}
           >
+            <aside ref={leftSidebarRef} className={styles.leftSidebar} aria-label="Outils d'affichage">
+              <BrushSizeSlider value={brushSize} onChange={setBrushSize} min={1} max={16} />
+              <div className={styles.leftSidebarTools}>
+                <div ref={mirrorContainerRef} className={styles.settingsContainer}>
+                  <Button
+                    variant={mirrorAxis !== 'none' ? 'selected' : 'selectable'}
+                    size="md"
+                    iconOnly
+                    iconLeft={mirrorAxis === 'vertical' ? 'mirror-v' : mirrorAxis === 'radial' ? 'radial' : 'mirror'}
+                    title="Symétrie"
+                    aria-label="Symétrie"
+                    aria-pressed={mirrorAxis !== 'none'}
+                    aria-expanded={showMirror}
+                    onClick={handleMirrorToggle}
+                  />
+                  {showMirror && (
+                    <div className={styles.settingsPanelAnchor}>
+                      <MirrorPanel
+                        axis={mirrorAxis}
+                        rotation={mirrorRotation}
+                        radialSegments={radialSegments}
+                        onAxisChange={setMirrorAxis}
+                        onRotationToggle={handleMirrorRotationToggle}
+                        onRadialSegmentsChange={setRadialSegments}
+                        onClose={handleMirrorClose}
+                      />
+                    </div>
+                  )}
+                </div>
+                <div ref={settingsContainerRef} className={styles.settingsContainer}>
+                  <Button
+                    variant={showSettings ? 'selected' : 'selectable'}
+                    size="md"
+                    iconOnly
+                    iconLeft="settings"
+                    title="Paramètres"
+                    aria-label="Paramètres"
+                    aria-expanded={showSettings}
+                    onClick={handleSettingsToggle}
+                  />
+                  {showSettings && (
+                    <div className={styles.settingsPanelAnchor}>
+                      <SettingsPanel
+                        showGrid={showGrid}
+                        gridOpacity={gridOpacity}
+                        bgColor={bgColor}
+                        onShowGridToggle={handleShowGridToggle}
+                        onGridOpacityChange={setGridOpacity}
+                        onBgColorChange={setBgColor}
+                        onClose={handleSettingsClose}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </aside>
+
             <Canvas
               data={drawing.data}
               activeLayerId={activeLayerId}
               tool={tool}
               color={color}
               brushSize={brushSize}
-              mirrorH={mirrorH}
-              mirrorV={mirrorV}
+              symmetry={symmetry}
               onLayerChange={handleLayerChange}
               onInvisibleLayerAttempt={() => setShowInvisibleModal(true)}
               onDrawStart={handleDrawStart}
@@ -303,57 +333,57 @@ export function Editor() {
               showGrid={showGrid}
               selection={selection}
             />
-          </div>
 
-          <aside ref={rightSidebarRef} className={styles.rightSidebar}>
-            <div className={styles.colorWheelContainer}>
-              <Button
-                variant="ghost"
-                size="md"
-                iconOnly
-                title="Choisir une couleur"
-                aria-label="Choisir une couleur"
-                aria-expanded={openPanel === 'color' && !editColorMode}
-                onClick={() => handlePanelToggle('color')}
-              >
-                <ColorWheelIcon size={32} />
-              </Button>
-              {openPanel === 'color' && !editColorMode && (
-                <ColorPanel className={styles.colorPanel} onClose={handlePanelClose}>
-                  <ColorPicker value={color} onChange={handleColorChange} onColorHover={setHoveredColor} recentColors={displayedRecentColors} drawingColors={drawingColors} />
-                </ColorPanel>
+            <aside ref={rightSidebarRef} className={styles.rightSidebar}>
+              <div className={styles.colorWheelContainer}>
+                <Button
+                  variant="ghost"
+                  size="md"
+                  iconOnly
+                  title="Choisir une couleur"
+                  aria-label="Choisir une couleur"
+                  aria-expanded={openPanel === 'color' && !editColorMode}
+                  onClick={() => handlePanelToggle('color')}
+                >
+                  <ColorWheelIcon size={32} />
+                </Button>
+                {openPanel === 'color' && !editColorMode && (
+                  <ColorPanel className={styles.colorPanel} onClose={handlePanelClose}>
+                    <ColorPicker value={color} onChange={handleColorChange} onColorHover={setHoveredColor} recentColors={displayedRecentColors} drawingColors={drawingColors} />
+                  </ColorPanel>
+                )}
+              </div>
+              {displayedRecentColors.length > 0 && (
+                <>
+                  <div className={styles.colorDivider} />
+                  <div className={styles.recentColors}>
+                    {displayedRecentColors.map((c, i) => (
+                      <ColorSwatch
+                        key={c}
+                        color={c}
+                        isPreview={isNormalPick && i === 0}
+                        onColorChange={handleSwatchColorChange}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
-            </div>
-            {displayedRecentColors.length > 0 && (
-              <>
-                <div className={styles.colorDivider} />
-                <div className={styles.recentColors}>
-                  {displayedRecentColors.map((c, i) => (
-                    <ColorSwatch
-                      key={c}
-                      color={c}
-                      isPreview={isNormalPick && i === 0}
-                      onColorChange={handleSwatchColorChange}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-            {drawingColors.length > 0 && <div className={styles.colorDivider} />}
-            <div className={styles.drawingColors}>
-              {drawingColors.map(c => (
-                <ColorSwatch
-                  key={c}
-                  color={c}
-                  displayColor={editColorMode?.originalColor === c ? color : undefined}
-                  onColorChange={handleSwatchColorChange}
-                  onContextMenu={handleSwatchContextMenu}
-                  onHoverEnter={handleHoverEnter}
-                  onHoverLeave={handleHoverLeave}
-                />
-              ))}
-            </div>
-          </aside>
+              {drawingColors.length > 0 && <div className={styles.colorDivider} />}
+              <div className={styles.drawingColors}>
+                {drawingColors.map(c => (
+                  <ColorSwatch
+                    key={c}
+                    color={c}
+                    displayColor={editColorMode?.originalColor === c ? color : undefined}
+                    onColorChange={handleSwatchColorChange}
+                    onEdit={handleSwatchEdit}
+                    onHoverEnter={handleHoverEnter}
+                    onHoverLeave={handleHoverLeave}
+                  />
+                ))}
+              </div>
+            </aside>
+          </div>
         </div>
 
         {openPanel === 'color' && editColorMode && (
@@ -365,15 +395,6 @@ export function Editor() {
           >
             <ColorPicker value={color} onChange={handleColorChange} onColorHover={setHoveredColor} recentColors={displayedRecentColors} drawingColors={drawingColors} />
           </ColorPanel>
-        )}
-
-        {contextMenu && (
-          <div className={styles.contextMenuAnchor} style={{ left: contextMenu.x, top: contextMenu.y }}>
-            <ContextMenu
-              items={[{ label: 'Modifier la couleur', onClick: () => handleEditDrawingColor(contextMenu.color, contextMenu.y) }]}
-              onClose={() => setContextMenu(null)}
-            />
-          </div>
         )}
 
         {status === 'saving' && <div className={styles.savingBadge} aria-live="polite">Enregistrement…</div>}

@@ -1,5 +1,6 @@
 import type { HexColor } from '@/types';
-import { getShapePixels, expandMirror } from '@/routes/Editor/shapePixels';
+import { getShapePixels, expandSymmetry } from '@/routes/Editor/shapePixels';
+import type { SymmetryConfig } from '@/routes/Editor/shapePixels';
 
 export type Tool = 'pencil' | 'eraser' | 'fill' | 'eyedropper' | 'circle' | 'square' | 'line' | 'select';
 export type ShapeTool = 'circle' | 'square' | 'line';
@@ -16,10 +17,9 @@ export function applyShape(
   color: HexColor,
   width: number,
   height: number,
-  mirrorH: boolean,
-  mirrorV: boolean,
+  symmetry: SymmetryConfig,
 ): Record<string, HexColor> {
-  const pts = expandMirror(getShapePixels(tool, start, end), width, height, mirrorH, mirrorV);
+  const pts = expandSymmetry(getShapePixels(tool, start, end), width, height, symmetry);
   const next = { ...current };
   for (const { x, y } of pts) {
     if (x >= 0 && y >= 0 && x < width && y < height) next[`${x},${y}`] = color;

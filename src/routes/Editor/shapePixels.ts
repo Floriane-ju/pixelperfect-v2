@@ -127,6 +127,84 @@ export function expandMirror(
   return result;
 }
 
+/** Symétrie centrale (rotation 180°) : chaque point ajoute son opposé par le centre du canvas. */
+export function expandRotate180(
+  pts: Array<{ x: number; y: number }>,
+  width: number,
+  height: number,
+): Array<{ x: number; y: number }> {
+  const seen = new Set<string>(pts.map(p => `${p.x},${p.y}`));
+  const result = [...pts];
+  const add = (x: number, y: number) => {
+    const k = `${x},${y}`;
+    if (!seen.has(k)) { seen.add(k); result.push({ x, y }); }
+  };
+  for (const { x, y } of pts) add(width - 1 - x, height - 1 - y);
+  return result;
+}
+
+/** Type de symétrie actif ; un seul à la fois ('none' = désactivé). */
+export type MirrorAxis = 'none' | 'horizontal' | 'vertical' | 'radial';
+
+export interface SymmetryConfig {
+  axis: MirrorAxis;
+  /** « Par rotation » global : axe → symétrie centrale 180° ; radial → rotation pure (sinon kaléidoscope). */
+  rotation: boolean;
+  /** Nombre de segments radiaux (4 ou 8) ; utilisé seulement quand axis === 'radial'. */
+  radialSegments: number;
+}
+
+export function expandRadial(
+  pts: Array<{ x: number; y: number }>,
+  width: number,
+  height: number,
+  segments: number,
+  rotationOnly: boolean,
+): Array<{ x: number; y: number }> {
+  if (segments < 2) return pts;
+  const cx = (width - 1) / 2;
+  const cy = (height - 1) / 2;
+  const seen = new Set<string>();
+  const result: Array<{ x: number; y: number }> = [];
+  const add = (x: number, y: number) => {
+    const k = `${x},${y}`;
+    if (!seen.has(k)) { seen.add(k); result.push({ x, y }); }
+  };
+  for (const { x, y } of pts) {
+    const dx = x - cx;
+    const dy = y - cy;
+    // Kaléidoscope : on ajoute la version miroir avant rotation → groupe dièdral (2N copies).
+    const bases: Array<[number, number]> = rotationOnly ? [[dx, dy]] : [[dx, dy], [dx, -dy]];
+    for (const [bx, by] of bases) {
+      for (let k = 0; k < segments; k++) {
+        const a = (2 * Math.PI * k) / segments;
+        const cos = Math.cos(a);
+        const sin = Math.sin(a);
+        add(Math.round(cx + bx * cos - by * sin), Math.round(cy + bx * sin + by * cos));
+      }
+    }
+  }
+  return result;
+}
+
+export function expandSymmetry(
+  pts: Array<{ x: number; y: number }>,
+  width: number,
+  height: number,
+  cfg: SymmetryConfig,
+): Array<{ x: number; y: number }> {
+  switch (cfg.axis) {
+    case 'horizontal':
+      return cfg.rotation ? expandRotate180(pts, width, height) : expandMirror(pts, width, height, true, false);
+    case 'vertical':
+      return cfg.rotation ? expandRotate180(pts, width, height) : expandMirror(pts, width, height, false, true);
+    case 'radial':
+      return expandRadial(pts, width, height, cfg.radialSegments, cfg.rotation);
+    default:
+      return pts;
+  }
+}
+
 export function getShapePixels(
   tool: 'circle' | 'square' | 'line',
   start: { x: number; y: number },

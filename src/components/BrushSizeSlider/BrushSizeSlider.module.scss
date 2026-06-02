@@ -4,6 +4,7 @@
   align-items: center;
   gap: $space-s;
   height: 100%;
+  max-height: $size-slider-max-height;
   min-height: 0;
 }
 
@@ -46,7 +47,7 @@
   left: 50%;
   width: $size-slider-thumb;
   height: $size-slider-thumb;
-  background: $accent-2-500;
+  background: $accent-1-500;
   border: $border-m-accent-1;
   transform: translate(-50%, 50%);
   pointer-events: none;

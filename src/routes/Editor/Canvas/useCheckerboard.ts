@@ -9,7 +9,7 @@ export function useCheckerboard(canvasRef: RefObject<HTMLCanvasElement>, width: 
     if (!ctx) return;
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        ctx.fillStyle = (x + y) % 2 === 0 ? '#747474' : '#979797';
+        ctx.fillStyle = (x + y) % 2 === 0 ? '#8f8f8f' : '#b8b8b8';
         ctx.fillRect(x, y, 1, 1);
       }
     }

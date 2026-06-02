@@ -6,6 +6,7 @@ interface ColorSwatchProps {
   displayColor?: string;
   isPreview?: boolean;
   onColorChange: (color: string) => void;
+  onEdit?: (color: string, y: number) => void;
   onContextMenu?: (color: string, x: number, y: number) => void;
   onHoverEnter?: (color: string) => void;
   onHoverLeave?: () => void;
@@ -16,6 +17,7 @@ export const ColorSwatch = React.memo(function ColorSwatch({
   displayColor,
   isPreview,
   onColorChange,
+  onEdit,
   onContextMenu,
   onHoverEnter,
   onHoverLeave,
@@ -26,7 +28,7 @@ export const ColorSwatch = React.memo(function ColorSwatch({
       style={{ background: displayColor ?? color }}
       title={color}
       aria-label={`Choisir ${color}`}
-      onClick={() => onColorChange(color)}
+      onClick={e => (onEdit ? onEdit(color, e.clientY) : onColorChange(color))}
       onContextMenu={onContextMenu ? e => { e.preventDefault(); onContextMenu(color, e.clientX, e.clientY); } : undefined}
       onPointerEnter={onHoverEnter ? () => onHoverEnter(color) : undefined}
       onPointerLeave={onHoverLeave}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DrawingData, HexColor } from '@/types';
-import { bresenham, expandMirror, floodFill, getShapePixels } from '@/routes/Editor/shapePixels';
+import { bresenham, expandSymmetry, floodFill, getShapePixels } from '@/routes/Editor/shapePixels';
+import type { SymmetryConfig } from '@/routes/Editor/shapePixels';
 import { isShapeTool, applyShape } from './shapes';
 import type { Tool } from './shapes';
 import { useCanvasNavigation } from './useCanvasNavigation';
@@ -28,8 +29,7 @@ interface CanvasProps {
   tool: Tool;
   color: HexColor;
   brushSize?: number;
-  mirrorH: boolean;
-  mirrorV: boolean;
+  symmetry: SymmetryConfig;
   onLayerChange: (layerId: string, pixels: Record<string, HexColor>) => void;
   onInvisibleLayerAttempt: () => void;
   onDrawStart?: () => void;
@@ -48,8 +48,7 @@ export function Canvas({
   tool,
   color,
   brushSize = 1,
-  mirrorH,
-  mirrorV,
+  symmetry,
   onLayerChange,
   onInvisibleLayerAttempt,
   onDrawStart,
@@ -145,10 +144,10 @@ export function Canvas({
     if (!ctx) return;
     ctx.clearRect(0, 0, data.width, data.height);
     ctx.fillStyle = color;
-    for (const { x, y } of expandMirror(pts, data.width, data.height, mirrorH, mirrorV)) {
+    for (const { x, y } of expandSymmetry(pts, data.width, data.height, symmetry)) {
       if (x >= 0 && y >= 0 && x < data.width && y < data.height) ctx.fillRect(x, y, 1, 1);
     }
-  }, [data.width, data.height, color, mirrorH, mirrorV]);
+  }, [data.width, data.height, color, symmetry]);
 
   const clearPreview = useCallback(() => {
     previewRef.current?.getContext('2d')?.clearRect(0, 0, data.width, data.height);
@@ -156,7 +155,7 @@ export function Canvas({
 
   const paint = useCallback((pixels: Array<{ x: number; y: number }>) => {
     const stamped = stampBrush(pixels, brushSize);
-    const expanded = expandMirror(stamped, data.width, data.height, mirrorH, mirrorV);
+    const expanded = expandSymmetry(stamped, data.width, data.height, symmetry);
     const active = layerCanvasesRef.current.get(activeLayerId);
     const lctx = active?.canvas.getContext('2d') ?? null;
     const map = layerPixelsRef.current;
@@ -175,7 +174,7 @@ export function Canvas({
       }
     }
     if (changed) recompositeMain();
-  }, [tool, color, brushSize, activeLayerId, data.width, data.height, mirrorH, mirrorV, layerCanvasesRef, layerPixelsRef, recompositeMain]);
+  }, [tool, color, brushSize, activeLayerId, data.width, data.height, symmetry, layerCanvasesRef, layerPixelsRef, recompositeMain]);
 
   const schedulePipetteLongPress = useCallback((sx: number, sy: number, canvasPx: { x: number; y: number }) => {
     longPressFiredRef.current = false;
@@ -329,7 +328,7 @@ export function Canvas({
     const wasDrawing = isDrawing.current;
     if (wasDrawing && isShapeTool(tool) && shapeStartRef.current) {
       const endPx = screenToCanvas(e.clientX, e.clientY);
-      const next = applyShape(tool, shapeStartRef.current, endPx, layerPixelsRef.current, color, data.width, data.height, mirrorH, mirrorV);
+      const next = applyShape(tool, shapeStartRef.current, endPx, layerPixelsRef.current, color, data.width, data.height, symmetry);
       layerPixelsRef.current = next;
       onLayerChange(activeLayerId, next);
       clearPreview();
@@ -345,7 +344,7 @@ export function Canvas({
     lastPixel.current = null;
     drawSessionSnapshot.current = null;
     pendingStartRef.current = null;
-  }, [tool, screenToCanvas, data.width, data.height, color, activeLayerId, layerPixelsRef, onLayerChange, paint, clearPreview, mirrorH, mirrorV, onDrawEnd, onNavPointerUp, clearLongPress, selection]);
+  }, [tool, screenToCanvas, data.width, data.height, color, activeLayerId, layerPixelsRef, onLayerChange, paint, clearPreview, symmetry, onDrawEnd, onNavPointerUp, clearLongPress, selection]);
 
   const cssSize = { width: displaySize.w, height: displaySize.h };
   const { x, y, scale, angle } = transform;

@@ -5,6 +5,8 @@ import {
   getRectPixels,
   getEllipsePixels,
   expandMirror,
+  expandRadial,
+  expandRotate180,
   getShapePixels,
 } from './shapePixels';
 import type { HexColor } from '@/types';
@@ -218,6 +220,53 @@ describe('expandMirror', () => {
     // center pixel of odd-sized canvas mirrors onto itself
     const out = expandMirror([{ x: 2, y: 2 }], 5, 5, true, true);
     expect(out).toEqual([{ x: 2, y: 2 }]);
+  });
+});
+
+describe('expandRotate180', () => {
+  const w = 4, h = 4;
+
+  it('adds the centre-opposite point', () => {
+    const out = expandRotate180([{ x: 0, y: 1 }], w, h);
+    expect(sortKeys(out)).toEqual(sortKeys([{ x: 0, y: 1 }, { x: 3, y: 2 }]));
+  });
+
+  it('deduplicates centre pixel of odd canvas', () => {
+    expect(expandRotate180([{ x: 2, y: 2 }], 5, 5)).toEqual([{ x: 2, y: 2 }]);
+  });
+});
+
+describe('expandRadial', () => {
+  // canvas 5×5 → centre entier (2,2)
+  const w = 5, h = 5;
+
+  it('returns input unchanged when segments < 2', () => {
+    const pts = [{ x: 0, y: 0 }];
+    expect(expandRadial(pts, w, h, 1, false)).toBe(pts);
+  });
+
+  it('rotation only: 4 rotated copies, no mirror', () => {
+    const out = expandRadial([{ x: 2, y: 0 }], w, h, 4, true);
+    expect(sortKeys(out)).toEqual(sortKeys([
+      { x: 2, y: 0 },
+      { x: 4, y: 2 },
+      { x: 2, y: 4 },
+      { x: 0, y: 2 },
+    ]));
+  });
+
+  it('kaléidoscope (rotationOnly false) doubles a chiral point to 2N copies', () => {
+    const rot = expandRadial([{ x: 3, y: 0 }], w, h, 4, true);
+    const kal = expandRadial([{ x: 3, y: 0 }], w, h, 4, false);
+    expect(rot.length).toBe(4);
+    expect(kal.length).toBe(8);
+    // le kaléidoscope est un sur-ensemble des copies en rotation pure
+    const kalKeys = new Set(kal.map(key));
+    for (const p of rot) expect(kalKeys.has(key(p))).toBe(true);
+  });
+
+  it('center pixel maps onto itself (deduplicated)', () => {
+    expect(expandRadial([{ x: 2, y: 2 }], w, h, 8, false)).toEqual([{ x: 2, y: 2 }]);
   });
 });
 

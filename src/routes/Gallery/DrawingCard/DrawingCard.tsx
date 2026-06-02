@@ -123,7 +123,7 @@ export function DrawingCard({
         </div>
       ) : (
         <>
-          <header className={`${styles.header} accent2`} onClick={(e) => e.stopPropagation()}>
+          <header className={styles.header} onClick={(e) => e.stopPropagation()}>
             {mode === 'renaming' ? (
               <input
                 ref={inputRef}

@@ -25,7 +25,7 @@
   font-family: $font-family-base;
   font-weight: $font-weight-semibold;
   font-size: $font-size-2xl;
-  color: $accent-2-500;
+  color: $accent-1-600;
 }
 
 .list {
@@ -79,7 +79,7 @@
   left: 0;
   right: 0;
   height: $drop-indicator-height;
-  background: $accent-2-500;
+  background: $accent-1-600;
   pointer-events: none;
   z-index: 1;
 }
@@ -98,7 +98,7 @@
   justify-content: center;
   width: $btn-height;
   height: $btn-height;
-  color: $accent-2-500;
+  color: $accent-1-600;
   flex-shrink: 0;
   cursor: grab;
   touch-action: none;
@@ -114,7 +114,7 @@
   font-family: $font-family-base;
   font-weight: $font-weight-semibold;
   font-size: $font-size-md;
-  color: $accent-2-500;
+  color: $accent-1-600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

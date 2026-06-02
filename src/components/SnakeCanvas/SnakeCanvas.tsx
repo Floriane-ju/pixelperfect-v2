@@ -10,10 +10,10 @@ const FOOD_SIZE = 24;
 const FOOD_OFFSET = (CELL - FOOD_SIZE) / 2;
 const TICK_MS = 150;
 const INITIAL_LENGTH = 5;
-const COLOR_AUTO = '#A28EFD';
-const COLOR_USER = '#FFF8A9';
-const COLOR_FOOD_AUTO = '#A28EFD';
-const COLOR_FOOD_USER = '#FFFBD4';
+const COLOR_AUTO = '#FFF5DE';
+const COLOR_USER = '#FEA348';
+const COLOR_FOOD_AUTO = '#FFF5DE';
+const COLOR_FOOD_USER = '#FEA348';
 const BORDER_INSET = 1;
 
 type Dir = 'up' | 'down' | 'left' | 'right';
