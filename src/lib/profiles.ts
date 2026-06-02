@@ -3,6 +3,16 @@ import type { Profile } from '@/types';
 
 export const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 
+// Validation email volontairement permissive : la partie locale autorise tout
+// caractère non-espace/non-@ (donc `+`, `.`, etc., cf. sous-adressage gmail).
+// On délègue le vrai contrôle au serveur (Supabase) ; ici on évite juste les
+// saisies manifestement invalides.
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function isEmail(value: string): boolean {
+  return EMAIL_RE.test(value);
+}
+
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }

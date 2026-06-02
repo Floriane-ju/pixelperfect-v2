@@ -4,7 +4,7 @@ import { Input } from '@/components/Input';
 import { useModalA11y } from '@/hooks/useModalA11y';
 import { useModalZIndex } from '@/lib/modalStack';
 import { addCollaboratorByHandle } from '@/lib/drawings';
-import { USERNAME_RE, searchUsersByUsernamePrefix, type UserSuggestion } from '@/lib/profiles';
+import { EMAIL_RE, USERNAME_RE, searchUsersByUsernamePrefix, type UserSuggestion } from '@/lib/profiles';
 import styles from './InviteCollaboratorModal.module.scss';
 
 interface Props {
@@ -16,7 +16,6 @@ interface Props {
 
 type Status = 'idle' | 'pending' | 'error';
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SUGGEST_MIN_LEN = 3;
 const SUGGEST_DEBOUNCE_MS = 200;
 const USERNAME_PREFIX_RE = /^[a-z0-9_]+$/;
