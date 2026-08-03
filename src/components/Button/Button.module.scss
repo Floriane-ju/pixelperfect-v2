@@ -38,7 +38,7 @@
 
 // Variants
 .variant-primary {
-  background: $accent-1-600;
+  background: $accent-2-600;
   color: $accent-1-300;
   box-shadow: $shadow-btn-primary;
 
@@ -58,16 +58,16 @@
 
 .variant-ghost {
   background: transparent;
-  color: $accent-1-700;
+  color: $accent-2-700;
 
   &:hover:not(:disabled) {
-    color: $accent-1-600;
+    color: $accent-2-600;
   }
 }
 
 .variant-selected {
-  background: $accent-1-600;
-  color: $accent-1-500;
+  background: $accent-2-600;
+  color: $accent-1-300;
   box-shadow: $shadow-selected;
 
   &:hover:not(:disabled) {

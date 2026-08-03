@@ -2,20 +2,20 @@
   display: flex;
   flex-direction: column;
   width: $card-width;
-  background: $accent-1-450;
-  border:$border-m-accent-1;
+  background: $accent-2-400;
+  border:$border-m-accent-2;
   cursor: pointer;
   flex-shrink: 0;
-  box-shadow: $drop-shadow-interactive,$inner-shadow-interactive-purple;
+  box-shadow: $drop-shadow-interactive,$inner-shadow-interactive-2;
   transition: box-shadow $transition-fast;
   @include no-select;
 
   &:hover {
-    box-shadow: $drop-shadow-interactive-hover,$inner-shadow-interactive-purple-hover;
+    box-shadow: $drop-shadow-interactive-hover,$inner-shadow-interactive-2-hover;
   }
 
   &:active:not(:has(header:active)) {
-    box-shadow: $drop-shadow-interactive-active,$inner-shadow-interactive-purple-active;
+    box-shadow: $drop-shadow-interactive-active,$inner-shadow-interactive-2-active;
   }
 
   &:focus-visible {
@@ -24,7 +24,7 @@
   }
 
   &.dropTarget {
-    box-shadow: $drop-shadow-interactive-hover, $inner-shadow-interactive-purple-hover;
+    box-shadow: $drop-shadow-interactive-hover, $inner-shadow-interactive-2-hover;
     outline: $outline-width solid $accent-1-600;
     outline-offset: -$outline-offset;
   }
@@ -36,14 +36,14 @@
   justify-content: space-between;
   gap: $space-s;
   padding: $space-s;
-  border-bottom:$border-m-accent-1;
+  border-bottom:$border-m-accent-2;
 }
 
 .title {
   flex: 1;
   min-width: 0;
   font-size: $font-size-md;
-  color: $accent-1-700;
+  color: $accent-1-300;
   font-weight: $font-weight-regular;
   white-space: nowrap;
   overflow: hidden;

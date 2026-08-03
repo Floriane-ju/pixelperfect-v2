@@ -6,7 +6,7 @@
   width: $layer-panel-width;
   padding: $space-xxs;
   background: $accent-1-500;
-  border: $border-m-accent-1;
+  border: $border-m-accent-2;
   box-shadow: $shadow-modal;
   @include no-select;
 }
@@ -16,7 +16,7 @@
   align-items: center;
   gap: $space-s;
   padding: $space-sm $space-sm $space-sm $space-l;
-  border-bottom: $border-m-accent-1;
+  border-bottom: $border-m-accent-2;
 }
 
 .title {
@@ -47,7 +47,7 @@
   transition: background-color $transition-fast;
 
   &:not(:last-child) {
-    border-bottom: $border-s-accent-1;
+    border-bottom: $border-s-accent-2;
   }
 
   &:hover {

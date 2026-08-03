@@ -27,7 +27,7 @@
   max-height: calc(100dvh - #{$space-m});
   overflow: hidden;
   box-shadow: $shadow-modal;
-  border:$border-m-accent-1;
+  border:$border-m-accent-2;
 
   @include tablet-up {
     width: 620px;
@@ -55,7 +55,7 @@
   font-size: $font-size-md;
   flex-grow: 1;
   font-weight: $font-weight-regular;
-  color: $accent-1-600;
+  color: $accent-2-600;
   white-space: nowrap;
   flex-shrink: 0;
   line-height: 1;

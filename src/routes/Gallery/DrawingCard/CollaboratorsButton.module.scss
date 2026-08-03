@@ -15,8 +15,8 @@
   padding: $space-xxs;
   list-style: none;
   background: $accent-1-450;
-  border: $border-m-accent-1;
-  box-shadow: $inner-shadow-interactive-purple;
+  border: $border-m-accent-2;
+  box-shadow: $inner-shadow-interactive-1;
 }
 
 .row {
@@ -52,7 +52,7 @@
 .role {
   flex-shrink: 0;
   padding: $space-xxs $space-s;
-  border: $border-s-accent-1;
+  border: $border-s-accent-2;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
   text-transform: uppercase;
@@ -105,7 +105,7 @@
 .confirmYes,
 .confirmNo {
   padding: $space-xs $space-sm;
-  border: $border-s-accent-1;
+  border: $border-s-accent-2;
   background: transparent;
   color: $accent-1-600;
   font-family: $font-family-base;
