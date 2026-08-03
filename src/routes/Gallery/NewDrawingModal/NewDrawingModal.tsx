@@ -160,7 +160,7 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
         )}
 
         <div className={styles.actions}>
-          <Button variant="secondary" size="sm" onClick={onClose} disabled={isCreating}>
+          <Button variant="ghost" size="sm" onClick={onClose} disabled={isCreating}>
             Annuler
           </Button>
           <Button

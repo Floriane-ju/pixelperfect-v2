@@ -24,8 +24,9 @@
 
 .header {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  align-items: end;
+  justify-content:space-between;
   gap: $space-l;
   padding: $space-4xl 0;
   padding-top: max(#{$space-4xl}, env(safe-area-inset-top));
@@ -53,7 +54,7 @@
   font-size: $font-size-display;
   font-weight: $font-weight-regular;
   color: $accent-2-600;
-  line-height: 1;
+  line-height: 1.4;
   white-space: nowrap;
   flex-shrink: 0;
   text-shadow: $text-shadow-display;

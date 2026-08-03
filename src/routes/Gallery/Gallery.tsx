@@ -178,13 +178,11 @@ export function Gallery() {
       <a className="skip-link" href="#gallery-content">Aller au contenu</a>
       <header className={styles.header}>
         <div className={styles.titleGroup}>
-          <h1 className={styles.title}>Pixel Perfect</h1>
+          <h1 className={styles.title}>Pixel<br/>Perfect</h1>
           
         </div>
         <div className={styles.headerActions}>
-          <Button variant="primary" onClick={() => setShowNewModal(true)}>
-            Nouveau dessin
-          </Button>
+          
           {isAuth ? (
             <>
               <Button variant="ghost" onClick={() => setShowProfile(true)}>
@@ -202,11 +200,14 @@ export function Gallery() {
               <Button variant="ghost" onClick={() => fileInputRef.current?.click()}>
                 Importer
               </Button>
-              <Button variant="primary" onClick={() => navigate('/login')}>
+              <Button variant="ghost" onClick={() => navigate('/login')}>
                 Se connecter
               </Button>
             </>
           )}
+          <Button variant="primary" onClick={() => setShowNewModal(true)}>
+            Nouveau dessin
+          </Button>
         </div>
       </header>
 

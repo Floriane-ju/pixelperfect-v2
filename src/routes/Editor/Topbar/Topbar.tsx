@@ -115,7 +115,7 @@ export function Topbar() {
             {openPanel === 'ref' && (
               <div className={styles.refPanel}>
                 <Button
-                  variant="secondary"
+                  variant="ghost"
                   size="sm"
                   fullWidth
                   onClick={() => fileInputRef.current?.click()}
