@@ -1,3 +1,19 @@
+// Rampe accent-2 exposée au runtime (vignettes de la galerie, cf. DrawingThumbnail).
+// Source de vérité : _variables.scss — ces custom properties en sont dérivées.
+:root {
+  --accent-2-300: #{$accent-2-300};
+  --accent-2-350: #{$accent-2-350};
+  --accent-2-400: #{$accent-2-400};
+  --accent-2-450: #{$accent-2-450};
+  --accent-2-500: #{$accent-2-500};
+  --accent-2-550: #{$accent-2-550};
+  --accent-2-600: #{$accent-2-600};
+  --accent-2-650: #{$accent-2-650};
+  --accent-2-700: #{$accent-2-700};
+  --accent-2-750: #{$accent-2-750};
+  --accent-2-800: #{$accent-2-800};
+}
+
 *,
 *::before,
 *::after {
