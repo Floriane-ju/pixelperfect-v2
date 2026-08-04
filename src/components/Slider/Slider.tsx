@@ -1,4 +1,6 @@
 import { useCallback, useId } from 'react';
+import type { ChangeEvent } from 'react';
+import { cx } from '@/lib/cx';
 import styles from './Slider.module.scss';
 
 export interface SliderProps {
@@ -29,14 +31,14 @@ export function Slider({
   const inputId = useId();
 
   const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: ChangeEvent<HTMLInputElement>) => {
       onChange(Number(e.target.value));
     },
     [onChange],
   );
 
   return (
-    <div className={className ? `${styles.wrapper} ${className}` : styles.wrapper}>
+    <div className={cx(styles.wrapper, className)}>
       {(label || valueLabel) && (
         <div className={styles.labelRow}>
           {label && <label htmlFor={inputId}>{label}</label>}

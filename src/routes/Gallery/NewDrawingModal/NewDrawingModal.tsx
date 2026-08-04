@@ -1,8 +1,7 @@
 import { useRef, useState } from 'react';
 import { Button } from '@/components/Button';
+import { Dialog } from '@/components/Dialog';
 import { Input } from '@/components/Input';
-import { useModalA11y } from '@/hooks/useModalA11y';
-import { useModalZIndex } from '@/lib/modalStack';
 import styles from './NewDrawingModal.module.scss';
 
 interface Preset {
@@ -18,6 +17,10 @@ const PRESETS: Preset[] = [
   { label: '54 × 54', width: 54, height: 54 },
 ];
 
+const MIN_SIZE = 8;
+const MAX_SIZE = 512;
+const DEFAULT_SIZE = 32;
+
 type SizeMode = 'preset' | 'custom';
 
 export interface NewDrawingModalProps {
@@ -25,24 +28,20 @@ export interface NewDrawingModalProps {
   onConfirm: (name: string, width: number, height: number) => Promise<void>;
 }
 
+function parseDimension(value: string, fallback: number): number {
+  const n = parseInt(value, 10);
+  return Number.isFinite(n) && n > 0 ? Math.max(MIN_SIZE, Math.min(n, MAX_SIZE)) : fallback;
+}
+
 export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
   const [name, setName] = useState('Sans titre');
   const [sizeMode, setSizeMode] = useState<SizeMode>('preset');
   const [selectedPreset, setSelectedPreset] = useState(0);
-  const [customWidth, setCustomWidth] = useState('32');
-  const [customHeight, setCustomHeight] = useState('32');
+  const [customWidth, setCustomWidth] = useState(String(DEFAULT_SIZE));
+  const [customHeight, setCustomHeight] = useState(String(DEFAULT_SIZE));
   const [isCreating, setIsCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const nameRef = useRef<HTMLInputElement>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
-
-  useModalA11y({ modalRef, onClose, initialFocusRef: nameRef });
-  const { zIndex, raise } = useModalZIndex();
-
-  const parseDimension = (value: string, fallback: number): number => {
-    const n = parseInt(value, 10);
-    return Number.isFinite(n) && n > 0 ? Math.max(8, Math.min(n, 512)) : fallback;
-  };
 
   const handleSubmit = async () => {
     const trimmed = name.trim() || 'Sans titre';
@@ -55,8 +54,8 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
       width = preset.width;
       height = preset.height;
     } else {
-      width = parseDimension(customWidth, 32);
-      height = parseDimension(customHeight, 32);
+      width = parseDimension(customWidth, DEFAULT_SIZE);
+      height = parseDimension(customHeight, DEFAULT_SIZE);
     }
 
     setIsCreating(true);
@@ -70,96 +69,12 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
   };
 
   return (
-    <div className={styles.overlay} style={{ zIndex }} onPointerDown={onClose}>
-      <div
-        ref={modalRef}
-        className={styles.modal}
-        onPointerDown={(e) => e.stopPropagation()}
-        onPointerDownCapture={raise}
-        onFocusCapture={raise}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="new-drawing-title"
-      >
-        <h2 id="new-drawing-title" className={styles.heading}>
-          Nouveau dessin
-        </h2>
-
-        <Input
-          ref={nameRef}
-          id="drawing-name"
-          label="Nom"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          maxLength={80}
-          onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmit(); }}
-        />
-
-        <div className={styles.field}>
-          <span className={styles.label}>Taille</span>
-          <div className={styles.presets}>
-            {PRESETS.map((p, i) => (
-              <button
-                key={p.label}
-                type="button"
-                className={[
-                  styles.presetBtn,
-                  sizeMode === 'preset' && selectedPreset === i ? styles.presetBtnActive : '',
-                ].filter(Boolean).join(' ')}
-                onClick={() => { setSizeMode('preset'); setSelectedPreset(i); }}
-              >
-                {p.label}
-              </button>
-            ))}
-            <button
-              type="button"
-              className={[
-                styles.presetBtn,
-                sizeMode === 'custom' ? styles.presetBtnActive : '',
-              ].filter(Boolean).join(' ')}
-              onClick={() => setSizeMode('custom')}
-            >
-              Personnalisé
-            </button>
-          </div>
-
-          {sizeMode === 'custom' && (
-            <div className={styles.customRow}>
-              <div className={styles.dimensionField}>
-                <label className={styles.dimensionLabel} htmlFor="custom-width">L</label>
-                <input
-                  id="custom-width"
-                  className={styles.dimensionInput}
-                  type="number"
-                  min={1}
-                  max={512}
-                  value={customWidth}
-                  onChange={(e) => setCustomWidth(e.target.value)}
-                />
-              </div>
-              <span className={styles.dimensionSep}>×</span>
-              <div className={styles.dimensionField}>
-                <label className={styles.dimensionLabel} htmlFor="custom-height">H</label>
-                <input
-                  id="custom-height"
-                  className={styles.dimensionInput}
-                  type="number"
-                  min={1}
-                  max={512}
-                  value={customHeight}
-                  onChange={(e) => setCustomHeight(e.target.value)}
-                />
-              </div>
-              <span className={styles.dimensionUnit}>px</span>
-            </div>
-          )}
-        </div>
-
-        {errorMsg && (
-          <div className={styles.error} role="alert">{errorMsg}</div>
-        )}
-
-        <div className={styles.actions}>
+    <Dialog
+      title="Nouveau dessin"
+      onClose={onClose}
+      initialFocusRef={nameRef}
+      actions={
+        <>
           <Button variant="ghost" size="sm" onClick={onClose} disabled={isCreating}>
             Annuler
           </Button>
@@ -171,8 +86,82 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
           >
             {isCreating ? 'Création…' : 'Créer'}
           </Button>
+        </>
+      }
+    >
+      <Input
+        ref={nameRef}
+        id="drawing-name"
+        label="Nom"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        maxLength={80}
+        onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmit(); }}
+      />
+
+      <div className={styles.field}>
+        <span className={styles.label}>Taille</span>
+        <div className={styles.presets}>
+          {PRESETS.map((p, i) => {
+            const isActive = sizeMode === 'preset' && selectedPreset === i;
+            return (
+              <Button
+                key={p.label}
+                variant={isActive ? 'selected' : 'selectable'}
+                size="sm"
+                aria-pressed={isActive}
+                onClick={() => { setSizeMode('preset'); setSelectedPreset(i); }}
+              >
+                {p.label}
+              </Button>
+            );
+          })}
+          <Button
+            variant={sizeMode === 'custom' ? 'selected' : 'selectable'}
+            size="sm"
+            aria-pressed={sizeMode === 'custom'}
+            onClick={() => setSizeMode('custom')}
+          >
+            Personnalisé
+          </Button>
         </div>
+
+        {sizeMode === 'custom' && (
+          <div className={styles.customRow}>
+            {/* Champs en ligne (L × H px) : le composant Input empile label et champ. */}
+            <div className={styles.dimensionField}>
+              <label className={styles.dimensionLabel} htmlFor="custom-width">L</label>
+              <input
+                id="custom-width"
+                className={styles.dimensionInput}
+                type="number"
+                min={MIN_SIZE}
+                max={MAX_SIZE}
+                value={customWidth}
+                onChange={(e) => setCustomWidth(e.target.value)}
+              />
+            </div>
+            <span className={styles.dimensionSep}>×</span>
+            <div className={styles.dimensionField}>
+              <label className={styles.dimensionLabel} htmlFor="custom-height">H</label>
+              <input
+                id="custom-height"
+                className={styles.dimensionInput}
+                type="number"
+                min={MIN_SIZE}
+                max={MAX_SIZE}
+                value={customHeight}
+                onChange={(e) => setCustomHeight(e.target.value)}
+              />
+            </div>
+            <span className={styles.dimensionUnit}>px</span>
+          </div>
+        )}
       </div>
-    </div>
+
+      {errorMsg && (
+        <div className={styles.error} role="alert">{errorMsg}</div>
+      )}
+    </Dialog>
   );
 }

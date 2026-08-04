@@ -1,13 +1,15 @@
-import { useRef, useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import { useState } from 'react';
 import type { DrawingRow } from '@/types';
 import { DrawingThumbnail } from '@/routes/Gallery/DrawingThumbnail/DrawingThumbnail';
+import { InlineConfirm } from '@/components/InlineConfirm';
 import { Menu } from '@/components/Menu';
 import type { MenuItem } from '@/components/Menu';
+import { useInlineRename } from '@/hooks/useInlineRename';
+import { cx } from '@/lib/cx';
 import { CollaboratorsButton } from './CollaboratorsButton';
 import styles from './DrawingCard.module.scss';
 
-interface Props {
+export interface DrawingCardProps {
   drawing: DrawingRow;
   isOwner?: boolean;
   onClick?: () => void;
@@ -19,7 +21,7 @@ interface Props {
   onDropDrawing?: (sourceId: string) => void;
 }
 
-type Mode = 'default' | 'renaming' | 'confirming-delete';
+const THUMB_RENDER_SIZE = 174;
 
 export function DrawingCard({
   drawing,
@@ -31,24 +33,17 @@ export function DrawingCard({
   onInvite,
   onCollaboratorRemoved,
   onDropDrawing,
-}: Props) {
-  const [mode, setMode] = useState<Mode>('default');
-  const [renameValue, setRenameValue] = useState(drawing.title);
+}: DrawingCardProps) {
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const rename = useInlineRename({ currentName: drawing.title, onRename });
+
+  const isIdle = !rename.isRenaming && !isConfirmingDelete;
 
   const menuItems: MenuItem[] = [
     ...(onRename
-      ? [{
-          label: 'Renommer',
-          icon: 'edit' as const,
-          onClick: () => {
-            setRenameValue(drawing.title);
-            setMode('renaming');
-            setTimeout(() => inputRef.current?.select(), 0);
-          },
-        }]
+      ? [{ label: 'Renommer', icon: 'edit' as const, onClick: rename.start }]
       : []),
     ...(onRemoveFromGroup
       ? [{ label: 'Retirer du groupe', icon: 'back' as const, onClick: () => onRemoveFromGroup() }]
@@ -57,30 +52,17 @@ export function DrawingCard({
       ? [{ label: 'Inviter…', icon: 'add' as const, onClick: () => onInvite() }]
       : []),
     ...(onDelete
-      ? [{ label: 'Supprimer', icon: 'trash' as const, variant: 'danger' as const, onClick: () => setMode('confirming-delete') }]
+      ? [{ label: 'Supprimer', icon: 'trash' as const, variant: 'danger' as const, onClick: () => setIsConfirmingDelete(true) }]
       : []),
   ];
 
-  const commitRename = () => {
-    const trimmed = renameValue.trim();
-    if (trimmed && trimmed !== drawing.title) onRename?.(trimmed);
-    setMode('default');
-  };
-
-  const handleRenameKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') commitRename();
-    if (e.key === 'Escape') setMode('default');
-  };
-
-  const classNames = [
-    styles.card,
-    isDragging ? styles.dragging : '',
-    isDragOver ? styles.dropTarget : '',
-  ].filter(Boolean).join(' ');
-
   return (
     <article
-      className={classNames}
+      className={cx(
+        styles.card,
+        isDragging && styles.dragging,
+        isDragOver && styles.dropTarget,
+      )}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData('text/plain', drawing.id);
@@ -102,42 +84,39 @@ export function DrawingCard({
         const sourceId = e.dataTransfer.getData('text/plain');
         if (sourceId && sourceId !== drawing.id) onDropDrawing?.(sourceId);
       }}
-      onClick={() => { if (mode === 'default') onClick?.(); }}
+      onClick={() => { if (isIdle) onClick?.(); }}
       onKeyDown={(e) => {
-        if (mode === 'default' && (e.key === 'Enter' || e.key === ' ')) {
+        if (isIdle && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           onClick?.();
         }
       }}
       role="button"
-      tabIndex={mode === 'default' ? 0 : -1}
+      tabIndex={isIdle ? 0 : -1}
       aria-label={drawing.title}
     >
-      {mode === 'confirming-delete' ? (
-        <div className={styles.confirmRow} onClick={(e) => e.stopPropagation()}>
-          <span className={styles.confirmLabel}>Supprimer «&nbsp;{drawing.title}&nbsp;» ?</span>
-          <div className={styles.confirmActions}>
-            <button type="button" className={styles.confirmBtn} onClick={() => { onDelete?.(); setMode('default'); }}>Oui</button>
-            <button type="button" className={styles.cancelBtn} onClick={() => setMode('default')}>Non</button>
-          </div>
-        </div>
+      {isConfirmingDelete ? (
+        <InlineConfirm
+          layout="column"
+          className={styles.confirmRow}
+          message={<>Supprimer «&nbsp;{drawing.title}&nbsp;» ?</>}
+          onConfirm={() => { onDelete?.(); setIsConfirmingDelete(false); }}
+          onCancel={() => setIsConfirmingDelete(false)}
+        />
       ) : (
         <>
           <header className={styles.header} onClick={(e) => e.stopPropagation()}>
-            {mode === 'renaming' ? (
+            {rename.isRenaming ? (
               <input
-                ref={inputRef}
                 autoFocus
                 className={styles.renameInput}
-                value={renameValue}
-                onChange={(e) => setRenameValue(e.target.value)}
-                onKeyDown={handleRenameKey}
-                onBlur={commitRename}
+                maxLength={80}
+                {...rename.inputProps}
               />
             ) : (
               <span className={styles.title}>{drawing.title}</span>
             )}
-            {mode === 'default' && drawing.collaborator_count >= 1 && (
+            {isIdle && drawing.collaborator_count >= 1 && (
               <CollaboratorsButton
                 drawingId={drawing.id}
                 count={drawing.collaborator_count}
@@ -145,13 +124,13 @@ export function DrawingCard({
                 onRemoved={onCollaboratorRemoved}
               />
             )}
-            {menuItems.length > 0 && mode === 'default' && (
+            {menuItems.length > 0 && isIdle && (
               <Menu items={menuItems} ariaLabel="Actions" />
             )}
           </header>
           <div className={styles.preview}>
             <div className={styles.previewInner}>
-              <DrawingThumbnail data={drawing.data} size={174} />
+              <DrawingThumbnail data={drawing.data} size={THUMB_RENDER_SIZE} />
             </div>
           </div>
         </>

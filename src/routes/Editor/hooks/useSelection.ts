@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import type { MutableRefObject } from 'react';
 import type { DrawingData, HexColor } from '@/types';
 
 export type SelectionState =
@@ -18,7 +19,7 @@ interface UseSelectionParams {
   activeLayerId: string;
   onLayerChange: (layerId: string, pixels: Record<string, HexColor>) => void;
   pushHistory: (before: DrawingData) => void;
-  latestDataRef: React.MutableRefObject<DrawingData | null>;
+  latestDataRef: MutableRefObject<DrawingData | null>;
 }
 
 export interface UseSelectionApi {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
@@ -46,7 +47,7 @@ export function Login() {
 
   const locked = lockUntil !== null && Date.now() < lockUntil;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (locked) return;
     setError(null);

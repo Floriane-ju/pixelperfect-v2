@@ -1,10 +1,39 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { Button } from '@/components/Button';
+import type { IconName } from '@/components/Icons';
 import { Menu } from '@/components/Menu';
 import { Slider } from '@/components/Slider';
 import { LayerPanel } from '@/routes/Editor/LayerPanel/LayerPanel';
+import { useOutsideDismiss } from '@/hooks/useOutsideDismiss';
+import type { Tool } from '../Canvas/Canvas';
 import { useEditorContext } from '../useEditorContext';
 import styles from './Topbar.module.scss';
+
+interface ToolButton {
+  tool: Tool;
+  icon: IconName;
+  label: string;
+  /** Infobulle si elle diffère du libellé (raccourci clavier). */
+  title?: string;
+}
+
+const TOOLS: ToolButton[] = [
+  { tool: 'pencil', icon: 'pen', label: 'Crayon' },
+  { tool: 'eraser', icon: 'erase', label: 'Gomme' },
+  { tool: 'fill', icon: 'fill', label: 'Pot de peinture' },
+  { tool: 'eyedropper', icon: 'pipette', label: 'Pipette' },
+  { tool: 'select', icon: 'select', label: 'Sélection rectangulaire', title: 'Sélection rectangulaire (S)' },
+  { tool: 'line', icon: 'line', label: 'Ligne' },
+  { tool: 'square', icon: 'rect', label: 'Rectangle' },
+  { tool: 'circle', icon: 'circle', label: 'Ellipse' },
+];
+
+const COPIED_FEEDBACK_MS = 2000;
+const REF_SCALE_MIN = 0.05;
+const REF_SCALE_MAX = 5;
+const REF_STEP = 0.01;
+const REF_OPACITY_MAX = 1;
 
 export function Topbar() {
   const {
@@ -21,21 +50,17 @@ export function Topbar() {
 
   const flashCopied = () => {
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), COPIED_FEEDBACK_MS);
   };
 
-  useEffect(() => {
-    if (!openPanel || openPanel === 'color' || openPanel === 'export') return;
-    const handler = (e: PointerEvent) => {
-      if (topbarRef.current && !topbarRef.current.contains(e.target as Node)) {
-        onPanelClose();
-      }
-    };
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
-  }, [openPanel, onPanelClose]);
+  // Les panneaux « color » et « export » gèrent leur propre fermeture.
+  useOutsideDismiss({
+    active: openPanel !== null && openPanel !== 'color' && openPanel !== 'export',
+    refs: [topbarRef],
+    onDismiss: onPanelClose,
+  });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) onRefImageImport(file);
     e.target.value = '';
@@ -43,10 +68,6 @@ export function Topbar() {
 
   const displayW = refImage ? refImage.naturalWidth * refImage.scale : 0;
   const displayH = refImage ? refImage.naturalHeight * refImage.scale : 0;
-  const xMin = Math.round(-displayW);
-  const xMax = Math.round(canvasDisplaySize.w);
-  const yMin = Math.round(-displayH);
-  const yMax = Math.round(canvasDisplaySize.h);
 
   return (
     <header ref={topbarRef} className={styles.topbar}>
@@ -85,7 +106,7 @@ export function Topbar() {
                 canvasWidth={canvasWidth}
                 canvasHeight={canvasHeight}
                 onAdd={onLayerAdd}
-                onSelect={id => { onLayerSelect(id); }}
+                onSelect={onLayerSelect}
                 onVisibilityToggle={onLayerVisibilityToggle}
                 onDuplicate={onLayerDuplicate}
                 onDelete={onLayerDelete}
@@ -99,7 +120,7 @@ export function Topbar() {
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              style={{ display: 'none' }}
+              className={styles.hiddenInput}
               onChange={handleFileChange}
             />
             <Button
@@ -134,9 +155,8 @@ export function Topbar() {
                     <Slider
                       label="Position X"
                       valueLabel={`${Math.round(refImage.x)} px`}
-                      min={xMin}
-                      max={xMax}
-                      step={1}
+                      min={Math.round(-displayW)}
+                      max={Math.round(canvasDisplaySize.w)}
                       value={Math.round(refImage.x)}
                       ariaLabel="Position X de la référence"
                       ariaValueText={`${Math.round(refImage.x)} pixels`}
@@ -148,9 +168,8 @@ export function Topbar() {
                     <Slider
                       label="Position Y"
                       valueLabel={`${Math.round(refImage.y)} px`}
-                      min={yMin}
-                      max={yMax}
-                      step={1}
+                      min={Math.round(-displayH)}
+                      max={Math.round(canvasDisplaySize.h)}
                       value={Math.round(refImage.y)}
                       ariaLabel="Position Y de la référence"
                       ariaValueText={`${Math.round(refImage.y)} pixels`}
@@ -162,13 +181,14 @@ export function Topbar() {
                     <Slider
                       label="Zoom"
                       valueLabel={`${Math.round(refImage.scale * 100)} %`}
-                      min={0.05}
-                      max={5}
-                      step={0.01}
+                      min={REF_SCALE_MIN}
+                      max={REF_SCALE_MAX}
+                      step={REF_STEP}
                       value={refImage.scale}
                       ariaLabel="Zoom de la référence"
                       ariaValueText={`${Math.round(refImage.scale * 100)} pour cent`}
                       onChange={newScale => {
+                        // Zoom centré : le centre de l'image reste en place.
                         const cx = refImage.x + (refImage.naturalWidth * refImage.scale) / 2;
                         const cy = refImage.y + (refImage.naturalHeight * refImage.scale) / 2;
                         onRefImageTransform(
@@ -183,9 +203,9 @@ export function Topbar() {
                     <Slider
                       label="Opacité"
                       valueLabel={`${Math.round(refImage.opacity * 100)} %`}
-                      min={0.05}
-                      max={1}
-                      step={0.01}
+                      min={REF_SCALE_MIN}
+                      max={REF_OPACITY_MAX}
+                      step={REF_STEP}
                       value={refImage.opacity}
                       ariaLabel="Opacité de la référence"
                       ariaValueText={`${Math.round(refImage.opacity * 100)} pour cent`}
@@ -237,14 +257,19 @@ export function Topbar() {
         </div>
 
         <div className={styles.buttonGroup}>
-          <Button variant={tool === 'pencil' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="pen" title="Crayon" aria-label="Crayon" aria-pressed={tool === 'pencil'} onClick={() => onToolChange('pencil')} />
-          <Button variant={tool === 'eraser' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="erase" title="Gomme" aria-label="Gomme" aria-pressed={tool === 'eraser'} onClick={() => onToolChange('eraser')} />
-          <Button variant={tool === 'fill' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="fill" title="Pot de peinture" aria-label="Pot de peinture" aria-pressed={tool === 'fill'} onClick={() => onToolChange('fill')} />
-          <Button variant={tool === 'eyedropper' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="pipette" title="Pipette" aria-label="Pipette" aria-pressed={tool === 'eyedropper'} onClick={() => onToolChange('eyedropper')} />
-          <Button variant={tool === 'select' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="select" title="Sélection rectangulaire (S)" aria-label="Sélection rectangulaire" aria-pressed={tool === 'select'} onClick={() => onToolChange('select')} />
-          <Button variant={tool === 'line' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="line" title="Ligne" aria-label="Ligne" aria-pressed={tool === 'line'} onClick={() => onToolChange('line')} />
-          <Button variant={tool === 'square' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="rect" title="Rectangle" aria-label="Rectangle" aria-pressed={tool === 'square'} onClick={() => onToolChange('square')} />
-          <Button variant={tool === 'circle' ? 'selected' : 'selectable'} size="md" iconOnly iconLeft="circle" title="Ellipse" aria-label="Ellipse" aria-pressed={tool === 'circle'} onClick={() => onToolChange('circle')} />
+          {TOOLS.map(({ tool: t, icon, label, title: tooltip }) => (
+            <Button
+              key={t}
+              variant={tool === t ? 'selected' : 'selectable'}
+              size="md"
+              iconOnly
+              iconLeft={icon}
+              title={tooltip ?? label}
+              aria-label={label}
+              aria-pressed={tool === t}
+              onClick={() => onToolChange(t)}
+            />
+          ))}
         </div>
       </div>
     </header>

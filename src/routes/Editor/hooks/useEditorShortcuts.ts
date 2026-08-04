@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import type { MutableRefObject } from 'react';
 import type { Tool } from '../Canvas/Canvas';
 import type { UseSelectionApi } from './useSelection';
 
@@ -6,7 +7,7 @@ interface UseEditorShortcutsParams {
   handleUndo: () => void;
   handleRedo: () => void;
   setTool: (t: Tool) => void;
-  selectionRef: React.MutableRefObject<UseSelectionApi>;
+  selectionRef: MutableRefObject<UseSelectionApi>;
 }
 
 export function useEditorShortcuts({ handleUndo, handleRedo, setTool, selectionRef }: UseEditorShortcutsParams): void {

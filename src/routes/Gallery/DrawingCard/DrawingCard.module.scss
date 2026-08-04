@@ -79,51 +79,10 @@
   justify-content: center;
 }
 
-// Confirmation suppression
+// Confirmation suppression : la mise en page vient de InlineConfirm
 .confirmRow {
-  display: flex;
-  flex-direction: column;
-  gap: $space-s;
   padding: $space-sm;
   flex: 1;
-  min-height: 100px;
+  min-height: $card-confirm-min-height;
   background: $accent-1-500;
-}
-
-.confirmLabel {
-  font-size: $font-size-sm;
-  color: $accent-1-600;
-}
-
-.confirmActions {
-  display: flex;
-  gap: $space-s;
-}
-
-.confirmBtn {
-  flex: 1;
-  height: $space-xl;
-  background: $color-danger;
-  color: $color-white;
-  font-size: $font-size-sm;
-  font-family: $font-family-base;
-  transition: filter $transition-fast;
-
-  &:hover {
-    filter: brightness(1.1);
-  }
-}
-
-.cancelBtn {
-  flex: 1;
-  height: $space-xl;
-  background: $accent-1-400;
-  color: $accent-1-600;
-  font-size: $font-size-sm;
-  font-family: $font-family-base;
-  transition: opacity $transition-fast;
-
-  &:hover {
-    opacity: 0.7;
-  }
 }

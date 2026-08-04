@@ -102,9 +102,16 @@ $font-weight-bold:     700;
 // ─────────────────────────────────────────────
 // Outline
 // ─────────────────────────────────────────────
-$outline-width:      2px;
-$outline-width-thin: 1px;
-$outline-offset:     2px;
+$outline-width:       2px;
+$outline-width-thin:  1px;
+$outline-width-thick: 3px;
+$outline-offset:      2px;
+$outline-offset-lg:   6px;
+
+// ─────────────────────────────────────────────
+// Typographie fine
+// ─────────────────────────────────────────────
+$letter-spacing-caps: 1px;
 
 // ─────────────────────────────────────────────
 // Opacity
@@ -113,6 +120,11 @@ $opacity-overlay:     0.6;
 $opacity-drop-target: 0.4;
 $opacity-bg-tint:     0.1;
 $opacity-bg-subtle:   0.08;
+
+// ─────────────────────────────────────────────
+// Interlignes
+// ─────────────────────────────────────────────
+$line-height-relaxed: 1.5;
 
 // ─────────────────────────────────────────────
 // Touch target
@@ -151,6 +163,23 @@ $selection-dasharray:      4 3;
 $selection-dash-cycle:     -7;
 $selection-anim-duration:  600ms;
 
+// Menus et popovers
+$menu-min-width-sm: 160px;
+$menu-min-width:    220px;
+$menu-min-width-lg: 240px;
+$menu-max-height:   240px;
+
+// Dialogues centrés (Dialog) et modales flottantes (Modal)
+$dialog-width-sm:      320px;
+$dialog-width-md:      360px;
+$modal-panel-width:    480px;
+$modal-panel-width-lg: 620px;
+
+// Sélecteur de couleur
+$picker-width:     316px;
+$picker-sv-height: 216px;
+$swatch-gap:       6px;
+
 // ─────────────────────────────────────────────
 // Motif damier
 // ─────────────────────────────────────────────
@@ -187,6 +216,9 @@ $inner-shadow-interactive-1-active:inset 2px 2px 0 0 #{$accent-1-600}, inset -2p
 $inner-shadow-interactive-2:inset 2px 2px 0 0 #{$accent-2-400};
 $inner-shadow-interactive-2-hover:inset 2px 2px 0 0 #{$accent-2-300};
 $inner-shadow-interactive-2-active:inset 2px 2px 0 0 #{$accent-2-600}, inset -2px -2px 0 0 #{$accent-2-400};
+
+//Drop shadow des panneaux flottants (éditeur)
+$drop-shadow-panel: 8px 8px 0 0 #{$accent-1-600};
 
 //Drop shadows interactive
 $drop-shadow-interactive:8px 8px 0 0 #{$accent-2-600};
@@ -247,4 +279,8 @@ $thumb-gap:     6px;
 $layer-panel-width:    360px;
 $layer-thumb-size:     40px;
 $layer-row-max-height: 320px;
-$drop-indicator-height: 3px;
+$drop-indicator-height: $outline-width-thick;
+$gallery-max-width:       1200px;
+$card-confirm-min-height: 100px;
+$dimension-input-width:   64px;
+$ref-panel-width:         240px;

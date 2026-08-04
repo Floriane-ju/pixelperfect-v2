@@ -1,4 +1,4 @@
-.colorSwatch {
+.swatch {
   width: 100%;
   height: $btn-height;
   border: $outline-width solid $color-black;
@@ -14,7 +14,7 @@
   }
 }
 
-.colorSwatchPreview {
+.swatchPreview {
   outline: $outline-width solid $accent-1-500;
   outline-offset: -$outline-offset;
   position: relative;

@@ -1,35 +1,36 @@
-import React from 'react';
+import { memo } from 'react';
+import { cx } from '@/lib/cx';
+import type { HexColor } from '@/types';
 import styles from './ColorSwatch.module.scss';
 
-interface ColorSwatchProps {
-  color: string;
-  displayColor?: string;
+export interface ColorSwatchProps {
+  color: HexColor;
+  /** Couleur réellement affichée pendant l'édition en cours (aperçu). */
+  displayColor?: HexColor;
   isPreview?: boolean;
-  onColorChange: (color: string) => void;
-  onEdit?: (color: string, y: number) => void;
-  onContextMenu?: (color: string, x: number, y: number) => void;
-  onHoverEnter?: (color: string) => void;
+  onColorChange: (color: HexColor) => void;
+  onEdit?: (color: HexColor, y: number) => void;
+  onHoverEnter?: (color: HexColor) => void;
   onHoverLeave?: () => void;
 }
 
-export const ColorSwatch = React.memo(function ColorSwatch({
+export const ColorSwatch = memo(function ColorSwatch({
   color,
   displayColor,
   isPreview,
   onColorChange,
   onEdit,
-  onContextMenu,
   onHoverEnter,
   onHoverLeave,
 }: ColorSwatchProps) {
   return (
     <button
-      className={`${styles.colorSwatch}${isPreview ? ` ${styles.colorSwatchPreview}` : ''}`}
+      type="button"
+      className={cx(styles.swatch, isPreview && styles.swatchPreview)}
       style={{ background: displayColor ?? color }}
       title={color}
       aria-label={`Choisir ${color}`}
       onClick={e => (onEdit ? onEdit(color, e.clientY) : onColorChange(color))}
-      onContextMenu={onContextMenu ? e => { e.preventDefault(); onContextMenu(color, e.clientX, e.clientY); } : undefined}
       onPointerEnter={onHoverEnter ? () => onHoverEnter(color) : undefined}
       onPointerLeave={onHoverLeave}
     />

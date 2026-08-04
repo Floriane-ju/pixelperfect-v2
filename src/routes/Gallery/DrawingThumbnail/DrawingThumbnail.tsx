@@ -2,12 +2,12 @@ import { useEffect, useRef } from 'react';
 import type { DrawingData } from '@/types';
 import styles from './DrawingThumbnail.module.scss';
 
-interface Props {
+export interface DrawingThumbnailProps {
   data: DrawingData;
   size?: number;
 }
 
-export function DrawingThumbnail({ data, size = 120 }: Props) {
+export function DrawingThumbnail({ data, size = 120 }: DrawingThumbnailProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {

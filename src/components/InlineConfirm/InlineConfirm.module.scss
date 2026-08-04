@@ -1,0 +1,37 @@
+.confirm {
+  display: flex;
+  width: 100%;
+  color: $accent-1-600;
+  font-family: $font-family-base;
+  font-size: $font-size-md;
+  @include no-select;
+}
+
+.layout-row {
+  align-items: center;
+  gap: $space-s;
+}
+
+.layout-column {
+  flex-direction: column;
+  gap: $space-s;
+  font-size: $font-size-sm;
+}
+
+.message {
+  flex: 1;
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  gap: $space-s;
+}
+
+.layout-column .actions {
+  width: 100%;
+
+  > * {
+    flex: 1;
+  }
+}

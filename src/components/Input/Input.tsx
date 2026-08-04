@@ -1,5 +1,6 @@
 import { forwardRef, useId } from 'react';
 import type { InputHTMLAttributes, ReactNode } from 'react';
+import { cx } from '@/lib/cx';
 import styles from './Input.module.scss';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -27,17 +28,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputId = id ?? generatedId;
     const errorId = error ? `${inputId}-error` : undefined;
 
-    const wrapperClasses = [
-      styles.field,
-      fullWidth ? styles.fullWidth : '',
-      className ?? '',
-    ]
-      .filter(Boolean)
-      .join(' ');
-
-    const inputClasses = [styles.input, inputClassName ?? '']
-      .filter(Boolean)
-      .join(' ');
+    const wrapperClasses = cx(styles.field, fullWidth && styles.fullWidth, className);
+    const inputClasses = cx(styles.input, inputClassName);
 
     return (
       <div className={wrapperClasses}>

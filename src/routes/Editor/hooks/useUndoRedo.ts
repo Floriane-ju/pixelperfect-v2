@@ -1,11 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
+import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import type { DrawingData, DrawingRow } from '@/types';
 
 const MAX_HISTORY = 50;
 
 interface UseUndoRedoParams {
-  latestDataRef: React.MutableRefObject<DrawingData | null>;
-  setDrawing: React.Dispatch<React.SetStateAction<DrawingRow | null>>;
+  latestDataRef: MutableRefObject<DrawingData | null>;
+  setDrawing: Dispatch<SetStateAction<DrawingRow | null>>;
   scheduleSave: () => void;
 }
 

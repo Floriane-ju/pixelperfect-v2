@@ -2,6 +2,7 @@ import { forwardRef } from 'react';
 import type { ButtonHTMLAttributes, PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
 import styles from './Button.module.scss';
 import { Icons, type IconName } from '@/components/Icons';
+import { cx } from '@/lib/cx';
 import { useLongPressLabel } from './useLongPressLabel';
 
 export type ButtonVariant =
@@ -51,16 +52,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const ariaLabel = typeof rest['aria-label'] === 'string' ? rest['aria-label'] : undefined;
     const { handlers, consumeFired } = useLongPressLabel(ariaLabel, iconOnly);
 
-    const classes = [
+    const classes = cx(
       styles.button,
       styles[`variant-${variant}`],
       styles[`size-${size}`],
-      fullWidth ? styles.fullWidth : '',
-      iconOnly ? styles.iconOnly : '',
-      className ?? '',
-    ]
-      .filter(Boolean)
-      .join(' ');
+      fullWidth && styles.fullWidth,
+      iconOnly && styles.iconOnly,
+      className,
+    );
 
     const compose = <E extends ReactPointerEvent<HTMLButtonElement>>(
       a: ((e: E) => void) | undefined,
@@ -95,9 +94,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         onPointerMove={compose(handlers.onPointerMove, onPointerMove)}
         {...rest}
       >
-        {iconLeft ? <Icons className={styles.icon} icon={iconLeft} size={24} /> : null}
+        {iconLeft ? <Icons className={styles.icon} icon={iconLeft} /> : null}
         {children ? <span className={styles.label}>{children}</span> : null}
-        {iconRight ? <Icons className={styles.icon} icon={iconRight} size={24} /> : null}
+        {iconRight ? <Icons className={styles.icon} icon={iconRight} /> : null}
       </button>
     );
   },

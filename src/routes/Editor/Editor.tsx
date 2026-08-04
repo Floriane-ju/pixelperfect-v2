@@ -28,6 +28,7 @@ import { useLayers } from './hooks/useLayers';
 import { useReferenceImage } from './hooks/useReferenceImage';
 import { useColorPalette } from './hooks/useColorPalette';
 import { useEditorShortcuts } from './hooks/useEditorShortcuts';
+import { useOutsideDismiss } from '@/hooks/useOutsideDismiss';
 import { useSelection } from './hooks/useSelection';
 import { EditorContext } from './EditorContext';
 import type { EditorContextValue } from './EditorContext';
@@ -125,32 +126,22 @@ export function Editor() {
     radialSegments,
   }), [mirrorAxis, mirrorRotation, radialSegments]);
 
-  useEffect(() => {
-    if (!showSettings) return;
-    const handler = (e: PointerEvent) => {
-      const inPanel = settingsContainerRef.current?.contains(e.target as Node);
-      if (!inPanel) setShowSettings(false);
-    };
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
-  }, [showSettings]);
+  useOutsideDismiss({
+    active: showSettings,
+    refs: [settingsContainerRef],
+    onDismiss: handleSettingsClose,
+  });
 
-  useEffect(() => {
-    if (!showMirror) return;
-    const handler = (e: PointerEvent) => {
-      const inPanel = mirrorContainerRef.current?.contains(e.target as Node);
-      if (!inPanel) setShowMirror(false);
-    };
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
-  }, [showMirror]);
+  useOutsideDismiss({
+    active: showMirror,
+    refs: [mirrorContainerRef],
+    onDismiss: handleMirrorClose,
+  });
 
   const topbarRefImage = useMemo(() =>
     refImage ? { x: refImage.x, y: refImage.y, scale: refImage.scale, opacity: refImage.opacity, naturalWidth: refImage.naturalWidth, naturalHeight: refImage.naturalHeight } : null,
     [refImage]
   );
-
-  const handleSwatchColorChange = useCallback((c: string) => handleColorChange(c as HexColor), [handleColorChange]);
 
   const handlePickColor = useCallback((c: HexColor) => {
     handleColorChange(c);
@@ -174,12 +165,7 @@ export function Editor() {
     return () => document.removeEventListener('paste', handler);
   }, [handleColorChange, commitRecentColor]);
 
-  const handleSwatchEdit = useCallback((c: string, y: number) => {
-    handleEditDrawingColor(c as HexColor, y);
-  }, [handleEditDrawingColor]);
-
   const handleHoverLeave = useCallback(() => setHoveredColor(null), [setHoveredColor]);
-  const handleHoverEnter = useCallback((c: string) => setHoveredColor(c as HexColor), [setHoveredColor]);
 
   const handleCopySvg = useCallback(() => {
     if (!drawing) return;
@@ -244,7 +230,7 @@ export function Editor() {
 
   return (
     <EditorContext.Provider value={editorCtx}>
-      <main className={`${styles.editor}`}>
+      <main className={styles.editor}>
         <a className="skip-link" href="#canvas">Aller au canvas</a>
         <Topbar />
 
@@ -362,7 +348,7 @@ export function Editor() {
                         key={c}
                         color={c}
                         isPreview={isNormalPick && i === 0}
-                        onColorChange={handleSwatchColorChange}
+                        onColorChange={handleColorChange}
                       />
                     ))}
                   </div>
@@ -375,9 +361,9 @@ export function Editor() {
                     key={c}
                     color={c}
                     displayColor={editColorMode?.originalColor === c ? color : undefined}
-                    onColorChange={handleSwatchColorChange}
-                    onEdit={handleSwatchEdit}
-                    onHoverEnter={handleHoverEnter}
+                    onColorChange={handleColorChange}
+                    onEdit={handleEditDrawingColor}
+                    onHoverEnter={setHoveredColor}
                     onHoverLeave={handleHoverLeave}
                   />
                 ))}

@@ -10,7 +10,7 @@
   z-index: $z-popover;
   display: flex;
   flex-direction: column;
-  min-width: 220px;
+  min-width: $menu-min-width;
   margin: 0;
   padding: $space-xxs;
   list-style: none;
@@ -78,6 +78,6 @@
 .divider {
   display: block;
   width: 100%;
-  height: 1px;
+  height: $outline-width-thin;
   background: $accent-1-600;
 }

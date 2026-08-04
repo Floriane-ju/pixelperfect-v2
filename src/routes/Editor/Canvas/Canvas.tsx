@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { PointerEvent } from 'react';
 import type { DrawingData, HexColor } from '@/types';
 import { bresenham, expandSymmetry, floodFill, getShapePixels } from '@/routes/Editor/shapePixels';
 import type { SymmetryConfig } from '@/routes/Editor/shapePixels';
@@ -199,7 +200,7 @@ export function Canvas({
     }, PIPETTE_HOLD_MS);
   }, [clearPreview, pickColorAt, restoreDrawSession]);
 
-  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     wrapperRef.current?.setPointerCapture(e.pointerId);
     const navResult = onNavPointerDown(e.pointerId, e.clientX, e.clientY, e.button, e.target === canvasRef.current);
 
@@ -271,7 +272,7 @@ export function Canvas({
     schedulePipetteLongPress(e.clientX, e.clientY, px);
   }, [data.layers, data.width, data.height, activeLayerId, tool, color, layerCanvasesRef, layerPixelsRef, onInvisibleLayerAttempt, pickColorAt, screenToCanvas, onLayerChange, drawPreview, clearPreview, onDrawStart, onDrawEnd, onNavPointerDown, onNavPointerUp, restoreDrawSession, clearLongPress, schedulePipetteLongPress, selection]);
 
-  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (onNavPointerMove(e.pointerId, e.clientX, e.clientY)) return;
     if (!isDrawing.current) return;
     const origin = pressOriginRef.current;
@@ -301,7 +302,7 @@ export function Canvas({
     lastPixel.current = px;
   }, [onNavPointerMove, screenToCanvas, paint, tool, drawPreview, clearLongPress, selection]);
 
-  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerUp = useCallback((e: PointerEvent<HTMLDivElement>) => {
     wrapperRef.current?.releasePointerCapture(e.pointerId);
     onNavPointerUp(e.pointerId);
     clearLongPress();

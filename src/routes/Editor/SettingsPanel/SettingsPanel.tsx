@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useModalA11y } from '@/hooks/useModalA11y';
+import { cx } from '@/lib/cx';
 import { Button } from '@/components/Button';
 import { Slider } from '@/components/Slider';
 import styles from './SettingsPanel.module.scss';
@@ -72,7 +73,7 @@ export function SettingsPanel({
 
       <section className={styles.section}>
         <span className={styles.label}>Couleur de fond</span>
-        <div className={styles.bgOptions} role="radiogroup" aria-label="Couleur de fond">
+        <div className={styles.options} role="radiogroup" aria-label="Couleur de fond">
           {BG_OPTIONS.map(opt => (
             <Button
               key={opt.value}
@@ -83,7 +84,7 @@ export function SettingsPanel({
               aria-label={opt.label}
               onClick={() => onBgColorChange(opt.value)}
             >
-              <span className={`${styles.swatch} ${styles[`swatch-${opt.value}`]}`} aria-hidden="true" />
+              <span className={cx(styles.swatch, styles[`swatch-${opt.value}`])} aria-hidden="true" />
             </Button>
           ))}
         </div>

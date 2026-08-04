@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Button } from '@/components/Button';
 import styles from './ErrorBoundary.module.scss';
 
-interface Props {
+export interface ErrorBoundaryProps {
   children: ReactNode;
 }
 
@@ -11,7 +11,7 @@ interface State {
   hasError: boolean;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   state: State = { hasError: false };
 
   static getDerivedStateFromError(): State {

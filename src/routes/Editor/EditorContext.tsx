@@ -4,7 +4,7 @@ import type { OpenPanel } from './hooks/useColorPalette';
 import type { Tool } from './Canvas/Canvas';
 import type { RefImageState } from './hooks/useReferenceImage';
 
-export type RefImageInfo = Omit<RefImageState, 'src'>;
+type RefImageInfo = Omit<RefImageState, 'src'>;
 
 export interface EditorContextValue {
   title: string;

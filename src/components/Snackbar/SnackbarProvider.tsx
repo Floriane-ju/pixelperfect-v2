@@ -10,11 +10,11 @@ interface SnackbarItem {
   duration?: number;
 }
 
-interface Props {
+export interface SnackbarProviderProps {
   children: ReactNode;
 }
 
-export function SnackbarProvider({ children }: Props) {
+export function SnackbarProvider({ children }: SnackbarProviderProps) {
   const [current, setCurrent] = useState<SnackbarItem | null>(null);
 
   const show = useCallback((message: string, options?: ShowSnackbarOptions) => {

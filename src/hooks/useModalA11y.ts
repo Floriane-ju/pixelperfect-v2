@@ -2,14 +2,14 @@ import { useEffect, type RefObject } from 'react';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-interface Options {
+export interface UseModalA11yParams {
   modalRef: RefObject<HTMLElement | null>;
   onClose: () => void;
   initialFocusRef?: RefObject<HTMLElement | null>;
   closeOnEscape?: boolean;
 }
 
-export function useModalA11y({ modalRef, onClose, initialFocusRef, closeOnEscape = true }: Options): void {
+export function useModalA11y({ modalRef, onClose, initialFocusRef, closeOnEscape = true }: UseModalA11yParams): void {
   useEffect(() => {
     const previouslyFocused = document.activeElement;
     const explicit = initialFocusRef?.current;

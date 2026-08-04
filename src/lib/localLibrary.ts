@@ -42,7 +42,7 @@ function openDb(): Promise<IDBDatabase> {
   return dbPromise;
 }
 
-function get(id: string): Promise<unknown> {
+function readRaw(id: string): Promise<unknown> {
   return openDb().then(
     (db) =>
       new Promise<unknown>((resolve, reject) => {
@@ -53,7 +53,7 @@ function get(id: string): Promise<unknown> {
   );
 }
 
-function getAll(): Promise<unknown[]> {
+function readAllRaw(): Promise<unknown[]> {
   return openDb().then(
     (db) =>
       new Promise<unknown[]>((resolve, reject) => {
@@ -124,7 +124,7 @@ function parseLocalDrawing(raw: unknown): LocalDrawing {
   };
 }
 
-export function toRow(d: LocalDrawing): DrawingRow {
+function toRow(d: LocalDrawing): DrawingRow {
   return {
     id: d.id,
     title: d.title,
@@ -142,8 +142,8 @@ function nowIso(): string {
 }
 
 /** Tous les dessins locaux validés, triés par date de modification décroissante (ISO lexicographique). */
-export async function getAllLocal(): Promise<LocalDrawing[]> {
-  const raws = await getAll();
+export async function getAllDrawings(): Promise<LocalDrawing[]> {
+  const raws = await readAllRaw();
   const parsed: LocalDrawing[] = [];
   for (const raw of raws) {
     try {
@@ -157,24 +157,24 @@ export async function getAllLocal(): Promise<LocalDrawing[]> {
 }
 
 /** Insère en masse des dessins déjà validés (utilisé par l'import). */
-export async function bulkAddLocal(drawings: LocalDrawing[]): Promise<void> {
+export async function bulkAdd(drawings: LocalDrawing[]): Promise<void> {
   await write((store) => {
     for (const d of drawings) store.put(d);
   });
 }
 
-export async function localFetchDrawings(): Promise<DrawingRow[]> {
-  const all = await getAllLocal();
+export async function fetchDrawings(): Promise<DrawingRow[]> {
+  const all = await getAllDrawings();
   return all.map(toRow);
 }
 
-export async function localFetchDrawing(id: string): Promise<DrawingRow> {
-  const raw = await get(id);
+export async function fetchDrawing(id: string): Promise<DrawingRow> {
+  const raw = await readRaw(id);
   if (raw === undefined) throw new Error('Dessin introuvable');
   return toRow(parseLocalDrawing(raw));
 }
 
-export async function localCreateDrawing(
+export async function createDrawing(
   title: string,
   width: number,
   height: number,
@@ -197,36 +197,36 @@ export async function localCreateDrawing(
   return toRow(drawing);
 }
 
-export async function localUpdateDrawingData(id: string, data: DrawingData): Promise<void> {
+export async function updateDrawingData(id: string, data: DrawingData): Promise<void> {
   await modify(id, (d) => {
     d.data = data;
   });
 }
 
-export async function localRenameDrawing(id: string, title: string): Promise<void> {
+export async function renameDrawing(id: string, title: string): Promise<void> {
   await modify(id, (d) => {
     d.title = title;
   });
 }
 
-export async function localDeleteDrawing(id: string): Promise<void> {
+export async function deleteDrawing(id: string): Promise<void> {
   await write((store) => store.delete(id));
 }
 
-export async function localRemoveFromGroup(id: string): Promise<void> {
+export async function removeFromGroup(id: string): Promise<void> {
   await modify(id, (d) => {
     d.group = null;
   });
 }
 
-export async function localMoveToGroup(id: string, group: string): Promise<void> {
+export async function moveToGroup(id: string, group: string): Promise<void> {
   await modify(id, (d) => {
     d.group = group;
   });
 }
 
 /** Renomme un groupe en une seule transaction (curseur) pour rester atomique. */
-export async function localRenameGroup(oldName: string, newName: string): Promise<void> {
+export async function renameGroup(oldName: string, newName: string): Promise<void> {
   const ts = nowIso();
   const db = await openDb();
   await new Promise<void>((resolve, reject) => {

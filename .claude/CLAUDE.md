@@ -36,18 +36,27 @@ src/
   main.tsx              # entrée React, RouterProvider
   router.tsx            # routes (login publique, reste sous AppLayout + ErrorBoundary ; pas de garde d'auth)
   AppLayout.tsx         # layout racine + SessionProvider + SnackbarProvider
-  components/           # composants réutilisables (Button, Input, Snackbar, ColorSwatch,
-                        #   ColorWheelIcon, BrushSizeSlider, Icons, ErrorBoundary, SessionProvider)
+  components/           # composants réutilisables (Button, Input, Switch, Slider, Snackbar,
+                        #   ColorSwatch, ColorWheelIcon, BrushSizeSlider, Icons, Menu,
+                        #   ErrorBoundary, SessionProvider)
     <Name>/<Name>.tsx + <Name>.module.scss + index.ts
+    Dialog/             # dialogue centré (voile + clic extérieur) — ConfirmModal, NewDrawing,
+                        #   NewGroup, InviteCollaborator passent par lui
+    Modal/              # modale flottante déplaçable + ModalHeader (réutilisé par GroupModal)
+    InlineConfirm/      # confirmation en place (carte, ligne de menu), layout row|column
     SessionProvider/    # contexte session (useSession) — split Context/Provider/hook (cf. Snackbar)
-  hooks/                # hooks transverses (useModalA11y)
-  lib/                  # accès Supabase et persistance
+  hooks/                # hooks transverses (useModalA11y, useOutsideDismiss, useAnchoredMenu,
+                        #   useInlineRename, useDraggableModal)
+  lib/                  # accès Supabase, persistance et utilitaires transverses
     supabase.ts         # client
+    cx.ts               # concaténation de classes CSS (seul chemin autorisé)
     auth.ts             # session / login
     drawingStore.ts     # dispatcher : route CRUD vers Supabase (connecté) ou local (anonyme)
     drawings.ts         # CRUD Supabase + collaborateurs
     drawingValidation.ts # validation runtime partagée des DrawingData (remote + local + import)
-    localLibrary.ts     # bibliothèque locale IndexedDB (base `pixelperfect-library`, owner LOCAL_OWNER)
+    localLibrary.ts     # bibliothèque locale IndexedDB (base `pixelperfect-library`, owner LOCAL_OWNER) ;
+                        #   API nommée comme `drawings.ts` (fetchDrawings, createDrawing…), à importer
+                        #   en namespace (`import * as local`) ou avec alias
     libraryTransfer.ts  # export/import JSON de la bibliothèque locale (fusion, nouveaux IDs)
     groupDrawings.ts    # groupes
     offlineQueue.ts     # file IndexedDB (migre les anciennes entrées localStorage)
@@ -56,7 +65,7 @@ src/
     Gallery/            # liste, groupes, modales (NewDrawing, NewGroup, Group,
                         #   InviteCollaborator), DrawingCard/Thumbnail, Menu
     Editor/             # Canvas (+ overlays, hooks navigation/composite/sélection),
-                        #   Topbar, LayerPanel, ColorPicker, ContextMenu, EditorContext,
+                        #   Topbar, LayerPanel, ColorPicker, SettingsPanel, MirrorPanel, EditorContext,
                         #   hooks (useSave, useUndoRedo, useLayers, useSelection,
                         #   useColorPalette, useReferenceImage, useEditorShortcuts),
                         #   utilitaires (colorMerge, exportSvg, shapePixels) avec tests
@@ -74,7 +83,10 @@ public/                 # icônes PWA + favicon
 - Pas d'`any`. Utiliser `unknown` puis narrower.
 - Pas de `console.log` committé.
 - Bump du `version` dans `package.json` après toute modification fonctionnelle.
-- Toujours réutiliser les composants existants (ex. `<Button>` plutôt qu'un `<button>` brut).
+- Toujours réutiliser les composants existants (ex. `<Button>` plutôt qu'un `<button>` brut, `<Dialog>`
+  ou `<Modal>` plutôt qu'un voile maison, `<InlineConfirm>` pour une confirmation en place).
+- Classes CSS conditionnelles : toujours `cx()` (`@/lib/cx`), jamais de template ni de `filter(Boolean).join(' ')`.
+- Types de props exportés et nommés `<Composant>Props` ; params/retours de hooks `Use<Nom>Params` / `Use<Nom>Return`.
 - Validation runtime obligatoire pour toute donnée venant de Supabase (cf. `parseDrawingData` dans `lib/drawings.ts`).
 - Quand un changement mérite une mise à jour de claude.md ou des rules, propose la.
 

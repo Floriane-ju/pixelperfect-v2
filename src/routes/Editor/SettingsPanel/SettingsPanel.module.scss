@@ -1,35 +1,20 @@
 .panel {
-  display: flex;
-  flex-direction: column;
-  gap: $space-m;
-  padding: $space-m;
-  background: $neutral-0;
-  border: $border-m-accent-2;
-  box-shadow: 8px 8px 0 0 #{$accent-1-600};
-  min-width: 220px;
+  @include editor-popover;
 }
 
 .section {
-  display: flex;
-  flex-direction: column;
-  gap: $space-s;
+  @include popover-section;
 }
 
 .row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $space-s;
+  @include popover-row;
 }
 
 .label {
-  font-family: $font-family-mono;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  color: $color-text;
+  @include popover-label;
 }
 
-.bgOptions {
+.options {
   display: flex;
   gap: $space-s;
 }

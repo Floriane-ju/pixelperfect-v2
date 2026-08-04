@@ -10,12 +10,14 @@ import { GroupModal } from './GroupModal/GroupModal';
 import { NewDrawingModal } from './NewDrawingModal/NewDrawingModal';
 import { NewGroupModal } from './NewGroupModal/NewGroupModal';
 import { InviteCollaboratorModal } from './InviteCollaboratorModal/InviteCollaboratorModal';
-import { ProfileModal } from './ProfileModal';
+import { ProfileModal } from './ProfileModal/ProfileModal';
 import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup, moveToGroup, renameGroup } from '@/lib/drawingStore';
 import { signOut } from '@/lib/auth';
 import { LOCAL_OWNER } from '@/lib/localLibrary';
 import { exportLibrary, importLibrary } from '@/lib/libraryTransfer';
 import { groupDrawings } from '@/lib/groupDrawings';
+import type { DrawingGroup } from '@/lib/groupDrawings';
+import { cx } from '@/lib/cx';
 import type { DrawingRow } from '@/types';
 import { SnakeCanvas } from '@/components/SnakeCanvas';
 import { version as appVersion } from '../../../package.json';
@@ -166,7 +168,7 @@ export function Gallery() {
   const openGroups = useMemo(
     () => activeGroups
       .map((name) => groups.find((g) => g.name === name))
-      .filter((g): g is { name: string; drawings: DrawingRow[] } => g !== undefined),
+      .filter((g): g is DrawingGroup => g !== undefined),
     [activeGroups, groups],
   );
 
@@ -174,15 +176,13 @@ export function Gallery() {
     <main className={styles.gallery}>
       <SnakeCanvas onModeChange={setSnakeActive} />
       <div className={styles.version}>v{appVersion}</div>
-      <div className={`${styles.galleryBody}${snakeActive ? ` ${styles.galleryBodyDimmed}` : ''}`}>
+      <div className={cx(styles.galleryBody, snakeActive && styles.galleryBodyDimmed)}>
       <a className="skip-link" href="#gallery-content">Aller au contenu</a>
       <header className={styles.header}>
         <div className={styles.titleGroup}>
-          <h1 className={styles.title}>Pixel<br/>Perfect</h1>
-          
+          <h1 className={styles.title}>Pixel<br />Perfect</h1>
         </div>
         <div className={styles.headerActions}>
-          
           {isAuth ? (
             <>
               <Button variant="ghost" onClick={() => setShowProfile(true)}>
@@ -241,7 +241,7 @@ export function Gallery() {
       {hasContent && (
         <div
           id="gallery-content"
-          className={`${styles.content}${isContentDragOver ? ` ${styles.contentDropTarget}` : ''}`}
+          className={cx(styles.content, isContentDragOver && styles.contentDropTarget)}
           onDragOver={(e) => { e.preventDefault(); setIsContentDragOver(true); }}
           onDragLeave={() => setIsContentDragOver(false)}
           onDrop={(e) => {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { RefObject } from 'react';
+import type { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react';
 import type { DrawingData, DrawingRow, HexColor } from '@/types';
 
 const MAX_RECENT_COLORS = 4;
@@ -8,10 +8,10 @@ export type OpenPanel = 'layers' | 'color' | 'ref' | 'export' | null;
 
 interface UseColorPaletteParams {
   drawing: DrawingRow | null;
-  setDrawing: React.Dispatch<React.SetStateAction<DrawingRow | null>>;
+  setDrawing: Dispatch<SetStateAction<DrawingRow | null>>;
   scheduleSave: () => void;
   pushHistory: (before: DrawingData) => void;
-  latestDataRef: React.MutableRefObject<DrawingData | null>;
+  latestDataRef: MutableRefObject<DrawingData | null>;
   rightSidebarRef: RefObject<HTMLElement>;
 }
 

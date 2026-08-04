@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import type { RefObject } from 'react';
+import type { MutableRefObject, RefObject } from 'react';
 
 interface UseResponsiveDisplaySizeReturn {
   displaySize: { w: number; h: number };
-  displaySizeRef: React.MutableRefObject<{ w: number; h: number }>;
+  displaySizeRef: MutableRefObject<{ w: number; h: number }>;
 }
 
 export function useResponsiveDisplaySize(

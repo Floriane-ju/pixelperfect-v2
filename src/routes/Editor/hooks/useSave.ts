@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { updateDrawingData } from '@/lib/drawings';
-import { localUpdateDrawingData } from '@/lib/localLibrary';
+import { updateDrawingData as localUpdateDrawingData } from '@/lib/localLibrary';
 import { enqueue, dequeue, getPending } from '@/lib/offlineQueue';
 import type { DrawingData, DrawingRow } from '@/types';
 

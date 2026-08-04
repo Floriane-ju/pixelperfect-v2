@@ -1,5 +1,6 @@
 import { forwardRef } from 'react';
 import type { ButtonHTMLAttributes } from 'react';
+import { cx } from '@/lib/cx';
 import styles from './Switch.module.scss';
 
 export interface SwitchProps
@@ -10,9 +11,7 @@ export interface SwitchProps
 
 export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
   ({ checked, onChange, disabled, className, ...rest }, ref) => {
-    const classes = [styles.switch, checked ? styles.checked : '', className ?? '']
-      .filter(Boolean)
-      .join(' ');
+    const classes = cx(styles.switch, checked && styles.checked, className);
 
     return (
       <button

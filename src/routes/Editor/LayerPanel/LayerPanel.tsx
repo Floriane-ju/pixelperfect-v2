@@ -1,11 +1,13 @@
 import { useCallback, useRef, useState } from 'react';
+import type { PointerEvent } from 'react';
 import { Button } from '@/components/Button';
 import { Icons } from '@/components/Icons';
+import { cx } from '@/lib/cx';
 import type { PixelLayer } from '@/types';
 import { LayerThumbnail } from './LayerThumbnail';
 import styles from './LayerPanel.module.scss';
 
-interface LayerPanelProps {
+export interface LayerPanelProps {
   layers: PixelLayer[];
   activeLayerId: string;
   canvasWidth: number;
@@ -49,14 +51,14 @@ export function LayerPanel({
     else itemRefs.current.delete(id);
   }, []);
 
-  const handleHandlePointerDown = (e: React.PointerEvent<HTMLSpanElement>, id: string) => {
+  const handleDragStart = (e: PointerEvent<HTMLSpanElement>, id: string) => {
     e.stopPropagation();
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     setDrag({ id, targetId: null, pos: 'before' });
   };
 
-  const handleHandlePointerMove = (e: React.PointerEvent<HTMLSpanElement>) => {
+  const handleDragMove = (e: PointerEvent<HTMLSpanElement>) => {
     const current = dragRef.current;
     if (!current) return;
     const y = e.clientY;
@@ -88,7 +90,7 @@ export function LayerPanel({
     }
   };
 
-  const handleHandlePointerUp = (e: React.PointerEvent<HTMLSpanElement>) => {
+  const handleDragEnd = (e: PointerEvent<HTMLSpanElement>) => {
     const current = dragRef.current;
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
@@ -119,13 +121,13 @@ export function LayerPanel({
           const isDragging = drag?.id === layer.id;
           const isDropBefore = drag?.targetId === layer.id && drag.pos === 'before';
           const isDropAfter = drag?.targetId === layer.id && drag.pos === 'after';
-          const classes = [
+          const classes = cx(
             styles.item,
-            isActive ? styles.itemActive : '',
-            isDragging ? styles.itemDragging : '',
-            isDropBefore ? styles.itemDropBefore : '',
-            isDropAfter ? styles.itemDropAfter : '',
-          ].filter(Boolean).join(' ');
+            isActive && styles.itemActive,
+            isDragging && styles.itemDragging,
+            isDropBefore && styles.itemDropBefore,
+            isDropAfter && styles.itemDropAfter,
+          );
           return (
             <li
               key={layer.id}
@@ -138,13 +140,13 @@ export function LayerPanel({
               <span
                 className={styles.handle}
                 aria-hidden="true"
-                onPointerDown={e => handleHandlePointerDown(e, layer.id)}
-                onPointerMove={handleHandlePointerMove}
-                onPointerUp={handleHandlePointerUp}
-                onPointerCancel={handleHandlePointerUp}
+                onPointerDown={e => handleDragStart(e, layer.id)}
+                onPointerMove={handleDragMove}
+                onPointerUp={handleDragEnd}
+                onPointerCancel={handleDragEnd}
                 onClick={e => e.stopPropagation()}
               >
-                <Icons icon="drag" size={24} />
+                <Icons icon="drag" />
               </span>
               <Button
                 variant="ghost"

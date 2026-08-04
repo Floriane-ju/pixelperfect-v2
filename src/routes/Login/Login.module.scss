@@ -12,7 +12,7 @@
   box-shadow: $shadow-modal;
   padding: $space-2xl;
   width: 100%;
-  max-width: 360px;
+  max-width: $dialog-width-md;
   background:$accent-1-450;
 }
 

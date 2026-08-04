@@ -1,13 +1,14 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import { Button } from '@/components/Button';
+import { Dialog } from '@/components/Dialog';
 import { Input } from '@/components/Input';
-import { useModalA11y } from '@/hooks/useModalA11y';
-import { useModalZIndex } from '@/lib/modalStack';
+import { cx } from '@/lib/cx';
 import { addCollaboratorByHandle } from '@/lib/drawings';
 import { EMAIL_RE, USERNAME_RE, searchUsersByUsernamePrefix, type UserSuggestion } from '@/lib/profiles';
 import styles from './InviteCollaboratorModal.module.scss';
 
-interface Props {
+export interface InviteCollaboratorModalProps {
   drawingId: string;
   drawingTitle: string;
   onClose: () => void;
@@ -18,6 +19,9 @@ type Status = 'idle' | 'pending' | 'error';
 
 const SUGGEST_MIN_LEN = 3;
 const SUGGEST_DEBOUNCE_MS = 200;
+/** Laisse le temps au pointerdown d'une suggestion d'aboutir avant de fermer la liste. */
+const BLUR_CLOSE_DELAY_MS = 100;
+const MAX_HANDLE_LEN = 254;
 const USERNAME_PREFIX_RE = /^[a-z0-9_]+$/;
 
 function normalize(input: string): string {
@@ -30,7 +34,12 @@ function isValidHandle(value: string): boolean {
   return USERNAME_RE.test(value);
 }
 
-export function InviteCollaboratorModal({ drawingId, drawingTitle, onClose, onInvited }: Props) {
+export function InviteCollaboratorModal({
+  drawingId,
+  drawingTitle,
+  onClose,
+  onInvited,
+}: InviteCollaboratorModalProps) {
   const [handle, setHandle] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [message, setMessage] = useState('');
@@ -38,11 +47,7 @@ export function InviteCollaboratorModal({ drawingId, drawingTitle, onClose, onIn
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
   const listboxId = useId();
-
-  useModalA11y({ modalRef, onClose, initialFocusRef: inputRef });
-  const { zIndex, raise } = useModalZIndex();
 
   const normalized = normalize(handle);
   const isValid = isValidHandle(normalized);
@@ -95,7 +100,7 @@ export function InviteCollaboratorModal({ drawingId, drawingTitle, onClose, onIn
     void submit(suggestion.username);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (showSuggestions && suggestions.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -127,84 +132,13 @@ export function InviteCollaboratorModal({ drawingId, drawingTitle, onClose, onIn
   const showList = showSuggestions && suggestions.length > 0;
 
   return (
-    <div className={styles.overlay} style={{ zIndex }} onPointerDown={onClose}>
-      <div
-        ref={modalRef}
-        className={styles.modal}
-        onPointerDown={(e) => e.stopPropagation()}
-        onPointerDownCapture={raise}
-        onFocusCapture={raise}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="invite-collab-title"
-      >
-        <h2 id="invite-collab-title" className={styles.heading}>
-          Inviter sur «&nbsp;{drawingTitle}&nbsp;»
-        </h2>
-
-        <div
-          className={styles.combobox}
-          role="combobox"
-          aria-haspopup="listbox"
-          aria-expanded={showList}
-          aria-owns={listboxId}
-        >
-          <Input
-            ref={inputRef}
-            id="invite-handle"
-            label="Pseudo ou email du collaborateur"
-            type="text"
-            autoComplete="off"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            value={handle}
-            aria-autocomplete="list"
-            aria-controls={listboxId}
-            aria-activedescendant={activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined}
-            onChange={(e) => {
-              setHandle(e.target.value);
-              setStatus('idle');
-              setMessage('');
-              setShowSuggestions(true);
-            }}
-            onFocus={() => setShowSuggestions(true)}
-            onBlur={() => { setTimeout(() => setShowSuggestions(false), 100); }}
-            maxLength={254}
-            onKeyDown={handleKeyDown}
-          />
-
-          {showList && (
-            <ul
-              id={listboxId}
-              role="listbox"
-              className={styles.suggestions}
-            >
-              {suggestions.map((s, i) => (
-                <li
-                  key={s.user_id}
-                  id={`${listboxId}-opt-${i}`}
-                  role="option"
-                  aria-selected={i === activeIndex}
-                  className={`${styles.suggestion}${i === activeIndex ? ` ${styles.suggestionActive}` : ''}`}
-                  onMouseEnter={() => setActiveIndex(i)}
-                  onPointerDown={(e) => { e.preventDefault(); pick(s); }}
-                >
-                  @{s.username}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {message && (
-          <p className={styles.error} role={status === 'error' ? 'alert' : 'status'}>
-            {message}
-          </p>
-        )}
-
-        <div className={styles.actions}>
-          <Button variant="secondary" size="sm" onClick={onClose}>
+    <Dialog
+      title={<>Inviter sur «&nbsp;{drawingTitle}&nbsp;»</>}
+      onClose={onClose}
+      initialFocusRef={inputRef}
+      actions={
+        <>
+          <Button variant="ghost" size="sm" onClick={onClose}>
             Fermer
           </Button>
           <Button
@@ -215,8 +149,65 @@ export function InviteCollaboratorModal({ drawingId, drawingTitle, onClose, onIn
           >
             {status === 'pending' ? 'Envoi…' : 'Inviter'}
           </Button>
-        </div>
+        </>
+      }
+    >
+      <div
+        className={styles.combobox}
+        role="combobox"
+        aria-haspopup="listbox"
+        aria-expanded={showList}
+        aria-owns={listboxId}
+      >
+        <Input
+          ref={inputRef}
+          id="invite-handle"
+          label="Pseudo ou email du collaborateur"
+          type="text"
+          autoComplete="off"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          value={handle}
+          aria-autocomplete="list"
+          aria-controls={listboxId}
+          aria-activedescendant={activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined}
+          onChange={(e) => {
+            setHandle(e.target.value);
+            setStatus('idle');
+            setMessage('');
+            setShowSuggestions(true);
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => { setTimeout(() => setShowSuggestions(false), BLUR_CLOSE_DELAY_MS); }}
+          maxLength={MAX_HANDLE_LEN}
+          onKeyDown={handleKeyDown}
+        />
+
+        {showList && (
+          <ul id={listboxId} role="listbox" className={styles.suggestions}>
+            {suggestions.map((s, i) => (
+              <li
+                key={s.user_id}
+                id={`${listboxId}-opt-${i}`}
+                role="option"
+                aria-selected={i === activeIndex}
+                className={cx(styles.suggestion, i === activeIndex && styles.suggestionActive)}
+                onPointerEnter={() => setActiveIndex(i)}
+                onPointerDown={(e) => { e.preventDefault(); pick(s); }}
+              >
+                @{s.username}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-    </div>
+
+      {message && (
+        <p className={styles.error} role={status === 'error' ? 'alert' : 'status'}>
+          {message}
+        </p>
+      )}
+    </Dialog>
   );
 }

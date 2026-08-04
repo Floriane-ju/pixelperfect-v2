@@ -1,4 +1,5 @@
 import { useCallback, useId, useRef } from 'react';
+import type { KeyboardEvent, PointerEvent } from 'react';
 import styles from './BrushSizeSlider.module.scss';
 
 export interface BrushSizeSliderProps {
@@ -34,7 +35,7 @@ export function BrushSizeSlider({
   );
 
   const handlePointerDown = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
+    (e: PointerEvent<HTMLDivElement>) => {
       e.currentTarget.setPointerCapture(e.pointerId);
       updateFromPointer(e.clientY);
     },
@@ -42,7 +43,7 @@ export function BrushSizeSlider({
   );
 
   const handlePointerMove = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
+    (e: PointerEvent<HTMLDivElement>) => {
       if (e.currentTarget.hasPointerCapture(e.pointerId)) {
         updateFromPointer(e.clientY);
       }
@@ -50,12 +51,12 @@ export function BrushSizeSlider({
     [updateFromPointer],
   );
 
-  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerUp = useCallback((e: PointerEvent<HTMLDivElement>) => {
     e.currentTarget.releasePointerCapture(e.pointerId);
   }, []);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
+    (e: KeyboardEvent<HTMLDivElement>) => {
       if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
         e.preventDefault();
         onChange(Math.min(max, value + 1));

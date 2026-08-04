@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { CSSProperties, PointerEvent } from 'react';
 import type { HexColor } from '@/types';
 import styles from './ColorPicker.module.scss';
 
@@ -15,6 +16,8 @@ interface HSV {
   s: number; // [0, 1]
   v: number; // [0, 1]
 }
+
+const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
 
 function hexToHsv(hex: HexColor): HSV {
   const r = parseInt(hex.slice(1, 3), 16) / 255;
@@ -49,9 +52,7 @@ function isValidHex(s: string): s is HexColor {
 
 export function ColorPicker({ value, onChange, recentColors, drawingColors, onColorHover }: ColorPickerProps) {
   const [hsv, setHsv] = useState<HSV>(() => hexToHsv(value));
-  const [hexInput, setHexInput] = useState(value);
-  const svRef = useRef<HTMLDivElement>(null);
-  const hueRef = useRef<HTMLDivElement>(null);
+  const [hexInput, setHexInput] = useState<string>(value);
 
   // Sync incoming value when it changes externally (e.g. swatch click)
   useEffect(() => {
@@ -59,73 +60,72 @@ export function ColorPicker({ value, onChange, recentColors, drawingColors, onCo
     setHexInput(value);
   }, [value]);
 
-  const emitColor = useCallback((newHsv: HSV) => {
-    const hex = hsvToHex(newHsv.h, newHsv.s, newHsv.v);
+  const applyHsv = useCallback((next: HSV) => {
+    setHsv(next);
+    const hex = hsvToHex(next.h, next.s, next.v);
     setHexInput(hex);
     onChange(hex);
   }, [onChange]);
 
-  // SV square drag
-  const handleSvPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  /** Saturation/valeur depuis la position du pointeur dans le carré. */
+  const pickSv = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    applyHsv({
+      ...hsv,
+      s: clamp01((e.clientX - rect.left) / rect.width),
+      v: clamp01(1 - (e.clientY - rect.top) / rect.height),
+    });
+  }, [hsv, applyHsv]);
+
+  /** Teinte depuis la position du pointeur dans le rail. */
+  const pickHue = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    applyHsv({ ...hsv, h: clamp01((e.clientX - rect.left) / rect.width) * 360 });
+  }, [hsv, applyHsv]);
+
+  const startCapture = (e: PointerEvent<HTMLDivElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
-    const rect = e.currentTarget.getBoundingClientRect();
-    const s = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const v = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height));
-    const newHsv = { ...hsv, s, v };
-    setHsv(newHsv);
-    emitColor(newHsv);
-  }, [hsv, emitColor]);
-
-  const handleSvPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.buttons === 0) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const s = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const v = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height));
-    const newHsv = { ...hsv, s, v };
-    setHsv(newHsv);
-    emitColor(newHsv);
-  }, [hsv, emitColor]);
-
-  // Hue slider drag
-  const handleHuePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    const rect = e.currentTarget.getBoundingClientRect();
-    const h = Math.max(0, Math.min(360, ((e.clientX - rect.left) / rect.width) * 360));
-    const newHsv = { ...hsv, h };
-    setHsv(newHsv);
-    emitColor(newHsv);
-  }, [hsv, emitColor]);
-
-  const handleHuePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.buttons === 0) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const h = Math.max(0, Math.min(360, ((e.clientX - rect.left) / rect.width) * 360));
-    const newHsv = { ...hsv, h };
-    setHsv(newHsv);
-    emitColor(newHsv);
-  }, [hsv, emitColor]);
+  };
 
   const handleHexChange = (raw: string) => {
     const normalized = raw.startsWith('#') ? raw : `#${raw}`;
-    setHexInput(normalized as HexColor);
+    setHexInput(normalized);
     if (isValidHex(normalized)) {
-      const newHsv = hexToHsv(normalized);
-      setHsv(newHsv);
+      setHsv(hexToHsv(normalized));
       onChange(normalized);
     }
   };
 
   const currentHex = hsvToHex(hsv.h, hsv.s, hsv.v);
 
+  const renderSwatches = (label: string, colors: HexColor[], withHover: boolean) => (
+    <div className={styles.section}>
+      <span className={styles.sectionLabel}>{label}</span>
+      <div className={styles.swatches}>
+        {colors.map(c => (
+          <button
+            key={c}
+            type="button"
+            className={styles.swatch}
+            style={{ background: c }}
+            title={c}
+            aria-label={`Choisir ${c}`}
+            onClick={() => onChange(c)}
+            onPointerEnter={withHover ? () => onColorHover?.(c) : undefined}
+            onPointerLeave={withHover ? () => onColorHover?.(null) : undefined}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className={styles.picker}>
-      {/* SV Square */}
       <div
-        ref={svRef}
         className={styles.svSquare}
-        style={{ '--hue-deg': `${hsv.h}deg` } as React.CSSProperties}
-        onPointerDown={handleSvPointerDown}
-        onPointerMove={handleSvPointerMove}
+        style={{ '--hue-deg': `${hsv.h}deg` } as CSSProperties}
+        onPointerDown={(e) => { startCapture(e); pickSv(e); }}
+        onPointerMove={(e) => { if (e.buttons !== 0) pickSv(e); }}
       >
         <div className={styles.svWhite} />
         <div className={styles.svBlack} />
@@ -135,12 +135,10 @@ export function ColorPicker({ value, onChange, recentColors, drawingColors, onCo
         />
       </div>
 
-      {/* Hue slider */}
       <div
-        ref={hueRef}
         className={styles.hueSlider}
-        onPointerDown={handleHuePointerDown}
-        onPointerMove={handleHuePointerMove}
+        onPointerDown={(e) => { startCapture(e); pickHue(e); }}
+        onPointerMove={(e) => { if (e.buttons !== 0) pickHue(e); }}
       >
         <div
           className={styles.hueThumb}
@@ -151,7 +149,6 @@ export function ColorPicker({ value, onChange, recentColors, drawingColors, onCo
         />
       </div>
 
-      {/* Hex input */}
       <div className={styles.hexRow}>
         <div className={styles.preview} style={{ background: currentHex }} />
         <input
@@ -165,45 +162,8 @@ export function ColorPicker({ value, onChange, recentColors, drawingColors, onCo
         />
       </div>
 
-      {/* Drawing colors palette */}
-      {drawingColors.length > 0 && (
-        <div className={styles.section}>
-          <span className={styles.sectionLabel}>Couleurs du dessin</span>
-          <div className={styles.swatches}>
-            {drawingColors.map(c => (
-              <button
-                key={c}
-                className={styles.swatch}
-                style={{ background: c }}
-                title={c}
-                aria-label={`Choisir ${c}`}
-                onClick={() => onChange(c)}
-                onPointerEnter={() => onColorHover?.(c)}
-                onPointerLeave={() => onColorHover?.(null)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Recent colors */}
-      {recentColors.length > 0 && (
-        <div className={styles.section}>
-          <span className={styles.sectionLabel}>Couleurs récentes</span>
-          <div className={styles.swatches}>
-            {recentColors.map(c => (
-              <button
-                key={c}
-                className={styles.swatch}
-                style={{ background: c }}
-                title={c}
-                aria-label={`Choisir ${c}`}
-                onClick={() => onChange(c)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {drawingColors.length > 0 && renderSwatches('Couleurs du dessin', drawingColors, true)}
+      {recentColors.length > 0 && renderSwatches('Couleurs récentes', recentColors, false)}
     </div>
   );
 }

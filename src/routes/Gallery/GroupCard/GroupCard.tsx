@@ -1,12 +1,13 @@
-import { useRef, useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import { useState } from 'react';
 import { DrawingThumbnail } from '@/routes/Gallery/DrawingThumbnail/DrawingThumbnail';
 import { Menu } from '@/components/Menu';
 import type { MenuItem } from '@/components/Menu';
+import { useInlineRename } from '@/hooks/useInlineRename';
+import { cx } from '@/lib/cx';
 import type { DrawingRow } from '@/types';
 import styles from './GroupCard.module.scss';
 
-interface Props {
+export interface GroupCardProps {
   name: string;
   drawings: DrawingRow[];
   onOpen: () => void;
@@ -21,52 +22,39 @@ const MAX_PREVIEWS = 5;
 // 46 = $thumb-size (54) − 2×$border-width (2px outer) − 2×$border-width (2px inner)
 const THUMB_RENDER_SIZE = 46;
 
-type Mode = 'default' | 'renaming';
-
-export function GroupCard({ name, drawings, onOpen, onDropDrawing, onRename, onUngroup, onDelete, existingGroupNames }: Props) {
+export function GroupCard({
+  name,
+  drawings,
+  onOpen,
+  onDropDrawing,
+  onRename,
+  onUngroup,
+  onDelete,
+  existingGroupNames,
+}: GroupCardProps) {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [mode, setMode] = useState<Mode>('default');
-  const [renameValue, setRenameValue] = useState(name);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const rename = useInlineRename({
+    currentName: name,
+    onRename,
+    isTaken: (next) => existingGroupNames?.some((n) => n !== name && n === next) ?? false,
+  });
   const previews = drawings.slice(0, MAX_PREVIEWS);
-
-  const commitRename = () => {
-    const trimmed = renameValue.trim();
-    const isDuplicate = existingGroupNames?.some((n) => n !== name && n === trimmed);
-    if (trimmed && trimmed !== name && !isDuplicate) onRename?.(trimmed);
-    setMode('default');
-  };
-
-  const handleRenameKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') commitRename();
-    if (e.key === 'Escape') setMode('default');
-  };
 
   const menuItems: MenuItem[] = [
     ...(onUngroup ? [{ label: 'Dissocier', icon: 'duplicate' as const, onClick: onUngroup }] : []),
-    ...(onRename
-      ? [{
-          label: 'Renommer',
-          icon: 'edit' as const,
-          onClick: () => {
-            setRenameValue(name);
-            setMode('renaming');
-            setTimeout(() => inputRef.current?.select(), 0);
-          },
-        }]
-      : []),
+    ...(onRename ? [{ label: 'Renommer', icon: 'edit' as const, onClick: rename.start }] : []),
     ...(onDelete ? [{ label: 'Supprimer', icon: 'trash' as const, onClick: onDelete, variant: 'danger' as const }] : []),
   ];
 
   return (
     <article
-      className={`${styles.card}${isDragOver ? ` ${styles.dropTarget}` : ''}`}
-      onClick={() => { if (mode === 'default') onOpen(); }}
+      className={cx(styles.card, isDragOver && styles.dropTarget)}
+      onClick={() => { if (!rename.isRenaming) onOpen(); }}
       role="button"
-      tabIndex={mode === 'default' ? 0 : -1}
+      tabIndex={rename.isRenaming ? -1 : 0}
       aria-label={`Groupe ${name}`}
       onKeyDown={(e) => {
-        if (mode !== 'default') return;
+        if (rename.isRenaming) return;
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); }
       }}
       onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(true); }}
@@ -79,23 +67,19 @@ export function GroupCard({ name, drawings, onOpen, onDropDrawing, onRename, onU
         if (drawingId) onDropDrawing?.(drawingId);
       }}
     >
-      <header className={styles.header} onClick={(e) => { if (mode === 'renaming') e.stopPropagation(); }}>
-        {mode === 'renaming' ? (
+      <header className={styles.header} onClick={(e) => { if (rename.isRenaming) e.stopPropagation(); }}>
+        {rename.isRenaming ? (
           <input
-            ref={inputRef}
             autoFocus
             className={styles.renameInput}
-            value={renameValue}
             maxLength={80}
-            onChange={(e) => setRenameValue(e.target.value)}
-            onKeyDown={handleRenameKey}
-            onBlur={commitRename}
             onClick={(e) => e.stopPropagation()}
+            {...rename.inputProps}
           />
         ) : (
           <span className={styles.title}>{name}</span>
         )}
-        {menuItems.length > 0 && mode === 'default' && (
+        {menuItems.length > 0 && !rename.isRenaming && (
           <Menu ariaLabel={`Options du groupe ${name}`} items={menuItems} />
         )}
       </header>

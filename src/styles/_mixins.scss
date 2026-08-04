@@ -24,6 +24,93 @@
   -webkit-touch-callout: none;
 }
 
+/** Input masqué mais déclenchable par programme (sélecteurs de fichier). */
+@mixin hidden-input {
+  display: none;
+}
+
+/** Popover ancré à un bouton de l'éditeur (SettingsPanel, MirrorPanel). */
+@mixin editor-popover {
+  display: flex;
+  flex-direction: column;
+  gap: $space-m;
+  padding: $space-m;
+  background: $neutral-0;
+  border: $border-m-accent-2;
+  box-shadow: $drop-shadow-panel;
+  min-width: $menu-min-width;
+}
+
+@mixin popover-section {
+  display: flex;
+  flex-direction: column;
+  gap: $space-s;
+}
+
+@mixin popover-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-s;
+}
+
+@mixin popover-label {
+  font-family: $font-family-mono;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text;
+}
+
+/** Panneau d'une modale flottante et déplaçable (Modal, GroupModal). */
+@mixin floating-panel($width) {
+  position: fixed;
+  pointer-events: auto;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  background: $accent-1-500;
+  width: calc(100vw - #{$space-m});
+  max-height: calc(100dvh - #{$space-m});
+  overflow: hidden;
+  box-shadow: $shadow-modal;
+  border: $border-m-accent-2;
+
+  @include tablet-up {
+    width: $width;
+    max-height: 80dvh;
+  }
+}
+
+/** En-tête servant de poignée de glissement d'une modale flottante. */
+@mixin floating-panel-header {
+  display: flex;
+  align-items: stretch;
+  gap: $space-sm;
+  padding: $space-s $space-s $space-sm $space-s;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+@mixin floating-panel-title($color) {
+  font-family: $font-family-base;
+  font-size: $font-size-md;
+  flex-grow: 1;
+  font-weight: $font-weight-regular;
+  color: $color;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+  margin: 0;
+  align-self: center;
+}
+
 @mixin safe-area-top {
   padding-top: max(#{$space-s}, env(safe-area-inset-top));
 }

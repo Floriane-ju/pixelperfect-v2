@@ -11,56 +11,12 @@
 
 .overlayDropTarget {
   background: rgba($accent-1-500, $opacity-drop-target);
-  outline: 3px dashed $accent-1-600;
-  outline-offset: -6px;
+  outline: $outline-width-thick dashed $accent-1-600;
+  outline-offset: -$outline-offset-lg;
 }
 
 .panel {
-  position: fixed;
-  pointer-events: auto;
-  top: 50%;
-  left: 50%;
-  display: flex;
-  flex-direction: column;
-  background: $accent-1-500;
-  width: calc(100vw - #{$space-m});
-  max-height: calc(100dvh - #{$space-m});
-  overflow: hidden;
-  box-shadow: $shadow-modal;
-  border:$border-m-accent-2;
-
-  @include tablet-up {
-    width: 620px;
-    max-height: 80dvh;
-  }
-}
-
-.header {
-  display: flex;
-  align-items: stretch;
-  gap: $space-sm;
-  padding: $space-s $space-s $space-sm $space-s;
-  flex-shrink: 0;
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-
-  &:active {
-    cursor: grabbing;
-  }
-}
-
-.title {
-  font-family: $font-family-base;
-  font-size: $font-size-md;
-  flex-grow: 1;
-  font-weight: $font-weight-regular;
-  color: $accent-2-600;
-  white-space: nowrap;
-  flex-shrink: 0;
-  line-height: 1;
-  margin: 0;
-  align-self: center;
+  @include floating-panel($modal-panel-width-lg);
 }
 
 .content {

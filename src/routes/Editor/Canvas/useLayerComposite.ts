@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react';
-import type { RefObject } from 'react';
+import type { MutableRefObject, RefObject } from 'react';
 import type { DrawingData, HexColor } from '@/types';
 
-export type LayerCanvasEntry = { canvas: HTMLCanvasElement; pixelsRef: Record<string, HexColor> };
+type LayerCanvasEntry = { canvas: HTMLCanvasElement; pixelsRef: Record<string, HexColor> };
 
 interface UseLayerCompositeParams {
   mainCanvasRef: RefObject<HTMLCanvasElement>;
@@ -11,8 +11,8 @@ interface UseLayerCompositeParams {
 }
 
 interface UseLayerCompositeReturn {
-  layerCanvasesRef: React.MutableRefObject<Map<string, LayerCanvasEntry>>;
-  layerPixelsRef: React.MutableRefObject<Record<string, HexColor>>;
+  layerCanvasesRef: MutableRefObject<Map<string, LayerCanvasEntry>>;
+  layerPixelsRef: MutableRefObject<Record<string, HexColor>>;
   recompositeMain: () => void;
 }
 

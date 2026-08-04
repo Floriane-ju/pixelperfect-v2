@@ -25,7 +25,7 @@
   touch-action: none;
   min-width: 0;
   background:$neutral-0;
-  box-shadow:8px 8px 0 0 #{$accent-1-600};
+  box-shadow: $drop-shadow-panel;
   border:$border-m-accent-2;
 
   &[data-bg='white']  { background: $neutral-0; }
@@ -125,13 +125,6 @@
 }
 
 // ── Context menu ─────────────────────────────────────────────────────────────
-
-.contextMenuAnchor {
-  position: fixed;
-  width: 0;
-  height: 0;
-  z-index: $z-dropdown;
-}
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 

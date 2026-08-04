@@ -6,14 +6,14 @@ import { USERNAME_RE, fetchMyProfile, updateUsername } from '@/lib/profiles';
 import type { Profile } from '@/types';
 import styles from './ProfileModal.module.scss';
 
-interface Props {
+export interface ProfileModalProps {
   onClose: () => void;
   onUpdated?: (profile: Profile) => void;
 }
 
 type Status = 'loading' | 'idle' | 'saving' | 'error';
 
-export function ProfileModal({ onClose, onUpdated }: Props) {
+export function ProfileModal({ onClose, onUpdated }: ProfileModalProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [username, setUsername] = useState('');
   const [status, setStatus] = useState<Status>('loading');

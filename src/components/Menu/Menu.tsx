@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button, type ButtonSize, type ButtonVariant } from '@/components/Button';
 import { Icons, type IconName } from '@/components/Icons';
+import { useAnchoredMenu } from '@/hooks/useAnchoredMenu';
+import { cx } from '@/lib/cx';
 import styles from './Menu.module.scss';
 
 export interface MenuItem {
@@ -22,12 +24,8 @@ export interface MenuProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-interface Position {
-  top: number;
-  left: number;
-}
-
-const MENU_GAP = 4;
+/** Doit correspondre à `min-width` de `.menu` : largeur supposée avant la première mesure. */
+const MENU_FALLBACK_WIDTH = 220;
 
 export function Menu({
   items,
@@ -52,47 +50,12 @@ export function Menu({
     [isControlled, onOpenChange, open],
   );
 
-  const [position, setPosition] = useState<Position | null>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLUListElement>(null);
-
-  const updatePosition = useCallback(() => {
-    const root = rootRef.current;
-    const menu = menuRef.current;
-    if (!root) return;
-    const rect = root.getBoundingClientRect();
-    const menuWidth = menu?.offsetWidth ?? 220;
-    const left = Math.max(MENU_GAP, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - MENU_GAP));
-    setPosition({ top: rect.bottom + MENU_GAP, left });
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    updatePosition();
-  }, [open, updatePosition]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handlePointer = (e: PointerEvent) => {
-      const target = e.target as Node;
-      if (rootRef.current?.contains(target) || menuRef.current?.contains(target)) return;
-      setOpen(false);
-    };
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    const handleReposition = () => updatePosition();
-    document.addEventListener('pointerdown', handlePointer);
-    document.addEventListener('keydown', handleKey);
-    window.addEventListener('resize', handleReposition);
-    window.addEventListener('scroll', handleReposition, true);
-    return () => {
-      document.removeEventListener('pointerdown', handlePointer);
-      document.removeEventListener('keydown', handleKey);
-      window.removeEventListener('resize', handleReposition);
-      window.removeEventListener('scroll', handleReposition, true);
-    };
-  }, [open, setOpen, updatePosition]);
+  const close = useCallback(() => setOpen(false), [setOpen]);
+  const { rootRef, menuRef, position } = useAnchoredMenu({
+    open,
+    onDismiss: close,
+    fallbackWidth: MENU_FALLBACK_WIDTH,
+  });
 
   return (
     <div
@@ -124,20 +87,13 @@ export function Menu({
               <button
                 type="button"
                 role="menuitem"
-                className={[
-                  styles.item,
-                  item.variant === 'danger' ? styles.itemDanger : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
+                className={cx(styles.item, item.variant === 'danger' && styles.itemDanger)}
                 onClick={() => {
                   item.onClick();
-                  setOpen(false);
+                  close();
                 }}
               >
-                {item.icon && (
-                  <Icons className={styles.icon} icon={item.icon} size={24} />
-                )}
+                {item.icon && <Icons className={styles.icon} icon={item.icon} />}
                 <span className={styles.label}>{item.label}</span>
               </button>
               {idx < items.length - 1 && <span className={styles.divider} aria-hidden="true" />}

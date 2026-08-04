@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { MutableRefObject } from 'react';
 import type { DrawingData, DrawingRow, HexColor } from '@/types';
 import { mergeColors } from '../colorMerge';
 
@@ -18,7 +19,7 @@ interface UseReferenceImageParams {
   drawing: DrawingRow | null;
   handleLayerChange: (layerId: string, pixels: Record<string, HexColor>) => void;
   pushHistory: (before: DrawingData) => void;
-  latestDataRef: React.MutableRefObject<DrawingData | null>;
+  latestDataRef: MutableRefObject<DrawingData | null>;
 }
 
 const MAX_REF_IMAGE_BYTES = 5_000_000;

@@ -2,14 +2,14 @@ import { memo, useEffect, useRef } from 'react';
 import type { PixelLayer } from '@/types';
 import styles from './LayerThumbnail.module.scss';
 
-interface Props {
+export interface LayerThumbnailProps {
   layer: PixelLayer;
   width: number;
   height: number;
   size?: number;
 }
 
-export const LayerThumbnail = memo(function LayerThumbnail({ layer, width, height, size = 32 }: Props) {
+export const LayerThumbnail = memo(function LayerThumbnail({ layer, width, height, size = 32 }: LayerThumbnailProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {

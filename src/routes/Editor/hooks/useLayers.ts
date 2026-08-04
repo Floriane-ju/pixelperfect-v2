@@ -1,14 +1,15 @@
 import { useCallback } from 'react';
+import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import type { DrawingData, DrawingRow, HexColor, PixelLayer } from '@/types';
 
 interface UseLayersParams {
   drawing: DrawingRow | null;
-  setDrawing: React.Dispatch<React.SetStateAction<DrawingRow | null>>;
+  setDrawing: Dispatch<SetStateAction<DrawingRow | null>>;
   activeLayerId: string;
-  setActiveLayerId: React.Dispatch<React.SetStateAction<string>>;
+  setActiveLayerId: Dispatch<SetStateAction<string>>;
   scheduleSave: () => void;
   pushHistory: (before: DrawingData) => void;
-  latestDataRef: React.MutableRefObject<DrawingData | null>;
+  latestDataRef: MutableRefObject<DrawingData | null>;
 }
 
 export function useLayers({ drawing, setDrawing, setActiveLayerId, scheduleSave, pushHistory, latestDataRef }: UseLayersParams) {

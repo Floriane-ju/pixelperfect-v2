@@ -1,5 +1,5 @@
 import { parseDrawingData, isRecord } from './drawingValidation';
-import { bulkAddLocal, getAllLocal } from './localLibrary';
+import { bulkAdd, getAllDrawings } from './localLibrary';
 import type { LocalDrawing } from './localLibrary';
 
 const FORMAT = 'pixelperfect-library';
@@ -51,7 +51,7 @@ export function parseLibraryFile(raw: unknown): LocalDrawing[] {
 }
 
 /** Déclenche le téléchargement d'un texte sous forme de fichier. */
-export function triggerDownload(filename: string, text: string, mime = 'application/json'): void {
+function triggerDownload(filename: string, text: string, mime = 'application/json'): void {
   const blob = new Blob([text], { type: mime });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -69,7 +69,7 @@ export function triggerDownload(filename: string, text: string, mime = 'applicat
 
 /** Exporte la bibliothèque locale vers un fichier JSON téléchargé. */
 export async function exportLibrary(): Promise<void> {
-  const drawings = await getAllLocal();
+  const drawings = await getAllDrawings();
   const exportedAt = new Date().toISOString();
   const file = serializeLibrary(drawings, exportedAt);
   const filename = `pixelperfect-library-${exportedAt.slice(0, 10)}.json`;
@@ -85,6 +85,6 @@ export async function importLibrary(jsonText: string): Promise<number> {
     throw new Error('Fichier invalide : JSON illisible.');
   }
   const drawings = parseLibraryFile(raw);
-  await bulkAddLocal(drawings);
+  await bulkAdd(drawings);
   return drawings.length;
 }

@@ -3,7 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useState } from 'react';
 import { useSave } from './useSave';
 import { updateDrawingData } from '@/lib/drawings';
-import { localUpdateDrawingData } from '@/lib/localLibrary';
+import { updateDrawingData as localUpdateDrawingData } from '@/lib/localLibrary';
 import * as offlineQueue from '@/lib/offlineQueue';
 import type { DrawingData, DrawingRow } from '@/types';
 
@@ -12,7 +12,7 @@ vi.mock('@/lib/drawings', () => ({
 }));
 
 vi.mock('@/lib/localLibrary', () => ({
-  localUpdateDrawingData: vi.fn(),
+  updateDrawingData: vi.fn(),
 }));
 
 vi.mock('@/lib/offlineQueue', () => {

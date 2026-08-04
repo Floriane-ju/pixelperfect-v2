@@ -1,0 +1,15 @@
+.header {
+  @include floating-panel-header;
+}
+
+.title {
+  @include floating-panel-title($accent-1-600);
+}
+
+.tone-accent-1 {
+  color: $accent-1-600;
+}
+
+.tone-accent-2 {
+  color: $accent-2-600;
+}

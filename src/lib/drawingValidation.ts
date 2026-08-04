@@ -1,14 +1,14 @@
 import type { DrawingData, HexColor, PixelLayer } from '@/types';
 
-export const MAX_DIMENSION = 512;
-export const MAX_LAYERS = 64;
-export const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+const MAX_DIMENSION = 512;
+const MAX_LAYERS = 64;
+const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
 export function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
-export function parseHexColor(v: unknown): HexColor {
+function parseHexColor(v: unknown): HexColor {
   if (typeof v !== 'string' || !HEX_COLOR_RE.test(v)) {
     throw new Error('Invalid DrawingRow: pixel color must be hex string');
   }
