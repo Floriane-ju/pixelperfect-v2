@@ -11,9 +11,9 @@ const FOOD_OFFSET = (CELL - FOOD_SIZE) / 2;
 const TICK_MS = 150;
 const INITIAL_LENGTH = 5;
 const COLOR_AUTO = '#FFF5DE';
-const COLOR_USER = '#FEA348';
+const COLOR_USER = '#6752DE';
 const COLOR_FOOD_AUTO = '#FFF5DE';
-const COLOR_FOOD_USER = '#FEA348';
+const COLOR_FOOD_USER = '#6752DE';
 const BORDER_INSET = 1;
 
 type Dir = 'up' | 'down' | 'left' | 'right';
@@ -405,7 +405,7 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
           <h2 id="snake-gameover-title" className={styles.title}>Game Over</h2>
           <div className={styles.actions}>
             <Button variant="primary" size="lg" onClick={handleReplay}>Rejouer</Button>
-            <Button variant="secondary" size="lg" onClick={handleBackToGallery}>Revenir à la galerie</Button>
+            <Button variant="ghost" size="lg" onClick={handleBackToGallery}>Revenir à la galerie</Button>
           </div>
         </div>
       ) : null}

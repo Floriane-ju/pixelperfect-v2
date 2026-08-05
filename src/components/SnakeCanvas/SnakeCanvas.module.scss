@@ -22,14 +22,14 @@
   align-items: center;
   justify-content: center;
   gap: $space-l;
-  background: rgba(0, 0, 0, $opacity-overlay);
+  background: rgba(255, 255, 255, $opacity-overlay);
   padding: $space-l;
 }
 
 .title {
   font-family: $font-family-display;
   font-size: $font-size-display;
-  color: $accent-1-300;
+  color: $accent-2-600;
   text-align: center;
   text-shadow: $text-shadow-display;
   margin: 0;
