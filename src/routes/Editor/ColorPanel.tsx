@@ -7,7 +7,7 @@ interface ColorPanelProps {
   onClose: () => void;
   className?: string;
   style?: CSSProperties;
-  panelRef?: RefObject<HTMLDivElement>;
+  panelRef?: RefObject<HTMLDivElement | null>;
 }
 
 export function ColorPanel({ children, onClose, className, style, panelRef }: ColorPanelProps) {

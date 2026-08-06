@@ -12,7 +12,7 @@ interface UseColorPaletteParams {
   scheduleSave: () => void;
   pushHistory: (before: DrawingData) => void;
   latestDataRef: MutableRefObject<DrawingData | null>;
-  rightSidebarRef: RefObject<HTMLElement>;
+  rightSidebarRef: RefObject<HTMLElement | null>;
 }
 
 export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory, latestDataRef, rightSidebarRef }: UseColorPaletteParams) {

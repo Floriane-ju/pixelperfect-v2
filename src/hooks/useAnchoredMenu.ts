@@ -18,9 +18,9 @@ export interface UseAnchoredMenuParams {
 
 export interface UseAnchoredMenuReturn {
   /** À poser sur le conteneur du déclencheur. */
-  rootRef: RefObject<HTMLDivElement>;
+  rootRef: RefObject<HTMLDivElement | null>;
   /** À poser sur le menu (rendu en portal). */
-  menuRef: RefObject<HTMLUListElement>;
+  menuRef: RefObject<HTMLUListElement | null>;
   /** `null` tant que la position n'est pas mesurée : ne pas rendre le menu avant. */
   position: AnchoredPosition | null;
 }

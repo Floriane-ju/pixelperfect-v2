@@ -7,7 +7,7 @@ interface UseResponsiveDisplaySizeReturn {
 }
 
 export function useResponsiveDisplaySize(
-  wrapperRef: RefObject<HTMLElement>,
+  wrapperRef: RefObject<HTMLElement | null>,
   dataWidth: number,
   dataHeight: number,
   onChange?: (size: { w: number; h: number }) => void,

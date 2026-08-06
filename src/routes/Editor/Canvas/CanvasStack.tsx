@@ -5,10 +5,10 @@ import { GridOverlay } from './GridOverlay';
 import styles from './Canvas.module.scss';
 
 interface CanvasStackProps {
-  checkerRef: RefObject<HTMLCanvasElement>;
-  canvasRef: RefObject<HTMLCanvasElement>;
-  previewRef: RefObject<HTMLCanvasElement>;
-  highlightRef: RefObject<HTMLCanvasElement>;
+  checkerRef: RefObject<HTMLCanvasElement | null>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
+  previewRef: RefObject<HTMLCanvasElement | null>;
+  highlightRef: RefObject<HTMLCanvasElement | null>;
   dataWidth: number;
   dataHeight: number;
   displaySize: { w: number; h: number };

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import type { RefObject } from 'react';
 
-export function useCheckerboard(canvasRef: RefObject<HTMLCanvasElement>, width: number, height: number): void {
+export function useCheckerboard(canvasRef: RefObject<HTMLCanvasElement | null>, width: number, height: number): void {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;

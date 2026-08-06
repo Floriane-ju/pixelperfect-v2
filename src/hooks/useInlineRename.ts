@@ -14,7 +14,7 @@ export interface UseInlineRenameReturn {
   start: () => void;
   cancel: () => void;
   inputProps: {
-    ref: RefObject<HTMLInputElement>;
+    ref: RefObject<HTMLInputElement | null>;
     value: string;
     onChange: (e: ChangeEvent<HTMLInputElement>) => void;
     onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;

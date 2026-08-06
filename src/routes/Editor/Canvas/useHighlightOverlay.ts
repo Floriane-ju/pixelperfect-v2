@@ -3,7 +3,7 @@ import type { RefObject } from 'react';
 import type { DrawingData, HexColor } from '@/types';
 
 interface UseHighlightOverlayParams {
-  canvasRef: RefObject<HTMLCanvasElement>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
   hoveredColor: HexColor | null | undefined;
   data: DrawingData;
   displaySize: { w: number; h: number };

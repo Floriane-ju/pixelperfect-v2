@@ -5,7 +5,7 @@ import type { DrawingData, HexColor } from '@/types';
 type LayerCanvasEntry = { canvas: HTMLCanvasElement; pixelsRef: Record<string, HexColor> };
 
 interface UseLayerCompositeParams {
-  mainCanvasRef: RefObject<HTMLCanvasElement>;
+  mainCanvasRef: RefObject<HTMLCanvasElement | null>;
   data: DrawingData;
   activeLayerId: string;
 }

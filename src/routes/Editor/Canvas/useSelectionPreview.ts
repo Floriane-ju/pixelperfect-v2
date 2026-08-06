@@ -3,7 +3,7 @@ import type { RefObject } from 'react';
 import type { SelectionState } from '@/routes/Editor/hooks/useSelection';
 
 interface UseSelectionPreviewParams {
-  canvasRef: RefObject<HTMLCanvasElement>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
   state: SelectionState | undefined;
   dataWidth: number;
   dataHeight: number;

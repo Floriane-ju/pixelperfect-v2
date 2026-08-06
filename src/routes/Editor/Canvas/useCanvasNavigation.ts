@@ -14,7 +14,7 @@ interface NavSnapshot {
   transform: Transform;
 }
 
-export function useCanvasNavigation(wrapperRef: RefObject<HTMLDivElement>) {
+export function useCanvasNavigation(wrapperRef: RefObject<HTMLDivElement | null>) {
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1, angle: 0 });
   const transformRef = useRef<Transform>({ x: 0, y: 0, scale: 1, angle: 0 });
   const navPointers = useRef(new Map<number, { x: number; y: number }>());
