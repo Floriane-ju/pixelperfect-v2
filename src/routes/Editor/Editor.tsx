@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { fetchDrawing } from '@/lib/drawingStore';
 import { LOCAL_OWNER } from '@/lib/localLibrary';
 import type { DrawingRow, HexColor } from '@/types';

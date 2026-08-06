@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router';
 import { SnackbarProvider } from '@/components/Snackbar';
 import { SessionProvider } from '@/components/SessionProvider';
 import styles from './AppLayout.module.scss';

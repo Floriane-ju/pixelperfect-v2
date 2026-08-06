@@ -1,5 +1,4 @@
-/// <reference types="vitest" />
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { visualizer } from 'rollup-plugin-visualizer';
@@ -52,22 +51,25 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-supabase': ['@supabase/supabase-js'],
+        // Rolldown (Vite 8) n'accepte plus la forme objet de manualChunks.
+        manualChunks(id) {
+          if (id.includes('/node_modules/@supabase/')) return 'vendor-supabase';
+          if (/\/node_modules\/(react|react-dom|react-router|scheduler)\//.test(id)) {
+            return 'vendor-react';
+          }
+          return undefined;
         },
       },
     },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(import.meta.dirname, 'src'),
     },
   },
   css: {
     preprocessorOptions: {
       scss: {
-        api: 'modern-compiler',
         additionalData: `@use "@/styles/variables" as *;\n@use "@/styles/mixins" as *;\n`,
       },
     },

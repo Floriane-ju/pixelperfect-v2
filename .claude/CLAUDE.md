@@ -5,8 +5,8 @@ Application PWA de dessin pixel art, installable sur iPad, iPhone et Android. De
 
 ## Stack
 - React 18 + TypeScript (strict)
-- Vite 5 + `vite-plugin-pwa` (Workbox, autoUpdate)
-- React Router v6
+- Vite 8 (Rolldown) + `vite-plugin-pwa` (Workbox, autoUpdate)
+- React Router v8 (paquet `react-router`, `react-router-dom` supprimé en v8)
 - SCSS modules + variables/mixins partagés (`src/styles/`, injectés via `additionalData`)
 - Supabase (auth + Postgres + RLS) — `@supabase/supabase-js`
 - Vitest + Testing Library + jsdom
