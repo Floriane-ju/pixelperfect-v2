@@ -1,4 +1,7 @@
 node_modules
+# pnpm uniquement — empêche la réintroduction d'un lockfile npm/yarn
+package-lock.json
+yarn.lock
 dist
 dist-ssr
 *.local

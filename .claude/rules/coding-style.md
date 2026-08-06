@@ -35,5 +35,5 @@
 ## Tests
 - Vitest + Testing Library + jsdom (cf. bloc `test` dans `vite.config.ts`).
 - Co-localiser les tests : `<module>.test.ts` à côté du module testé (cf. `routes/Editor/colorMerge.test.ts`, `hooks/useSave.test.ts`).
-- Lancer via `npm run test`.
+- Lancer via `pnpm run test`.
 - Pas de mocks de la persistance dans les tests d'intégration : Supabase local ou stubbé côté réseau uniquement.

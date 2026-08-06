@@ -1,0 +1,7 @@
+# Les scripts de cycle de vie sont bloqués par défaut (protection supply chain).
+# Seuls les paquets listés ici à `true` sont autorisés à exécuter leur script d'installation.
+allowBuilds:
+  # postinstall requis : installe le binaire natif esbuild utilisé par Vite.
+  esbuild: true
+  # build-from-source, simple repli — les prebuilds darwin-arm64 suffisent.
+  '@parcel/watcher': false

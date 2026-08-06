@@ -15,15 +15,15 @@ Application PWA de dessin pixel art, installable sur iPad, iPhone et Android. De
 
 ## Commands
 ```bash
-npm install
-npm run dev          # serveur Vite
-npm run build        # build prod (tsc -b + vite build)
-npm run preview      # prévisualiser le build
-npm run type-check   # tsc --noEmit
-npm run lint         # eslint .
-npm run format       # prettier --write
-npm run test         # vitest
-ANALYZE=1 npm run build  # rollup-plugin-visualizer → dist/stats.html
+pnpm install
+pnpm run dev          # serveur Vite
+pnpm run build        # build prod (tsc -b + vite build)
+pnpm run preview      # prévisualiser le build
+pnpm run type-check   # tsc --noEmit
+pnpm run lint         # eslint .
+pnpm run format       # prettier --write
+pnpm run test         # vitest
+ANALYZE=1 pnpm run build  # rollup-plugin-visualizer → dist/stats.html
 ```
 
 ## Env
