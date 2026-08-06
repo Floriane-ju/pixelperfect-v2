@@ -42,53 +42,82 @@ function getConnectedComponents(pixelSet: Set<string>): Set<string>[] {
   return components;
 }
 
-// For each connected component, emit directed boundary edges (CCW exterior, CW holes).
-// Within a single connected component, each vertex has at most one outgoing edge,
-// so the edgeMap is collision-free.
+type Point = [number, number];
+
+// For each connected component, emit directed boundary edges (each pixel contributes
+// its uncovered sides, oriented so the filled side stays on the same hand).
+// A vertex can carry TWO outgoing edges when two diagonally-touching pixels of the
+// same component meet there ("saddle" corner), so edges are stored as a list and the
+// traversal is keyed by directed edge, not by vertex.
 function traceComponentPath(component: Set<string>): string {
-  const edgeMap = new Map<string, [number, number]>();
+  const outgoing = new Map<string, Point[]>();
+  const addEdge = (from: Point, to: Point): void => {
+    const key = `${from[0]},${from[1]}`;
+    const list = outgoing.get(key);
+    if (list) list.push(to);
+    else outgoing.set(key, [to]);
+  };
 
   for (const key of component) {
-    const [x, y] = key.split(',').map(Number) as [number, number];
-    if (!component.has(`${x},${y - 1}`))   edgeMap.set(`${x},${y}`,           [x + 1, y]);
-    if (!component.has(`${x + 1},${y}`))   edgeMap.set(`${x + 1},${y}`,       [x + 1, y + 1]);
-    if (!component.has(`${x},${y + 1}`))   edgeMap.set(`${x + 1},${y + 1}`,   [x,     y + 1]);
-    if (!component.has(`${x - 1},${y}`))   edgeMap.set(`${x},${y + 1}`,       [x,     y]);
+    const [x, y] = key.split(',').map(Number) as Point;
+    if (!component.has(`${x},${y - 1}`))   addEdge([x,     y],     [x + 1, y]);
+    if (!component.has(`${x + 1},${y}`))   addEdge([x + 1, y],     [x + 1, y + 1]);
+    if (!component.has(`${x},${y + 1}`))   addEdge([x + 1, y + 1], [x,     y + 1]);
+    if (!component.has(`${x - 1},${y}`))   addEdge([x,     y + 1], [x,     y]);
   }
 
   const visited = new Set<string>();
   const polygons: string[] = [];
 
-  for (const startKey of edgeMap.keys()) {
-    if (visited.has(startKey)) continue;
+  for (const [fromKey, targets] of outgoing) {
+    for (const firstTarget of targets) {
+      if (visited.has(`${fromKey}>${firstTarget[0]},${firstTarget[1]}`)) continue;
 
-    const pts: [number, number][] = [];
-    let key = startKey;
+      const pts: Point[] = [];
+      let from = fromKey.split(',').map(Number) as Point;
+      let to = firstTarget;
 
-    while (!visited.has(key)) {
-      visited.add(key);
-      const [cx, cy] = key.split(',').map(Number) as [number, number];
-      pts.push([cx, cy]);
-      const next = edgeMap.get(key);
-      if (!next) break;
-      key = `${next[0]},${next[1]}`;
+      for (;;) {
+        const edgeKey = `${from[0]},${from[1]}>${to[0]},${to[1]}`;
+        if (visited.has(edgeKey)) break;
+        visited.add(edgeKey);
+        pts.push(from);
+
+        const candidates = outgoing.get(`${to[0]},${to[1]}`);
+        if (!candidates || candidates.length === 0) break;
+
+        let next = candidates[0]!;
+        if (candidates.length > 1) {
+          // Saddle corner: always take the same turn so the two boundaries pass
+          // each other instead of crossing, which would break the fill.
+          const dx = to[0] - from[0];
+          const dy = to[1] - from[1];
+          next =
+            candidates.find(
+              c => dx * (c[1] - to[1]) - dy * (c[0] - to[0]) > 0,
+            ) ?? next;
+        }
+
+        from = to;
+        to = next;
+      }
+
+      // Drop collinear points
+      const n = pts.length;
+      const simplified = pts.filter((_, i) => {
+        const prev = pts[(i - 1 + n) % n]!;
+        const curr = pts[i]!;
+        const next = pts[(i + 1) % n]!;
+        const cross =
+          (curr[0] - prev[0]) * (next[1] - prev[1]) -
+          (curr[1] - prev[1]) * (next[0] - prev[0]);
+        return cross !== 0;
+      });
+
+      if (simplified.length < 3) continue;
+
+      polygons.push('M' + simplified.map(p => `${p[0]} ${p[1]}`).join('L') + 'Z');
     }
-
-    if (pts.length < 2) continue;
-
-    // Drop collinear points
-    const n = pts.length;
-    const simplified = pts.filter((_, i) => {
-      const prev = pts[(i - 1 + n) % n]!;
-      const curr = pts[i]!;
-      const next = pts[(i + 1) % n]!;
-      const cross =
-        (curr[0] - prev[0]) * (next[1] - prev[1]) -
-        (curr[1] - prev[1]) * (next[0] - prev[0]);
-      return cross !== 0;
-    });
-
-    polygons.push('M' + simplified.map(p => `${p[0]} ${p[1]}`).join('L') + 'Z');
   }
 
   return polygons.join('');
