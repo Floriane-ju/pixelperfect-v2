@@ -31,6 +31,12 @@
   padding: $space-4xl 0;
   padding-top: max(#{$space-4xl}, env(safe-area-inset-top));
   flex-shrink: 0;
+  transition: padding $transition-base;
+}
+
+.headerCompact {
+  padding-bottom: $space-l;
+  padding-top: max(#{$space-l}, env(safe-area-inset-top));
 }
 
 .headerActions {
@@ -58,6 +64,16 @@
   white-space: nowrap;
   flex-shrink: 0;
   text-shadow: $text-shadow-display;
+  transition: font-size $transition-base;
+}
+
+.titleCompact {
+  font-size: $font-size-display-compact;
+
+  // Titre sur une seule ligne une fois réduit.
+  br {
+    display: none;
+  }
 }
 
 .galleryBody {

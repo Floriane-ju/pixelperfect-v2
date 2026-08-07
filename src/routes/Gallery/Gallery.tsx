@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, UIEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/Button';
 import { useSnackbar } from '@/components/Snackbar';
@@ -27,6 +27,20 @@ type Status = 'idle' | 'loading' | 'error';
 
 const MAX_IMPORT_BYTES = 20 * 1024 * 1024; // 20 Mo
 
+/** Défilement (px) à partir duquel le header passe en mode réduit. */
+const SCROLL_COMPACT_THRESHOLD = 24;
+
+/**
+ * Marge de défilement restante (px) exigée pour ré-agrandir le header : légèrement au-dessus
+ * de la hauteur libérée par la réduction (~166 px : titre 2 lignes → 1 ligne + paddings).
+ * En dessous, ré-agrandir supprimerait le débordement, `scrollTop` retomberait à 0 et le
+ * header oscillerait entre les deux tailles.
+ */
+const SCROLL_EXPAND_MIN_OVERFLOW = 200;
+
+/** Distance (px) d'un glissement vers le bas rétablissant le header quand la liste est en haut. */
+const TOUCH_EXPAND_DISTANCE = 8;
+
 export function Gallery() {
   const navigate = useNavigate();
   const snackbar = useSnackbar();
@@ -46,6 +60,8 @@ export function Gallery() {
   const [inviteTarget, setInviteTarget] = useState<DrawingRow | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [snakeActive, setSnakeActive] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const touchStartY = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Recharge la bibliothèque à chaque changement d'auth (login/logout) une fois la session résolue.
@@ -166,6 +182,29 @@ export function Gallery() {
     navigate(`/editor/${newDrawing.id}`);
   };
 
+  const handleContentScroll = (e: UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    // Hystérésis : une fois réduit, le header ne revient à sa taille pleine qu'en haut de liste
+    // et si la grille garde assez de débordement pour rester scrollable une fois ré-agrandie —
+    // sinon `scrollTop` retomberait à 0 et le header oscillerait. En deçà, seul un geste
+    // explicite vers le haut le rétablit (cf. expandIfAtTop).
+    const overflow = el.scrollHeight - el.clientHeight;
+    setIsScrolled((prev) =>
+      prev
+        ? !(el.scrollTop === 0 && overflow > SCROLL_EXPAND_MIN_OVERFLOW)
+        : el.scrollTop > SCROLL_COMPACT_THRESHOLD,
+    );
+  };
+
+  /**
+   * Rétablit le header sur un geste vers le haut alors que la liste est déjà en butée : à
+   * `scrollTop` 0 le navigateur n'émet plus d'événement `scroll`, molette et toucher sont donc
+   * les seuls signaux disponibles.
+   */
+  const expandIfAtTop = (el: HTMLDivElement) => {
+    if (el.scrollTop === 0) setIsScrolled(false);
+  };
+
   const { groups, ungrouped } = useMemo(() => groupDrawings(drawings), [drawings]);
   const hasContent = drawings.length > 0;
   const openGroups = useMemo(
@@ -181,9 +220,9 @@ export function Gallery() {
       <div className={styles.version}>v{appVersion}</div>
       <div className={cx(styles.galleryBody, snakeActive && styles.galleryBodyDimmed)}>
       <a className="skip-link" href="#gallery-content">Aller au contenu</a>
-      <header className={styles.header}>
+      <header className={cx(styles.header, isScrolled && styles.headerCompact)}>
         <div className={styles.titleGroup}>
-          <h1 className={styles.title}>Pixel<br />Perfect</h1>
+          <h1 className={cx(styles.title, isScrolled && styles.titleCompact)}>Pixel<br />Perfect</h1>
         </div>
         <div className={styles.headerActions}>
           {isAuth ? (
@@ -245,6 +284,15 @@ export function Gallery() {
         <div
           id="gallery-content"
           className={cx(styles.content, isContentDragOver && styles.contentDropTarget)}
+          onScroll={handleContentScroll}
+          onWheel={(e) => { if (e.deltaY < 0) expandIfAtTop(e.currentTarget); }}
+          onTouchStart={(e) => { touchStartY.current = e.touches[0]?.clientY ?? 0; }}
+          onTouchMove={(e) => {
+            const y = e.touches[0]?.clientY;
+            if (y !== undefined && y - touchStartY.current > TOUCH_EXPAND_DISTANCE) {
+              expandIfAtTop(e.currentTarget);
+            }
+          }}
           onDragOver={(e) => { e.preventDefault(); setIsContentDragOver(true); }}
           onDragLeave={() => setIsContentDragOver(false)}
           onDrop={(e) => {
