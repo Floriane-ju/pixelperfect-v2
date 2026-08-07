@@ -1,5 +1,10 @@
 .canvas {
   display: block;
+  // Le parent est carré : `100% * ratio` donne la largeur contenue, la hauteur
+  // suit via aspect-ratio. Aucun agrandissement au-delà de la case disponible.
+  width: min(100%, calc(100% * var(--ratio)));
+  height: auto;
+  aspect-ratio: var(--ratio);
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   background-image: linear-gradient(45deg, $accent-1-500 25%, transparent 25%, transparent 75%, $accent-1-500 75%), linear-gradient(45deg, $accent-1-500 25%, transparent 25%, transparent 75%, $accent-1-500 75%);

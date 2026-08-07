@@ -22,8 +22,8 @@
 .content {
   flex: 1;
   overflow-y: auto;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax($card-width, 1fr));
   gap: $space-sm;
   padding: $space-sm;
   align-content: flex-start;

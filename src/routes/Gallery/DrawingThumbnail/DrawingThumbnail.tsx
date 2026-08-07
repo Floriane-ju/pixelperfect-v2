@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import type { DrawingData } from '@/types';
 import { tintFromRamp } from '@/lib/color';
 import styles from './DrawingThumbnail.module.scss';
@@ -14,10 +14,9 @@ function readAccent2Ramp(): string[] {
 
 export interface DrawingThumbnailProps {
   data: DrawingData;
-  size?: number;
 }
 
-export function DrawingThumbnail({ data, size = 120 }: DrawingThumbnailProps) {
+export function DrawingThumbnail({ data }: DrawingThumbnailProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -57,9 +56,9 @@ export function DrawingThumbnail({ data, size = 120 }: DrawingThumbnailProps) {
     ctx.globalAlpha = 1;
   }, [data]);
 
+  // La taille vient du parent : `--ratio` laisse le CSS contenir le dessin
+  // dans le carré disponible sans le déformer (cf. DrawingThumbnail.module.scss).
   const ratio = data.width / data.height;
-  const displayWidth = ratio >= 1 ? size : Math.round(size * ratio);
-  const displayHeight = ratio >= 1 ? Math.round(size / ratio) : size;
 
   return (
     <canvas
@@ -67,7 +66,7 @@ export function DrawingThumbnail({ data, size = 120 }: DrawingThumbnailProps) {
       width={data.width}
       height={data.height}
       className={styles.canvas}
-      style={{ width: displayWidth, height: displayHeight }}
+      style={{ '--ratio': ratio } as CSSProperties}
       aria-hidden
     />
   );

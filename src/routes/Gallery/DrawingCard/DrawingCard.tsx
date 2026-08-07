@@ -23,8 +23,6 @@ export interface DrawingCardProps {
   onDropDrawing?: (sourceId: string) => void;
 }
 
-const THUMB_RENDER_SIZE = 174;
-
 export function DrawingCard({
   drawing,
   isOwner = false,
@@ -150,7 +148,7 @@ export function DrawingCard({
             </header>
             <div className={styles.preview}>
               <div className={styles.previewInner}>
-                <DrawingThumbnail data={drawing.data} size={THUMB_RENDER_SIZE} />
+                <DrawingThumbnail data={drawing.data} />
               </div>
             </div>
           </>

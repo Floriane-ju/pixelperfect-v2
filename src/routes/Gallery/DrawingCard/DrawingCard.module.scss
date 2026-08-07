@@ -1,10 +1,10 @@
 .card {
   display: flex;
   flex-direction: column;
-  width: $card-width;
+  width: 100%;
+  min-width: 0;
   background: $accent-1-450;
   cursor: pointer;
-  flex-shrink: 0;
   box-shadow: $drop-shadow-interactive,$inner-shadow-interactive-1;
   transition: box-shadow $transition-fast;
   border:$border-m-accent-2;
@@ -75,6 +75,7 @@
 .previewInner {
   background: $color-white;
   padding: $space-sm;
+  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;

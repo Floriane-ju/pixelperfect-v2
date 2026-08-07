@@ -1,11 +1,11 @@
 .card {
   display: flex;
   flex-direction: column;
-  width: $card-width;
+  width: 100%;
+  min-width: 0;
   background: $accent-2-400;
   border:$border-m-accent-2;
   cursor: pointer;
-  flex-shrink: 0;
   box-shadow: $drop-shadow-interactive,$inner-shadow-interactive-2;
   transition: box-shadow $transition-fast;
   @include no-select;
@@ -71,16 +71,14 @@
 }
 
 .grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: $thumb-gap;
-  width: calc(3 * #{$thumb-size} + 2 * #{$thumb-gap});
 }
 
 .thumb {
-  width: $thumb-size;
-  height: $thumb-size;
-  flex-shrink: 0;
+  aspect-ratio: 1;
+  min-width: 0;
   background: $accent-1-500;
 }
 
@@ -94,7 +92,5 @@
 }
 
 .thumbEmpty {
-  width: $thumb-size;
-  height: $thumb-size;
-  flex-shrink: 0;
+  aspect-ratio: 1;
 }

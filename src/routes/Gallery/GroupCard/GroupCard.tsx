@@ -19,8 +19,6 @@ export interface GroupCardProps {
 }
 
 const MAX_PREVIEWS = 5;
-// 46 = $thumb-size (54) − 2×$border-width (2px outer) − 2×$border-width (2px inner)
-const THUMB_RENDER_SIZE = 46;
 
 export function GroupCard({
   name,
@@ -99,7 +97,7 @@ export function GroupCard({
                 }}
               >
                 <div className={styles.thumbInner}>
-                  <DrawingThumbnail data={d.data} size={THUMB_RENDER_SIZE} />
+                  <DrawingThumbnail data={d.data} />
                 </div>
               </div>
             ))}
