@@ -10,6 +10,8 @@ export interface ModalHeaderProps {
   titleId: string;
   onClose: () => void;
   tone?: ModalHeaderTone;
+  /** Actions optionnelles affichées à gauche du bouton de fermeture. */
+  actions?: ReactNode;
   /** Handlers de glissement fournis par `useDraggableModal`. */
   dragHandlers: {
     onPointerDown: (e: PointerEvent<HTMLElement>) => void;
@@ -24,6 +26,7 @@ export function ModalHeader({
   titleId,
   onClose,
   tone = 'accent-1',
+  actions,
   dragHandlers,
 }: ModalHeaderProps) {
   return (
@@ -41,6 +44,7 @@ export function ModalHeader({
         <div />
         <div />
       </div>
+      {actions}
       <Button
         variant="primary"
         iconOnly

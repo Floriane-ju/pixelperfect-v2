@@ -38,6 +38,8 @@ export function Gallery() {
   const [status, setStatus] = useState<Status>('loading');
   const [errorMsg, setErrorMsg] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
+  /** Groupe dans lequel créer le prochain dessin (null = hors groupe). */
+  const [newDrawingGroup, setNewDrawingGroup] = useState<string | null>(null);
   const [activeGroups, setActiveGroups] = useState<string[]>([]);
   const [pendingGroup, setPendingGroup] = useState<{ sourceId: string; targetId: string } | null>(null);
   const [isContentDragOver, setIsContentDragOver] = useState(false);
@@ -160,6 +162,7 @@ export function Gallery() {
 
   const handleCreate = async (name: string, width: number, height: number) => {
     const newDrawing = await createDrawing(name, width, height);
+    if (newDrawingGroup) await moveToGroup(newDrawing.id, newDrawingGroup);
     navigate(`/editor/${newDrawing.id}`);
   };
 
@@ -205,7 +208,7 @@ export function Gallery() {
               </Button>
             </>
           )}
-          <Button variant="primary" onClick={() => setShowNewModal(true)}>
+          <Button variant="primary" onClick={() => { setNewDrawingGroup(null); setShowNewModal(true); }}>
             Nouveau dessin
           </Button>
         </div>
@@ -299,6 +302,7 @@ export function Gallery() {
           currentUserId={currentUserId}
           onClose={() => setActiveGroups((arr) => arr.filter((n) => n !== g.name))}
           onCardClick={(id) => navigate(`/editor/${id}`)}
+          onNewDrawing={() => { setNewDrawingGroup(g.name); setShowNewModal(true); }}
           onRename={handleRename}
           onDelete={handleDelete}
           onRemoveFromGroup={handleRemoveFromGroup}

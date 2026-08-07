@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { DrawingCard } from '@/routes/Gallery/DrawingCard/DrawingCard';
 import { ModalHeader } from '@/components/Modal';
+import { Button } from '@/components/Button';
 import { useModalA11y } from '@/hooks/useModalA11y';
 import { useDraggableModal } from '@/hooks/useDraggableModal';
 import { cx } from '@/lib/cx';
@@ -13,6 +14,7 @@ export interface GroupModalProps {
   currentUserId: string | null;
   onClose: () => void;
   onCardClick: (id: string) => void;
+  onNewDrawing?: () => void;
   onRename?: (id: string, title: string) => void;
   onDelete?: (id: string) => void;
   onRemoveFromGroup?: (id: string) => void;
@@ -26,6 +28,7 @@ export function GroupModal({
   currentUserId,
   onClose,
   onCardClick,
+  onNewDrawing,
   onRename,
   onDelete,
   onRemoveFromGroup,
@@ -87,6 +90,17 @@ export function GroupModal({
           onClose={onClose}
           tone="accent-2"
           dragHandlers={dragHandlers}
+          actions={onNewDrawing && (
+            <Button
+              variant="primary"
+              iconOnly
+              iconLeft="add"
+              aria-label="Nouveau dessin"
+              title="Nouveau dessin"
+              onClick={(e) => { e.stopPropagation(); onNewDrawing(); }}
+              onPointerDown={(e) => e.stopPropagation()}
+            />
+          )}
         />
         <div className={styles.content}>
           {drawings.map((d) => {

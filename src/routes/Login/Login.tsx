@@ -56,7 +56,10 @@ export function Login() {
       await signIn(email, password);
       attemptsRef.current = 0;
       navigate(from, { replace: true });
-    } catch {
+    } catch (err: unknown) {
+      // Le message affiché est volontairement générique : sans ce log, une panne
+      // d'infra (clé API révoquée, réseau) est indiscernable d'un mauvais mot de passe.
+      if (import.meta.env.DEV) console.error('[login]', err);
       attemptsRef.current += 1;
       if (attemptsRef.current >= MAX_ATTEMPTS) {
         setLockUntil(Date.now() + LOCKOUT_MS);

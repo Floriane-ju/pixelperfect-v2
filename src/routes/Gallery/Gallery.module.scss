@@ -77,10 +77,14 @@
 
 .content {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: grid;
   grid-template-columns: repeat(auto-fill, $card-width);
   gap: $space-l;
   align-content: flex-start;
+  padding-bottom: max(#{$space-4xl}, env(safe-area-inset-bottom));
 }
 
 .contentDropTarget {
