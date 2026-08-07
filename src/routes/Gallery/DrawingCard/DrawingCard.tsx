@@ -132,7 +132,12 @@ export function DrawingCard({
         ) : (
           <>
             <header className={styles.header} onClick={(e) => e.stopPropagation()}>
-              <span className={styles.title}>{drawing.title}</span>
+              <span className={styles.titleGroup}>
+                <span className={styles.title}>{drawing.title}</span>
+                <span className={styles.titleSize}>
+                  {drawing.data.width} × {drawing.data.height} px
+                </span>
+              </span>
               {isIdle && drawing.collaborator_count >= 1 && (
                 <CollaboratorsButton
                   drawingId={drawing.id}

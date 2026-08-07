@@ -79,7 +79,10 @@ export function Topbar() {
           aria-label="Retour à la galerie"
           onClick={onBack}
         />
-        <h1 className={styles.titleText}>{title}</h1>
+        <div className={styles.titleGroup}>
+          <h1 className={styles.titleText}>{title}</h1>
+          <span className={styles.titleSize}>{canvasWidth} × {canvasHeight} px</span>
+        </div>
       </div>
 
       <div className={styles.rightSection}>

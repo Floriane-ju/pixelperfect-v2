@@ -71,6 +71,14 @@ export function Login() {
 
   return (
     <main className={styles.page}>
+      <Button
+        variant="ghost"
+        iconOnly
+        iconLeft="back"
+        aria-label="Retour"
+        className={styles.back}
+        onClick={() => navigate(from, { replace: true })}
+      />
       <div className={styles.card}>
         <h1 className={styles.title}>Pixel Perfect</h1>
         <form className={styles.form} onSubmit={(e) => void handleSubmit(e)}>

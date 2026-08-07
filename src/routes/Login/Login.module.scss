@@ -1,9 +1,16 @@
 .page {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100dvh;
   padding: $space-l;
+}
+
+.back {
+  position: fixed;
+  top: calc($space-l + env(safe-area-inset-top));
+  left: calc($space-l + env(safe-area-inset-left));
 }
 
 .card {

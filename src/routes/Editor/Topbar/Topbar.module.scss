@@ -18,6 +18,13 @@
   min-width: 0;
 }
 
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  align-self: center;
+}
+
 .titleText {
   margin: 0;
   font-family: $font-family-display;
@@ -28,7 +35,15 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  align-self: center;
+}
+
+.titleSize {
+  font-family: $font-family-base;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rightSection {

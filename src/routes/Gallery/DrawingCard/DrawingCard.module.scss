@@ -44,12 +44,25 @@
   position: relative;
 }
 
-.title {
+.titleGroup {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
   font-size: $font-size-md;
   color: $accent-2-700;
   font-weight: $font-weight-regular;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.titleSize {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
