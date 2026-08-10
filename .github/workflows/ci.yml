@@ -9,6 +9,14 @@ on:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    # Variables au niveau du job, pas seulement du build : plusieurs tests importent des modules
+    # qui construisent le client Supabase au chargement (`src/lib/supabase.ts` lève sans elles).
+    # En local un `.env` masque le problème ; en CI il n'y en a pas.
+    # Valeurs de repli pour que la CI ne dépende pas d'un secret configuré ; les secrets du
+    # dépôt prennent le dessus s'ils existent.
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'placeholder_key' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -34,6 +42,3 @@ jobs:
 
       - name: Build
         run: pnpm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://placeholder.supabase.co' }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'placeholder_key' }}
