@@ -10,8 +10,9 @@ import { GroupModal } from './GroupModal/GroupModal';
 import { NewDrawingModal } from './NewDrawingModal/NewDrawingModal';
 import { NewGroupModal } from './NewGroupModal/NewGroupModal';
 import { InviteCollaboratorModal } from './InviteCollaboratorModal/InviteCollaboratorModal';
+import type { InviteTarget } from './InviteCollaboratorModal/InviteCollaboratorModal';
 import { ProfileModal } from './ProfileModal/ProfileModal';
-import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup, moveToGroup, renameGroup } from '@/lib/drawingStore';
+import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup, moveToGroup, renameGroup, dissolveGroup } from '@/lib/drawingStore';
 import { signOut } from '@/lib/auth';
 import { LOCAL_OWNER } from '@/lib/localLibrary';
 import { exportLibrary, importLibrary } from '@/lib/libraryTransfer';
@@ -57,7 +58,7 @@ export function Gallery() {
   const [activeGroups, setActiveGroups] = useState<string[]>([]);
   const [pendingGroup, setPendingGroup] = useState<{ sourceId: string; targetId: string } | null>(null);
   const [isContentDragOver, setIsContentDragOver] = useState(false);
-  const [inviteTarget, setInviteTarget] = useState<DrawingRow | null>(null);
+  const [inviteTarget, setInviteTarget] = useState<InviteTarget | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [snakeActive, setSnakeActive] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -147,10 +148,11 @@ export function Gallery() {
     ]).catch(refetchSilent);
   };
 
+  // Dissoudre passe par un seul appel : les membres du groupe doivent disparaître avec lui,
+  // sinon un dessin re-déposé plus tard sous le même nom serait re-partagé silencieusement.
   const handleUngroupAll = (groupName: string) => {
-    const ids = drawings.filter((d) => d.group === groupName).map((d) => d.id);
     setDrawings((prev) => prev.map((d) => d.group === groupName ? { ...d, group: null } : d));
-    Promise.all(ids.map((id) => removeFromGroup(id))).catch(refetchSilent);
+    dissolveGroup(groupName).then(refetchSilent).catch(refetchSilent);
   };
 
   const handleRenameGroup = (oldName: string, newName: string) => {
@@ -166,14 +168,18 @@ export function Gallery() {
   const handleDeleteGroup = (groupName: string) => {
     const ids = drawings.filter((d) => d.group === groupName).map((d) => d.id);
     setDrawings((prev) => prev.filter((d) => d.group !== groupName));
-    Promise.all(ids.map((id) => deleteDrawing(id))).catch(refetchSilent);
+    Promise.all(ids.map((id) => deleteDrawing(id)))
+      .then(() => dissolveGroup(groupName))
+      .catch(refetchSilent);
   };
 
+  // Le serveur partage automatiquement le dessin aux membres du groupe : on relit pour que le
+  // compteur de collaborateurs de la carte reflète ce partage.
   const handleMoveToGroup = (drawingId: string, groupName: string) => {
     setDrawings((prev) =>
       prev.map((d) => (d.id === drawingId ? { ...d, group: groupName } : d)),
     );
-    moveToGroup(drawingId, groupName).catch(refetchSilent);
+    moveToGroup(drawingId, groupName).then(refetchSilent).catch(refetchSilent);
   };
 
   const handleCreate = async (name: string, width: number, height: number) => {
@@ -206,6 +212,9 @@ export function Gallery() {
   };
 
   const { groups, ungrouped } = useMemo(() => groupDrawings(drawings), [drawings]);
+  // Un groupe appartient à qui y possède des dessins : le partage porte sur (utilisateur, nom),
+  // donc un même nom chez deux personnes reste deux groupes distincts.
+  const ownsGroup = (g: DrawingGroup) => g.drawings.some((d) => d.owner_id === currentUserId);
   const hasContent = drawings.length > 0;
   const openGroups = useMemo(
     () => activeGroups
@@ -310,6 +319,7 @@ export function Gallery() {
               drawings={g.drawings}
               onOpen={() => setActiveGroups((arr) => (arr.includes(g.name) ? arr : [...arr, g.name]))}
               onDropDrawing={(drawingId) => handleMoveToGroup(drawingId, g.name)}
+              onShare={isAuth && ownsGroup(g) ? () => setInviteTarget({ kind: 'group', name: g.name }) : undefined}
               onRename={(newName) => handleRenameGroup(g.name, newName)}
               onUngroup={() => handleUngroupAll(g.name)}
               onDelete={() => handleDeleteGroup(g.name)}
@@ -326,7 +336,7 @@ export function Gallery() {
                 onClick={() => navigate(`/editor/${d.id}`)}
                 onRename={(title) => handleRename(d.id, title)}
                 onDelete={isOwner ? () => handleDelete(d.id) : undefined}
-                onInvite={isAuth && isOwner ? () => setInviteTarget(d) : undefined}
+                onInvite={isAuth && isOwner ? () => setInviteTarget({ kind: 'drawing', id: d.id, title: d.title }) : undefined}
                 onCollaboratorRemoved={() => handleCollaboratorRemoved(d.id)}
                 onDropDrawing={(sourceId) => setPendingGroup({ sourceId, targetId: d.id })}
               />
@@ -350,21 +360,28 @@ export function Gallery() {
           currentUserId={currentUserId}
           onClose={() => setActiveGroups((arr) => arr.filter((n) => n !== g.name))}
           onCardClick={(id) => navigate(`/editor/${id}`)}
+          onShare={isAuth && ownsGroup(g) ? () => setInviteTarget({ kind: 'group', name: g.name }) : undefined}
+          onSharingChanged={refetchSilent}
           onNewDrawing={() => { setNewDrawingGroup(g.name); setShowNewModal(true); }}
           onRename={handleRename}
           onDelete={handleDelete}
           onRemoveFromGroup={handleRemoveFromGroup}
-          onInvite={isAuth ? (d) => setInviteTarget(d) : undefined}
+          onInvite={isAuth ? (d) => setInviteTarget({ kind: 'drawing', id: d.id, title: d.title }) : undefined}
           onCollaboratorRemoved={handleCollaboratorRemoved}
         />
       ))}
 
       {inviteTarget && (
         <InviteCollaboratorModal
-          drawingId={inviteTarget.id}
-          drawingTitle={inviteTarget.title}
+          target={inviteTarget}
           onClose={() => setInviteTarget(null)}
           onInvited={(_userId, handle) => {
+            if (inviteTarget.kind === 'group') {
+              // Le backfill serveur partage tous les dessins du groupe d'un coup : on relit.
+              refetchSilent();
+              snackbar.show(`Groupe partagé avec ${handle}`, { icon: 'collaborators' });
+              return;
+            }
             const id = inviteTarget.id;
             setDrawings((prev) =>
               prev.map((d) =>

@@ -58,7 +58,11 @@ src/
                         #   API nommée comme `drawings.ts` (fetchDrawings, createDrawing…), à importer
                         #   en namespace (`import * as local`) ou avec alias
     libraryTransfer.ts  # export/import JSON de la bibliothèque locale (fusion, nouveaux IDs)
-    groupDrawings.ts    # groupes
+    groupDrawings.ts    # regroupement client des dessins par nom de groupe
+    groupSharing.ts     # partage d'un groupe entier (RPC share_group_by_handle,
+                        #   list_group_members, remove_group_member) — connecté uniquement.
+                        #   L'auto-partage des dessins ajoutés au groupe vient d'un trigger
+                        #   Postgres sur `drawings."group"`, pas du client.
     offlineQueue.ts     # file IndexedDB (migre les anciennes entrées localStorage)
   routes/
     Login/              # auth (route publique)
@@ -72,7 +76,9 @@ src/
   styles/               # _variables, _mixins, global.scss
   types/                # DrawingData, PixelLayer, DrawingRow, CollaboratorRole, HexColor
 
-supabase/migrations/    # migrations SQL (RLS, RPC list_collaborators, ownership triggers)
+supabase/migrations/    # migrations SQL (RLS, RPC, triggers). Le schéma historique vit dans le
+                        #   dashboard Supabase : faire `supabase db pull` pour en récupérer le
+                        #   baseline avant d'écrire une nouvelle migration.
 public/                 # icônes PWA + favicon
 ```
 

@@ -81,6 +81,11 @@
 - Déplacement d'un dessin d'un groupe à un autre par drag & drop
 - Fenêtre de groupe flottante et déplaçable
 - Création de nouveau dessin directement dans un groupe
+- **Partage d'un groupe entier** à d'autres utilisateurs (pseudo ou email) : tout dessin ajouté
+  ensuite au groupe est automatiquement partagé aux membres
+- Liste des membres d'un groupe et retrait ; retirer un membre, sortir un dessin du groupe ou
+  dissoudre le groupe ne révoque que les accès hérités du groupe (les invitations
+  individuelles sur un dessin sont conservées)
 
 ---
 

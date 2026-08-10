@@ -12,6 +12,7 @@ export interface GroupCardProps {
   drawings: DrawingRow[];
   onOpen: () => void;
   onDropDrawing?: (drawingId: string) => void;
+  onShare?: () => void;
   onRename?: (newName: string) => void;
   onUngroup?: () => void;
   onDelete?: () => void;
@@ -25,6 +26,7 @@ export function GroupCard({
   drawings,
   onOpen,
   onDropDrawing,
+  onShare,
   onRename,
   onUngroup,
   onDelete,
@@ -39,6 +41,7 @@ export function GroupCard({
   const previews = drawings.slice(0, MAX_PREVIEWS);
 
   const menuItems: MenuItem[] = [
+    ...(onShare ? [{ label: 'Partager…', icon: 'collaborators' as const, onClick: onShare }] : []),
     ...(onUngroup ? [{ label: 'Dissocier', icon: 'duplicate' as const, onClick: onUngroup }] : []),
     ...(onRename ? [{ label: 'Renommer', icon: 'edit' as const, onClick: rename.start }] : []),
     ...(onDelete ? [{ label: 'Supprimer', icon: 'trash' as const, onClick: onDelete, variant: 'danger' as const }] : []),

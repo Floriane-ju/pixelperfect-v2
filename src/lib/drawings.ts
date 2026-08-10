@@ -69,11 +69,22 @@ export async function moveToGroup(id: string, group: string): Promise<void> {
   if (error) throw error;
 }
 
+/**
+ * Renomme un groupe côté serveur : le nom d'un groupe est aussi la clé de ses membres
+ * (`group_users`) et l'origine des partages hérités (`drawing_users.via_group`). La RPC met les
+ * trois à jour dans la même transaction et ne touche que les dessins de l'appelant.
+ */
 export async function renameGroup(oldName: string, newName: string): Promise<void> {
-  const { error } = await supabase
-    .from('drawings')
-    .update({ group: newName, updated_at: new Date().toISOString() })
-    .eq('group', oldName);
+  const { error } = await supabase.rpc('rename_group', {
+    old_name_in: oldName,
+    new_name_in: newName,
+  });
+  if (error) throw error;
+}
+
+/** Dissout le groupe : dessins dégroupés, membres du groupe et partages hérités supprimés. */
+export async function dissolveGroup(groupName: string): Promise<void> {
+  const { error } = await supabase.rpc('dissolve_group', { group_name_in: groupName });
   if (error) throw error;
 }
 

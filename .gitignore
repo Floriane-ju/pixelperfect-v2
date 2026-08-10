@@ -37,3 +37,5 @@ audits/
 
 # Supabase migrations (local only)
 supabase/migrations/
+# Scratch du CLI Supabase (projet lié, URL du pooler…)
+supabase/.temp/

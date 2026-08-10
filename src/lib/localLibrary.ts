@@ -225,8 +225,8 @@ export async function moveToGroup(id: string, group: string): Promise<void> {
   });
 }
 
-/** Renomme un groupe en une seule transaction (curseur) pour rester atomique. */
-export async function renameGroup(oldName: string, newName: string): Promise<void> {
+/** Réaffecte en une seule transaction (curseur) tous les dessins d'un groupe. `null` = dégroupe. */
+async function reassignGroup(oldName: string, newGroup: string | null): Promise<void> {
   const ts = nowIso();
   const db = await openDb();
   await new Promise<void>((resolve, reject) => {
@@ -238,7 +238,7 @@ export async function renameGroup(oldName: string, newName: string): Promise<voi
       try {
         const d = parseLocalDrawing(cursor.value);
         if (d.group === oldName) {
-          d.group = newName;
+          d.group = newGroup;
           d.updated_at = ts;
           cursor.update(d);
         }
@@ -251,4 +251,13 @@ export async function renameGroup(oldName: string, newName: string): Promise<voi
     tx.onerror = () => reject(tx.error);
     tx.onabort = () => reject(tx.error);
   });
+}
+
+export async function renameGroup(oldName: string, newName: string): Promise<void> {
+  await reassignGroup(oldName, newName);
+}
+
+/** Dissout le groupe : les dessins restent, sans groupe. Pas de partage en local. */
+export async function dissolveGroup(groupName: string): Promise<void> {
+  await reassignGroup(groupName, null);
 }

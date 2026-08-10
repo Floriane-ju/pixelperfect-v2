@@ -8,8 +8,8 @@ import type { DrawingData, DrawingRow } from '@/types';
  * IndexedDB (`lib/localLibrary`). Galerie et éditeur passent par ici plutôt que d'appeler
  * directement l'une ou l'autre persistance.
  *
- * Les fonctions collaborateurs (`listCollaborators`, etc.) restent dans `lib/drawings` :
- * elles ne sont atteignables que connecté.
+ * Les fonctions de partage (`listCollaborators` dans `lib/drawings`, `lib/groupSharing`) ne sont
+ * pas dispatchées : elles ne sont atteignables que connecté.
  */
 async function authed(): Promise<boolean> {
   const { data } = await supabase.auth.getSession();
@@ -56,4 +56,8 @@ export async function moveToGroup(id: string, group: string): Promise<void> {
 
 export async function renameGroup(oldName: string, newName: string): Promise<void> {
   return (await authed()) ? remote.renameGroup(oldName, newName) : local.renameGroup(oldName, newName);
+}
+
+export async function dissolveGroup(groupName: string): Promise<void> {
+  return (await authed()) ? remote.dissolveGroup(groupName) : local.dissolveGroup(groupName);
 }

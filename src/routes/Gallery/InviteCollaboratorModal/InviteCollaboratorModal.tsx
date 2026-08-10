@@ -5,12 +5,20 @@ import { Dialog } from '@/components/Dialog';
 import { Input } from '@/components/Input';
 import { cx } from '@/lib/cx';
 import { addCollaboratorByHandle } from '@/lib/drawings';
+import { shareGroupByHandle } from '@/lib/groupSharing';
 import { EMAIL_RE, USERNAME_RE, searchUsersByUsernamePrefix, type UserSuggestion } from '@/lib/profiles';
 import styles from './InviteCollaboratorModal.module.scss';
 
+/**
+ * Cible de l'invitation : un dessin, ou un groupe entier — auquel cas les dessins ajoutés
+ * ensuite au groupe sont partagés automatiquement.
+ */
+export type InviteTarget =
+  | { kind: 'drawing'; id: string; title: string }
+  | { kind: 'group'; name: string };
+
 export interface InviteCollaboratorModalProps {
-  drawingId: string;
-  drawingTitle: string;
+  target: InviteTarget;
   onClose: () => void;
   onInvited?: (userId: string, handle: string) => void;
 }
@@ -35,8 +43,7 @@ function isValidHandle(value: string): boolean {
 }
 
 export function InviteCollaboratorModal({
-  drawingId,
-  drawingTitle,
+  target,
   onClose,
   onInvited,
 }: InviteCollaboratorModalProps) {
@@ -78,13 +85,15 @@ export function InviteCollaboratorModal({
   }, [normalized]);
 
   const submit = async (handleOverride?: string) => {
-    const target = handleOverride ?? normalized;
-    if (!isValidHandle(target)) return;
+    const value = handleOverride ?? normalized;
+    if (!isValidHandle(value)) return;
     setStatus('pending');
     setMessage('');
     try {
-      const userId = await addCollaboratorByHandle(drawingId, target);
-      onInvited?.(userId, target);
+      const userId = target.kind === 'group'
+        ? await shareGroupByHandle(target.name, value)
+        : await addCollaboratorByHandle(target.id, value);
+      onInvited?.(userId, value);
       onClose();
     } catch (err) {
       setStatus('error');
@@ -133,7 +142,9 @@ export function InviteCollaboratorModal({
 
   return (
     <Dialog
-      title={<>Inviter sur «&nbsp;{drawingTitle}&nbsp;»</>}
+      title={target.kind === 'group'
+        ? <>Partager le groupe «&nbsp;{target.name}&nbsp;»</>
+        : <>Inviter sur «&nbsp;{target.title}&nbsp;»</>}
       onClose={onClose}
       initialFocusRef={inputRef}
       actions={
@@ -147,7 +158,7 @@ export function InviteCollaboratorModal({
             onClick={() => void submit()}
             disabled={disabled}
           >
-            {status === 'pending' ? 'Envoi…' : 'Inviter'}
+            {status === 'pending' ? 'Envoi…' : target.kind === 'group' ? 'Partager' : 'Inviter'}
           </Button>
         </>
       }

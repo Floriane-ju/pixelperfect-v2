@@ -1,0 +1,67 @@
+.root {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.menu {
+  position: fixed;
+  z-index: $z-popover;
+  display: flex;
+  flex-direction: column;
+  min-width: $menu-min-width-lg;
+  margin: 0;
+  padding: $space-xxs;
+  list-style: none;
+  background: $accent-1-450;
+  border: $border-m-accent-2;
+  box-shadow: $inner-shadow-interactive-1;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: $space-s;
+  width: 100%;
+  padding: $space-l;
+  color: $accent-1-600;
+  font-family: $font-family-base;
+  font-size: $font-size-md;
+  font-weight: $font-weight-regular;
+  text-align: left;
+  @include no-select;
+}
+
+.username {
+  flex: 1;
+  min-width: 0;
+  font-weight: $font-weight-semibold;
+  word-break: break-all;
+}
+
+.state {
+  padding: $space-l;
+  color: $accent-1-600;
+  font-family: $font-family-base;
+  font-size: $font-size-md;
+  font-weight: $font-weight-regular;
+  @include no-select;
+}
+
+.divider {
+  display: block;
+  width: 100%;
+  height: $outline-width-thin;
+  background: $accent-1-600;
+}
+
+.confirm {
+  padding: $space-l;
+}
