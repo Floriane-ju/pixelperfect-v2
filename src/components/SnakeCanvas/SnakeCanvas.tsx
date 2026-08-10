@@ -326,6 +326,7 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as Element | null;
       if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (gameOverRef.current) return;
 
       let newDir: Dir | null = null;

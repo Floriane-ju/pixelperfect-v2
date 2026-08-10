@@ -50,9 +50,13 @@ export function useSave({ id, drawing, authed, setStatus }: UseSaveParams) {
   useEffect(() => {
     const currentId = id;
     const currentAuthed = authed;
-    return () => {
+    // iOS suspend/tue la PWA sans démonter React (pas de cleanup) : pagehide et
+    // visibilitychange sont les seuls signaux fiables avant la coupure. beforeunload
+    // n'est pas fiable sur iOS Safari.
+    const flushImmediate = () => {
       if (saveTimerRef.current !== null && latestDataRef.current && currentId) {
         clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
         const data = latestDataRef.current;
         if (currentAuthed) {
           updateDrawingData(currentId, data).catch(() => {
@@ -62,6 +66,16 @@ export function useSave({ id, drawing, authed, setStatus }: UseSaveParams) {
           void localUpdateDrawingData(currentId, data);
         }
       }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') flushImmediate();
+    };
+    window.addEventListener('pagehide', flushImmediate);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', flushImmediate);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      flushImmediate();
     };
   }, [id, authed]);
 
