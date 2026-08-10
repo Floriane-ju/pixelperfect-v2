@@ -4,7 +4,7 @@
 Application PWA de dessin pixel art, installable sur iPad, iPhone et Android. Deux espaces : **galerie** (gestion des dessins, groupes, collaborateurs) et **éditeur** (canvas multi-calques avec outils de dessin). **Connexion optionnelle** : connecté → persistance Supabase (+ file offline IndexedDB) ; anonyme → bibliothèque locale durable dans IndexedDB (base `pixelperfect-library`) avec export/import JSON. Le choix du backend passe par le dispatcher `lib/drawingStore.ts`.
 
 ## Stack
-- React 18 + TypeScript (strict)
+- React 19 + TypeScript (strict)
 - Vite 8 (Rolldown) + `vite-plugin-pwa` (Workbox, autoUpdate)
 - React Router v8 (paquet `react-router`, `react-router-dom` supprimé en v8)
 - SCSS modules + variables/mixins partagés (`src/styles/`, injectés via `additionalData`)
@@ -22,7 +22,9 @@ pnpm run preview      # prévisualiser le build
 pnpm run type-check   # tsc --noEmit
 pnpm run lint         # eslint .
 pnpm run format       # prettier --write
-pnpm run test         # vitest
+pnpm run test         # vitest (mode watch)
+pnpm run test:run     # vitest run (one-shot, pour CI et pre-commit)
+pnpm run test:coverage # couverture v8 — nécessite `pnpm add -D @vitest/coverage-v8`
 ANALYZE=1 pnpm run build  # rollup-plugin-visualizer → dist/stats.html
 ```
 
@@ -76,10 +78,17 @@ src/
   styles/               # _variables, _mixins, global.scss
   types/                # DrawingData, PixelLayer, DrawingRow, CollaboratorRole, HexColor
 
-supabase/migrations/    # migrations SQL (RLS, RPC, triggers). Le schéma historique vit dans le
-                        #   dashboard Supabase : faire `supabase db pull` pour en récupérer le
-                        #   baseline avant d'écrire une nouvelle migration.
+supabase/
+  migrations/           # migrations SQL versionnées (RLS, RPC, triggers). Toujours exécuter
+                        #   via `supabase migration new <name>` + `supabase db push` en dev.
+  schema.sql            # instantané du schéma distant (audit, baseline). À régénérer via
+                        #   `supabase db dump --linked -f supabase/schema.sql` après chaque
+                        #   migration appliquée. Ne pas rejouer directement ; source de vérité.
+  .temp/                # scratch du CLI (ignoré) ; ne pas committer
 public/                 # icônes PWA + favicon
+  fonts/                # Oxanium 400/600 et Press Start 2P en .woff2 auto-hébergés
+                        #   (sous-ensembles latin et latin-ext seulement). Déclarés dans
+                        #   `src/styles/_fonts.scss`, précachés par Workbox via `globPatterns`.
 ```
 
 ## Conventions
@@ -101,6 +110,26 @@ public/                 # icônes PWA + favicon
 - Métas iOS dans `index.html` (`apple-touch-icon`, `apple-mobile-web-app-capable`, `viewport-fit=cover`).
 - Icônes dans `public/` : `pwa-192x192.png`, `pwa-512x512.png` (incluant variant `maskable`), `apple-touch-icon.png`.
 - File offline : `src/lib/offlineQueue.ts` (IndexedDB `pixelperfect/offline-queue`).
+
+## Sécurité (vercel.json)
+En production (Vercel), les headers HTTP suivants sont appliqués via `vercel.json` (à la racine) :
+- **CSP** (Content-Security-Policy) : `default-src 'self'`, `script-src 'self'`, `font-src 'self'` (les polices sont auto-hébergées dans `public/fonts/`, aucun domaine tiers n'est autorisé), `connect-src` limité à Supabase, `object-src 'none'`, `frame-ancestors 'none'`.
+- **HSTS** (max-age 63072000 + includeSubDomains + preload) : force HTTPS via preload list.
+- **X-Frame-Options: DENY** : clickjacking mitigation.
+- **X-Content-Type-Options: nosniff** : MIME-type sniffing prevention.
+- **Permissions-Policy** : désactive camera, microphone, geolocation.
+- **Referrer-Policy: strict-origin-when-cross-origin** : limite les infos de referer.
+- **Rewrites SPA** : `/(.*) → /index.html` pour React Router.
+
+## CI et Déploiement
+Un workflow GitHub Actions (`.github/workflows/ci.yml`) valide chaque commit sur main et chaque PR :
+1. **Install** : `pnpm install --frozen-lockfile` (vérifie que lockfile est à jour).
+2. **Lint** : `pnpm run lint` (ESLint).
+3. **Type check** : `pnpm run type-check` (TypeScript).
+4. **Test** : `pnpm run test:run` (Vitest one-shot, pas mode watch).
+5. **Build** : `pnpm run build` (Vite + tsc -b).
+
+Secrets en CI : `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` (fallbacks sur des valeurs de test si non configurés).
 
 ## Règles
 @.claude/rules/coding-style.md
