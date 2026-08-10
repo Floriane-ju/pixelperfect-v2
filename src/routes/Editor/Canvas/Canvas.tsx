@@ -41,6 +41,7 @@ interface CanvasProps {
   onDisplaySizeChange?: (size: { w: number; h: number }) => void;
   showGrid?: boolean;
   selection?: UseSelectionApi;
+  title?: string;
 }
 
 export function Canvas({
@@ -60,6 +61,7 @@ export function Canvas({
   onDisplaySizeChange,
   showGrid = false,
   selection,
+  title,
 }: CanvasProps) {
   const checkerRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -350,11 +352,14 @@ export function Canvas({
   const cssSize = { width: displaySize.w, height: displaySize.h };
   const { x, y, scale, angle } = transform;
   const selectionRect = computeSelectionRect(selection?.state);
+  const canvasAriaLabel = title ? `Dessin « ${title} » : ${data.width}×${data.height} pixels, ${data.layers.length} calque${data.layers.length > 1 ? 's' : ''}` : undefined;
 
   return (
     <div
       ref={wrapperRef}
+      id="canvas"
       className={styles.wrapper}
+      tabIndex={-1}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -375,6 +380,7 @@ export function Canvas({
           refImage={refImage}
           showGrid={showGrid}
           selectionRect={selectionRect}
+          canvasAriaLabel={canvasAriaLabel}
         />
       </div>
       {pickerIndicator && <PickerIndicator position={pickerIndicator} />}

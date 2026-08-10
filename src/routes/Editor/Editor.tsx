@@ -237,12 +237,9 @@ export function Editor() {
         <div className={styles.body}>
           <div
             ref={canvasAreaRef}
-            id="canvas"
             className={styles.canvasArea}
             data-bg={bgColor}
             style={{ ['--checker-opacity' as string]: String(gridOpacity) } as CSSProperties}
-            role="img"
-            aria-label={`Dessin « ${drawing.title} » : ${drawing.data.width}×${drawing.data.height} pixels, ${drawing.data.layers.length} calque${drawing.data.layers.length > 1 ? 's' : ''}`}
           >
             <aside ref={leftSidebarRef} className={styles.leftSidebar} aria-label="Outils d'affichage">
               <BrushSizeSlider value={brushSize} onChange={setBrushSize} min={1} max={16} />
@@ -318,6 +315,7 @@ export function Editor() {
               onDisplaySizeChange={setCanvasDisplaySize}
               showGrid={showGrid}
               selection={selection}
+              title={drawing.title}
             />
 
             <aside ref={rightSidebarRef} className={styles.rightSidebar}>
