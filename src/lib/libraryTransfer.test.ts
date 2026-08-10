@@ -54,7 +54,9 @@ describe('parseLibraryFile', () => {
   });
 
   it('rejects a wrong format tag', () => {
-    expect(() => parseLibraryFile({ format: 'something-else', version: 1, drawings: [] })).toThrow();
+    expect(() =>
+      parseLibraryFile({ format: 'something-else', version: 1, drawings: [] })
+    ).toThrow();
   });
 
   it('rejects when drawings is not an array', () => {
@@ -67,7 +69,76 @@ describe('parseLibraryFile', () => {
         format: 'pixelperfect-library',
         version: 1,
         drawings: [{ title: 'X', data: { width: 0, height: 2, layers: [] } }],
-      }),
+      })
     ).toThrow();
+  });
+
+  it('rejects a title longer than 80 characters', () => {
+    const longTitle = 'A'.repeat(81);
+    expect(() =>
+      parseLibraryFile({
+        format: 'pixelperfect-library',
+        version: 1,
+        drawings: [{ title: longTitle, data: sample.data }],
+      })
+    ).toThrow(/titre du dessin 1 dépasse 80 caractères/);
+  });
+
+  it('accepts a title of exactly 80 characters', () => {
+    const titleOf80 = 'A'.repeat(80);
+    const parsed = parseLibraryFile({
+      format: 'pixelperfect-library',
+      version: 1,
+      drawings: [{ title: titleOf80, data: sample.data }],
+    });
+    expect(parsed[0]?.title).toBe(titleOf80);
+  });
+
+  it('rejects a group longer than 80 characters', () => {
+    const longGroup = 'B'.repeat(81);
+    expect(() =>
+      parseLibraryFile({
+        format: 'pixelperfect-library',
+        version: 1,
+        drawings: [{ title: 'T', data: sample.data, group: longGroup }],
+      })
+    ).toThrow(/groupe du dessin 1 dépasse 80 caractères/);
+  });
+
+  it('accepts a group of exactly 80 characters', () => {
+    const groupOf80 = 'B'.repeat(80);
+    const parsed = parseLibraryFile({
+      format: 'pixelperfect-library',
+      version: 1,
+      drawings: [{ title: 'T', data: sample.data, group: groupOf80 }],
+    });
+    expect(parsed[0]?.group).toBe(groupOf80);
+  });
+
+  it('rejects more than 1000 drawings', () => {
+    const drawings = Array.from({ length: 1001 }, () => ({
+      title: 'T',
+      data: sample.data,
+    }));
+    expect(() =>
+      parseLibraryFile({
+        format: 'pixelperfect-library',
+        version: 1,
+        drawings,
+      })
+    ).toThrow(/trop de dessins \(maximum 1000\)/);
+  });
+
+  it('accepts exactly 1000 drawings', () => {
+    const drawings = Array.from({ length: 1000 }, () => ({
+      title: 'T',
+      data: sample.data,
+    }));
+    const parsed = parseLibraryFile({
+      format: 'pixelperfect-library',
+      version: 1,
+      drawings,
+    });
+    expect(parsed).toHaveLength(1000);
   });
 });

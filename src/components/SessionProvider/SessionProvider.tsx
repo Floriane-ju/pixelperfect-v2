@@ -11,7 +11,10 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const [state, setState] = useState<SessionState>({ session: null, loading: true });
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setState({ session: data.session, loading: false }));
+    supabase.auth
+      .getSession()
+      .then(({ data }) => setState({ session: data.session, loading: false }))
+      .catch(() => setState({ session: null, loading: false }));
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, s) => setState({ session: s, loading: false }));
