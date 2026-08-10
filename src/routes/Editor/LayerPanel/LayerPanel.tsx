@@ -45,11 +45,46 @@ export function LayerPanel({
   const [drag, setDrag] = useState<DragState | null>(null);
   const dragRef = useRef<DragState | null>(null);
   dragRef.current = drag;
+  const [announcement, setAnnouncement] = useState<string>('');
 
   const setItemRef = useCallback((id: string) => (el: HTMLLIElement | null) => {
     if (el) itemRefs.current.set(id, el);
     else itemRefs.current.delete(id);
   }, []);
+
+  /**
+   * `reversed` est l'ordre d'affichage : l'index 0 est le calque du dessus. Les positions
+   * annoncées suivent donc cet ordre-là, celui que la personne voit, et non l'ordre interne
+   * de `layers` qui est inversé.
+   *
+   * Flèches seules : déplacent la sélection, c'est la navigation attendue d'un `listbox`
+   * (sans elles, seul le calque déjà actif serait focalisable, donc lui seul déplaçable).
+   * Alt + flèches : réordonnent. `Alt` est exigé pour ne pas confisquer les flèches simples.
+   */
+  const handleLayerKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLLIElement>, layer: PixelLayer, index: number) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+
+      const delta = e.key === 'ArrowUp' ? -1 : 1;
+      const targetIndex = index + delta;
+      const target = reversed[targetIndex];
+      if (!target) return;
+
+      e.preventDefault();
+
+      if (e.altKey) {
+        onReorder(layer.id, target.id, delta === -1 ? 'after' : 'before');
+        setAnnouncement(`${layer.name} déplacé en position ${targetIndex + 1} sur ${layers.length}`);
+        // Le calque suit son déplacement : on garde le focus dessus.
+        requestAnimationFrame(() => itemRefs.current.get(layer.id)?.focus());
+        return;
+      }
+
+      onSelect(target.id);
+      itemRefs.current.get(target.id)?.focus();
+    },
+    [reversed, layers.length, onReorder, onSelect]
+  );
 
   const handleDragStart = (e: PointerEvent<HTMLSpanElement>, id: string) => {
     e.stopPropagation();
@@ -102,9 +137,9 @@ export function LayerPanel({
   };
 
   return (
-    <div className={styles.panel} role="dialog" aria-label="Calques">
+    <div className={styles.panel} role="group" aria-labelledby="layer-panel-title">
       <div className={styles.header}>
-        <h2 className={styles.title}>Calques</h2>
+        <h2 className={styles.title} id="layer-panel-title">Calques</h2>
         <Button
           variant="ghost"
           size="md"
@@ -116,7 +151,7 @@ export function LayerPanel({
         />
       </div>
       <ul className={styles.list} role="listbox">
-        {reversed.map(layer => {
+        {reversed.map((layer, index) => {
           const isActive = layer.id === activeLayerId;
           const isDragging = drag?.id === layer.id;
           const isDropBefore = drag?.targetId === layer.id && drag.pos === 'before';
@@ -135,7 +170,9 @@ export function LayerPanel({
               role="option"
               aria-selected={isActive}
               className={classes}
+              tabIndex={isActive ? 0 : -1}
               onClick={() => onSelect(layer.id)}
+              onKeyDown={(e) => handleLayerKeyDown(e, layer, index)}
             >
               <span
                 className={styles.handle}
@@ -182,6 +219,9 @@ export function LayerPanel({
           );
         })}
       </ul>
+      <div aria-live="polite" aria-atomic="true" className={styles.liveRegion}>
+        {announcement}
+      </div>
     </div>
   );
 }
