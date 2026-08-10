@@ -59,7 +59,11 @@
   font-size: $font-size-md;
   color: $accent-1-600;
   font-family: $font-family-base;
-  outline: none;
+
+  &:focus-visible {
+    @include focus-ring;
+    outline-offset: -$outline-offset;
+  }
 }
 
 .preview {

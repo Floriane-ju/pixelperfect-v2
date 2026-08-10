@@ -128,32 +128,31 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
 
         {sizeMode === 'custom' && (
           <div className={styles.customRow}>
-            {/* Champs en ligne (L × H px) : le composant Input empile label et champ. */}
-            <div className={styles.dimensionField}>
-              <label className={styles.dimensionLabel} htmlFor="custom-width">L</label>
-              <input
-                id="custom-width"
-                className={styles.dimensionInput}
-                type="number"
-                min={MIN_SIZE}
-                max={MAX_SIZE}
-                value={customWidth}
-                onChange={(e) => setCustomWidth(e.target.value)}
-              />
-            </div>
+            <Input
+              id="custom-width"
+              label="L"
+              type="number"
+              min={MIN_SIZE}
+              max={MAX_SIZE}
+              value={customWidth}
+              onChange={(e) => setCustomWidth(e.target.value)}
+              fullWidth={false}
+              className={styles.dimensionField}
+              inputClassName={styles.dimensionInput}
+            />
             <span className={styles.dimensionSep}>×</span>
-            <div className={styles.dimensionField}>
-              <label className={styles.dimensionLabel} htmlFor="custom-height">H</label>
-              <input
-                id="custom-height"
-                className={styles.dimensionInput}
-                type="number"
-                min={MIN_SIZE}
-                max={MAX_SIZE}
-                value={customHeight}
-                onChange={(e) => setCustomHeight(e.target.value)}
-              />
-            </div>
+            <Input
+              id="custom-height"
+              label="H"
+              type="number"
+              min={MIN_SIZE}
+              max={MAX_SIZE}
+              value={customHeight}
+              onChange={(e) => setCustomHeight(e.target.value)}
+              fullWidth={false}
+              className={styles.dimensionField}
+              inputClassName={styles.dimensionInput}
+            />
             <span className={styles.dimensionUnit}>px</span>
           </div>
         )}

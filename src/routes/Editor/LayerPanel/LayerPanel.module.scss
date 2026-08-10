@@ -81,7 +81,7 @@
   height: $drop-indicator-height;
   background: $accent-1-600;
   pointer-events: none;
-  z-index: 1;
+  z-index: $z-raised;
 }
 
 .itemDropBefore::before {
@@ -118,4 +118,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Annonce du déplacement de calque aux lecteurs d'écran (Alt+↑ / Alt+↓). */
+.liveRegion {
+  @include visually-hidden;
 }

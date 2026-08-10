@@ -87,6 +87,7 @@ export function Menu({
               <button
                 type="button"
                 role="menuitem"
+                tabIndex={-1}
                 className={cx(styles.item, item.variant === 'danger' && styles.itemDanger)}
                 onClick={() => {
                   item.onClick();

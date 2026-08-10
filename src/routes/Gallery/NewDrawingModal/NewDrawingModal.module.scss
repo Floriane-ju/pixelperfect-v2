@@ -24,31 +24,11 @@
 }
 
 .dimensionField {
-  display: flex;
-  align-items: center;
-  gap: $space-xs;
-}
-
-.dimensionLabel {
-  font-size: $font-size-sm;
-  color: $color-text-muted;
-  font-weight: $font-weight-medium;
+  width: $dimension-input-width;
 }
 
 .dimensionInput {
-  background: $color-bg;
-  color: $color-text;
-  font-size: $font-size-sm;
-  padding: $space-s;
-  width: $dimension-input-width;
   text-align: center;
-  min-height: $touch-target;
-  transition: border-color $transition-fast;
-
-  &:focus {
-    outline: none;
-    border-color: $color-primary;
-  }
 
   &::-webkit-inner-spin-button,
   &::-webkit-outer-spin-button {
