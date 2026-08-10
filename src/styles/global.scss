@@ -1,3 +1,6 @@
+// `@use` et non `@import` : ce dernier est déprécié et disparaît en Dart Sass 3.
+@use 'fonts';
+
 // Rampe accent-2 exposée au runtime (vignettes de la galerie, cf. DrawingThumbnail).
 // Source de vérité : _variables.scss — ces custom properties en sont dérivées.
 :root {
