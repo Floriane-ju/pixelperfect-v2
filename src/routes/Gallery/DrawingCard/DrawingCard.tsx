@@ -150,7 +150,7 @@ export function DrawingCard({
             </header>
             <div className={styles.preview}>
               <div className={styles.previewInner}>
-                <DrawingThumbnail data={drawing.data} />
+                <DrawingThumbnail drawing={drawing} />
               </div>
             </div>
           </>

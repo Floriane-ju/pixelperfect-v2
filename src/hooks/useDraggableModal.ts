@@ -16,14 +16,31 @@ export interface UseDraggableModalReturn {
     onPointerDown: (e: PointerEvent<HTMLElement>) => void;
     onPointerMove: (e: PointerEvent<HTMLElement>) => void;
     onPointerUp: () => void;
+    onPointerCancel: () => void;
+    onLostPointerCapture: () => void;
   };
 }
+
+interface DragState {
+  sx: number;
+  sy: number;
+  ox: number;
+  oy: number;
+  /** Bornes du décalage (depuis le départ) qui gardent l'en-tête dans la fenêtre. */
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+}
+
+const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
 
 /** Modale flottante : cascade initiale, glissement par l'en-tête et remontée au premier plan. */
 export function useDraggableModal(): UseDraggableModalReturn {
   const { zIndex, raise, initialOffset } = useModalZIndex();
   const [offset, setOffset] = useState(initialOffset);
-  const drag = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
+  const drag = useRef<DragState | null>(null);
+  const endDrag = () => { drag.current = null; };
 
   return {
     zIndex,
@@ -35,18 +52,29 @@ export function useDraggableModal(): UseDraggableModalReturn {
     dragHandlers: {
       onPointerDown: (e) => {
         e.currentTarget.setPointerCapture(e.pointerId);
-        drag.current = { sx: e.clientX, sy: e.clientY, ox: offset.x, oy: offset.y };
+        const rect = e.currentTarget.getBoundingClientRect();
+        drag.current = {
+          sx: e.clientX,
+          sy: e.clientY,
+          ox: offset.x,
+          oy: offset.y,
+          minX: -rect.left,
+          maxX: window.innerWidth - rect.right,
+          minY: -rect.top,
+          maxY: window.innerHeight - rect.bottom,
+        };
       },
       onPointerMove: (e) => {
-        if (!drag.current) return;
+        const d = drag.current;
+        if (!d) return;
         setOffset({
-          x: drag.current.ox + e.clientX - drag.current.sx,
-          y: drag.current.oy + e.clientY - drag.current.sy,
+          x: d.ox + clamp(e.clientX - d.sx, d.minX, d.maxX),
+          y: d.oy + clamp(e.clientY - d.sy, d.minY, d.maxY),
         });
       },
-      onPointerUp: () => {
-        drag.current = null;
-      },
+      onPointerUp: endDrag,
+      onPointerCancel: endDrag,
+      onLostPointerCapture: endDrag,
     },
   };
 }

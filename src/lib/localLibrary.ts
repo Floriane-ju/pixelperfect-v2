@@ -208,6 +208,9 @@ export async function createDrawing(
     group: null,
   };
   await write((store) => store.put(drawing));
+  // Sans stockage persistant, Safari efface IndexedDB après ~7 jours d'inactivité (hors PWA
+  // installée). Demandé ici, sur geste utilisateur : Firefox affiche une invite de permission.
+  void navigator.storage?.persist?.().catch(() => undefined);
   return toRow(drawing);
 }
 

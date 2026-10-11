@@ -29,8 +29,17 @@ export function CollaboratorsButton({
   const [status, setStatus] = useState<Status>('idle');
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  const close = useCallback(() => setOpen(false), []);
+  // La liste n'est pas gardée à la fermeture : à la réouverture elle est rechargée (une invitation
+  // ou un retrait entre-temps la rendrait fausse).
+  const close = useCallback(() => {
+    setOpen(false);
+    setCollaborators(null);
+    setStatus('idle');
+    setConfirmingId(null);
+    setActionError(null);
+  }, []);
   const { rootRef, menuRef, position } = useAnchoredMenu({
     open,
     onDismiss: close,
@@ -39,12 +48,14 @@ export function CollaboratorsButton({
 
   const handleRemove = useCallback(async (userId: string) => {
     setRemovingId(userId);
+    setActionError(null);
     try {
       await removeCollaborator(drawingId, userId);
       setCollaborators((prev) => prev?.filter((c) => c.user_id !== userId) ?? null);
       onRemoved?.();
     } catch {
-      setStatus('error');
+      // Pas de status 'error' ici : il masquerait toute la liste sans moyen de la retrouver.
+      setActionError('Retrait impossible. Réessayez.');
     } finally {
       setRemovingId(null);
       setConfirmingId(null);
@@ -76,7 +87,7 @@ export function CollaboratorsButton({
         aria-label={`Collaborateurs (${count})`}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => (open ? close() : setOpen(true))}
       />
       {open && position && createPortal(
         <ul
@@ -91,6 +102,9 @@ export function CollaboratorsButton({
           )}
           {status === 'error' && (
             <li className={styles.state}>Erreur de chargement.</li>
+          )}
+          {actionError && (
+            <li role="alert" className={styles.state}>{actionError}</li>
           )}
           {status === 'idle' && collaborators && collaborators.length === 0 && (
             <li className={styles.state}>Aucun collaborateur.</li>

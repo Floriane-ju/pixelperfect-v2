@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { isRecord, parseDrawingData } from './drawingValidation';
+import { SaveRejectedError } from './saveErrors';
 import type { CollaboratorRole, DrawingData, DrawingRow, PixelLayer } from '@/types';
 
 function parseCollaboratorCount(raw: unknown): number {
@@ -140,7 +141,7 @@ export async function updateDrawingData(id: string, drawingData: DrawingData): P
     .select('id');
   if (error) throw error;
   // RLS filtre silencieusement (session expirée, accès retiré, dessin supprimé) : 0 ligne, pas d'erreur.
-  if (!data || data.length === 0) throw new Error('Enregistrement refusé : dessin introuvable ou accès retiré');
+  if (!data || data.length === 0) throw new SaveRejectedError();
 }
 
 export async function removeCollaborator(drawingId: string, userId: string): Promise<void> {

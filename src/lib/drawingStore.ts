@@ -12,7 +12,10 @@ import type { DrawingData, DrawingRow } from '@/types';
  * pas dispatchées : elles ne sont atteignables que connecté.
  */
 async function authed(): Promise<boolean> {
-  const { data } = await supabase.auth.getSession();
+  const { data, error } = await supabase.auth.getSession();
+  // Jeton expiré et rafraîchissement impossible (hors ligne) : basculer en local afficherait la
+  // bibliothèque anonyme et y créerait les dessins d'un utilisateur connecté.
+  if (error) throw new Error('Session impossible à vérifier, reconnectez-vous au réseau.');
   return data.session !== null;
 }
 

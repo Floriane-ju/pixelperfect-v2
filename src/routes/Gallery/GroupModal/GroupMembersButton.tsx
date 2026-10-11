@@ -23,8 +23,17 @@ export function GroupMembersButton({ groupName, onRemoved }: GroupMembersButtonP
   const [status, setStatus] = useState<Status>('idle');
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  const close = useCallback(() => setOpen(false), []);
+  // La liste n'est pas gardée à la fermeture : à la réouverture elle est rechargée (une invitation
+  // ou un retrait entre-temps la rendrait fausse).
+  const close = useCallback(() => {
+    setOpen(false);
+    setMembers(null);
+    setStatus('idle');
+    setConfirmingId(null);
+    setActionError(null);
+  }, []);
   const { rootRef, menuRef, position } = useAnchoredMenu({
     open,
     onDismiss: close,
@@ -39,12 +48,14 @@ export function GroupMembersButton({ groupName, onRemoved }: GroupMembersButtonP
 
   const handleRemove = useCallback(async (userId: string) => {
     setRemovingId(userId);
+    setActionError(null);
     try {
       await removeGroupMember(groupName, userId);
       setMembers((prev) => prev?.filter((m) => m.user_id !== userId) ?? null);
       onRemoved?.();
     } catch {
-      setStatus('error');
+      // Pas de status 'error' ici : il masquerait toute la liste sans moyen de la retrouver.
+      setActionError('Retrait impossible. Réessayez.');
     } finally {
       setRemovingId(null);
       setConfirmingId(null);
@@ -73,7 +84,7 @@ export function GroupMembersButton({ groupName, onRemoved }: GroupMembersButtonP
         aria-haspopup="menu"
         aria-expanded={open}
         onPointerDown={(e) => e.stopPropagation()}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => (open ? close() : setOpen(true))}
       />
       {open && position && createPortal(
         <ul
@@ -85,6 +96,7 @@ export function GroupMembersButton({ groupName, onRemoved }: GroupMembersButtonP
         >
           {status === 'loading' && <li className={styles.state}>Chargement…</li>}
           {status === 'error' && <li className={styles.state}>Erreur de chargement.</li>}
+          {actionError && <li role="alert" className={styles.state}>{actionError}</li>}
           {status === 'idle' && members && members.length === 0 && (
             <li className={styles.state}>Groupe non partagé.</li>
           )}

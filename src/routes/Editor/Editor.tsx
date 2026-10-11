@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { fetchDrawing } from '@/lib/drawingStore';
 import { LOCAL_OWNER } from '@/lib/localLibrary';
-import { getPending } from '@/lib/offlineQueue';
-import type { DrawingRow, HexColor } from '@/types';
+import type { HexColor } from '@/types';
 import { ColorSwatch } from '@/components/ColorSwatch';
 import { ColorWheelIcon } from '@/components/ColorWheelIcon';
 import { BrushSizeSlider } from '@/components/BrushSizeSlider';
@@ -20,10 +18,10 @@ import type { RadialSegments } from './MirrorPanel';
 import type { MirrorAxis, SymmetryConfig } from './shapePixels';
 import { Canvas } from './Canvas/Canvas';
 import type { Tool } from './Canvas/Canvas';
-import { buildLayersSvg } from './exportSvg';
-import { copyLayersPng } from './exportPng';
 import { Topbar } from './Topbar/Topbar';
 import { useSave } from './hooks/useSave';
+import { useEditorDrawing } from './hooks/useEditorDrawing';
+import { useHexPaste } from './hooks/useHexPaste';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { useLayers } from './hooks/useLayers';
 import { useReferenceImage } from './hooks/useReferenceImage';
@@ -35,17 +33,13 @@ import { EditorContext } from './EditorContext';
 import type { EditorContextValue } from './EditorContext';
 import styles from './Editor.module.scss';
 
-type Status = 'loading' | 'ready' | 'error' | 'saving';
-
 export function Editor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [drawing, setDrawing] = useState<DrawingRow | null>(null);
-  const [status, setStatus] = useState<Status>('loading');
+  const { drawing, setDrawing, status, setStatus, activeLayerId, setActiveLayerId } = useEditorDrawing(id);
   const [tool, setTool] = useState<Tool>('pencil');
   const [brushSize, setBrushSize] = useState<number>(1);
-  const [selectedLayerId, setActiveLayerId] = useState<string>('');
   const [showInvisibleModal, setShowInvisibleModal] = useState(false);
   const [showCaptureModal, setShowCaptureModal] = useState(false);
   const [mirrorAxis, setMirrorAxis] = useState<MirrorAxis>('none');
@@ -62,37 +56,6 @@ export function Editor() {
   const mirrorContainerRef = useRef<HTMLDivElement>(null);
   const settingsContainerRef = useRef<HTMLDivElement>(null);
   const rightSidebarRef = useRef<HTMLElement>(null);
-
-  // Un undo/redo ou une suppression peut retirer le calque sélectionné : on retombe alors sur le
-  // calque du dessus plutôt que de dessiner dans un calque inexistant (traits perdus).
-  const layers = drawing?.data.layers;
-  const activeLayerId = !layers || layers.some(l => l.id === selectedLayerId)
-    ? selectedLayerId
-    : (layers[layers.length - 1]?.id ?? '');
-
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-    setDrawing(null);
-    setStatus('loading');
-    fetchDrawing(id)
-      .then(async row => {
-        // Modifs hors-ligne pas encore synchronisées : elles priment sur la version serveur, sinon
-        // l'éditeur afficherait l'ancienne version et le prochain autosave écraserait la file.
-        const pending = row.owner_id === LOCAL_OWNER ? null : await getPending(row.id);
-        return pending ? { ...row, data: pending } : row;
-      })
-      .then(row => {
-        if (cancelled) return;
-        setDrawing(row);
-        const visibleLayers = row.data.layers.filter(l => l.visible);
-        const topmost = visibleLayers[visibleLayers.length - 1] ?? row.data.layers[row.data.layers.length - 1];
-        setActiveLayerId(topmost?.id ?? '');
-        setStatus('ready');
-      })
-      .catch(() => { if (!cancelled) setStatus('error'); });
-    return () => { cancelled = true; };
-  }, [id]);
 
   // Le backend est lié au dessin chargé (immuable), pas à la session vivante : un changement
   // d'auth en cours d'édition ne doit pas réorienter les sauvegardes vers le mauvais backend.
@@ -188,38 +151,13 @@ export function Editor() {
     setTool('pencil');
   }, [handleColorChange, commitRecentColor]);
 
-  useEffect(() => {
-    const handler = (e: ClipboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
-      const text = e.clipboardData?.getData('text') ?? '';
-      const raw = text.trim().replace(/^#/, '');
-      if (!/^([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(raw)) return;
-      e.preventDefault();
-      // Forme canonique #rrggbb minuscule (comme le sélecteur) : exports PNG/SVG et pot de peinture
-      // ne lisent que 6 chiffres et comparent les chaînes. L'alpha éventuel est ignoré.
-      const rgb = raw.length <= 4 ? raw.slice(0, 3).replace(/./g, c => c + c) : raw.slice(0, 6);
-      const hex = `#${rgb.toLowerCase()}` as HexColor;
-      handleColorChange(hex);
-      commitRecentColor(hex);
-    };
-    document.addEventListener('paste', handler);
-    return () => document.removeEventListener('paste', handler);
+  const handlePastedColor = useCallback((hex: HexColor) => {
+    handleColorChange(hex);
+    commitRecentColor(hex);
   }, [handleColorChange, commitRecentColor]);
+  useHexPaste(handlePastedColor);
 
   const handleHoverLeave = useCallback(() => setHoveredColor(null), [setHoveredColor]);
-
-  const handleCopySvg = useCallback(() => {
-    if (!drawing) return;
-    const { layers, width, height } = drawing.data;
-    navigator.clipboard.writeText(buildLayersSvg(layers, width, height)).catch(() => undefined);
-  }, [drawing]);
-
-  const handleCopyPng = useCallback(() => {
-    if (!drawing) return;
-    const { layers, width, height } = drawing.data;
-    copyLayersPng(layers, width, height).catch(() => undefined);
-  }, [drawing]);
 
   const handleBack = useCallback(() => navigate('/'), [navigate]);
   const handlePanelClose = useCallback(() => setOpenPanel(null), [setOpenPanel]);
@@ -267,8 +205,6 @@ export function Editor() {
     onRefImageTransform: handleRefImageTransform,
     onRefImageCapture: handleCaptureRequest,
     canvasDisplaySize,
-    onCopySvg: handleCopySvg,
-    onCopyPng: handleCopyPng,
   };
 
   return (

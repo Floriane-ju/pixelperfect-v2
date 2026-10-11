@@ -31,15 +31,18 @@ export function SnackbarProvider({ children }: SnackbarProviderProps) {
   return (
     <SnackbarContext.Provider value={value}>
       {children}
-      {current && (
-        <Snackbar
-          key={current.id}
-          message={current.message}
-          icon={current.icon}
-          duration={current.duration}
-          onClose={() => setCurrent(null)}
-        />
-      )}
+      {/* Région montée en permanence : les lecteurs d'écran annoncent mal un role=status créé avec son contenu. */}
+      <div role="status" aria-live="polite">
+        {current && (
+          <Snackbar
+            key={current.id}
+            message={current.message}
+            icon={current.icon}
+            duration={current.duration}
+            onClose={() => setCurrent(null)}
+          />
+        )}
+      </div>
     </SnackbarContext.Provider>
   );
 }

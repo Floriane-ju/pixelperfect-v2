@@ -100,7 +100,7 @@ export function GroupCard({
                 }}
               >
                 <div className={styles.thumbInner}>
-                  <DrawingThumbnail data={d.data} />
+                  <DrawingThumbnail drawing={d} />
                 </div>
               </div>
             ))}
