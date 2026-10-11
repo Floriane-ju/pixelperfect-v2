@@ -37,7 +37,16 @@ export async function fetchDrawings(): Promise<DrawingRow[]> {
     .order('updated_at', { ascending: false });
 
   if (error) throw error;
-  return (data ?? []).map(parseDrawingRow);
+  // Comme localLibrary.getAllDrawings : une ligne invalide est ignorée plutôt que de casser la galerie.
+  const rows: DrawingRow[] = [];
+  for (const raw of data ?? []) {
+    try {
+      rows.push(parseDrawingRow(raw));
+    } catch {
+      /* ligne corrompue ou hors limites */
+    }
+  }
+  return rows;
 }
 
 export async function renameDrawing(id: string, title: string): Promise<void> {
@@ -124,11 +133,14 @@ export async function createDrawing(title: string, width: number, height: number
 }
 
 export async function updateDrawingData(id: string, drawingData: DrawingData): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('drawings')
     .update({ data: drawingData, updated_at: new Date().toISOString() })
-    .eq('id', id);
+    .eq('id', id)
+    .select('id');
   if (error) throw error;
+  // RLS filtre silencieusement (session expirée, accès retiré, dessin supprimé) : 0 ligne, pas d'erreur.
+  if (!data || data.length === 0) throw new Error('Enregistrement refusé : dessin introuvable ou accès retiré');
 }
 
 export async function removeCollaborator(drawingId: string, userId: string): Promise<void> {

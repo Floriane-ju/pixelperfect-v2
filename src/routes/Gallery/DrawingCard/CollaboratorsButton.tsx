@@ -51,13 +51,16 @@ export function CollaboratorsButton({
     }
   }, [drawingId, onRemoved]);
 
+  // Un échec n'est retenté qu'à la réouverture (status hors des deps : sinon boucle de refetch).
   useEffect(() => {
-    if (!open || collaborators !== null || status === 'loading') return;
+    if (!open || collaborators !== null) return;
+    let cancelled = false;
     setStatus('loading');
     listCollaborators(drawingId)
-      .then((rows) => { setCollaborators(rows); setStatus('idle'); })
-      .catch(() => setStatus('error'));
-  }, [open, drawingId, collaborators, status]);
+      .then((rows) => { if (!cancelled) { setCollaborators(rows); setStatus('idle'); } })
+      .catch(() => { if (!cancelled) setStatus('error'); });
+    return () => { cancelled = true; };
+  }, [open, drawingId, collaborators]);
 
   return (
     <div

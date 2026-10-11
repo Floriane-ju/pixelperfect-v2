@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { fetchDrawing } from '@/lib/drawingStore';
 import { LOCAL_OWNER } from '@/lib/localLibrary';
+import { getPending } from '@/lib/offlineQueue';
 import type { DrawingRow, HexColor } from '@/types';
 import { ColorSwatch } from '@/components/ColorSwatch';
 import { ColorWheelIcon } from '@/components/ColorWheelIcon';
@@ -44,7 +45,7 @@ export function Editor() {
   const [status, setStatus] = useState<Status>('loading');
   const [tool, setTool] = useState<Tool>('pencil');
   const [brushSize, setBrushSize] = useState<number>(1);
-  const [activeLayerId, setActiveLayerId] = useState<string>('');
+  const [selectedLayerId, setActiveLayerId] = useState<string>('');
   const [showInvisibleModal, setShowInvisibleModal] = useState(false);
   const [showCaptureModal, setShowCaptureModal] = useState(false);
   const [mirrorAxis, setMirrorAxis] = useState<MirrorAxis>('none');
@@ -62,18 +63,35 @@ export function Editor() {
   const settingsContainerRef = useRef<HTMLDivElement>(null);
   const rightSidebarRef = useRef<HTMLElement>(null);
 
+  // Un undo/redo ou une suppression peut retirer le calque sélectionné : on retombe alors sur le
+  // calque du dessus plutôt que de dessiner dans un calque inexistant (traits perdus).
+  const layers = drawing?.data.layers;
+  const activeLayerId = !layers || layers.some(l => l.id === selectedLayerId)
+    ? selectedLayerId
+    : (layers[layers.length - 1]?.id ?? '');
+
   useEffect(() => {
     if (!id) return;
+    let cancelled = false;
+    setDrawing(null);
     setStatus('loading');
     fetchDrawing(id)
+      .then(async row => {
+        // Modifs hors-ligne pas encore synchronisées : elles priment sur la version serveur, sinon
+        // l'éditeur afficherait l'ancienne version et le prochain autosave écraserait la file.
+        const pending = row.owner_id === LOCAL_OWNER ? null : await getPending(row.id);
+        return pending ? { ...row, data: pending } : row;
+      })
       .then(row => {
+        if (cancelled) return;
         setDrawing(row);
         const visibleLayers = row.data.layers.filter(l => l.visible);
         const topmost = visibleLayers[visibleLayers.length - 1] ?? row.data.layers[row.data.layers.length - 1];
         setActiveLayerId(topmost?.id ?? '');
         setStatus('ready');
       })
-      .catch(() => setStatus('error'));
+      .catch(() => { if (!cancelled) setStatus('error'); });
+    return () => { cancelled = true; };
   }, [id]);
 
   // Le backend est lié au dessin chargé (immuable), pas à la session vivante : un changement
@@ -111,7 +129,28 @@ export function Editor() {
     }
   }, [tool]);
 
-  useEditorShortcuts({ handleUndo, handleRedo, setTool, selectionRef });
+  useEffect(() => {
+    if (selectionRef.current.hasFloating) selectionRef.current.commit();
+  }, [activeLayerId]);
+
+  // Sélection flottante : son commit repartirait de l'instantané pris à la levée et annulerait
+  // l'undo/redo. Undo = abandon de la sélection ; redo attend qu'elle soit posée.
+  const undo = useCallback(() => {
+    if (selectionRef.current.hasFloating) selectionRef.current.cancel();
+    else handleUndo();
+  }, [handleUndo]);
+  const redo = useCallback(() => {
+    if (!selectionRef.current.hasFloating) handleRedo();
+  }, [handleRedo]);
+
+  useEditorShortcuts({ handleUndo: undo, handleRedo: redo, setTool, selectionRef });
+
+  // Opération structurelle sur les calques : la sélection flottante est posée d'abord, sinon
+  // l'historique capturerait l'état « pixels levés » et l'undo ferait disparaître la sélection.
+  const afterCommit = <A extends unknown[]>(fn: (...args: A) => void) => (...args: A) => {
+    selectionRef.current.commit();
+    fn(...args);
+  };
 
   const handleShowGridToggle = useCallback(() => setShowGrid(v => !v), []);
   const handleSettingsToggle = useCallback(() => setShowSettings(v => !v), []);
@@ -157,7 +196,10 @@ export function Editor() {
       const raw = text.trim().replace(/^#/, '');
       if (!/^([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(raw)) return;
       e.preventDefault();
-      const hex = `#${raw.toUpperCase()}` as HexColor;
+      // Forme canonique #rrggbb minuscule (comme le sélecteur) : exports PNG/SVG et pot de peinture
+      // ne lisent que 6 chiffres et comparent les chaînes. L'alpha éventuel est ignoré.
+      const rgb = raw.length <= 4 ? raw.slice(0, 3).replace(/./g, c => c + c) : raw.slice(0, 6);
+      const hex = `#${rgb.toLowerCase()}` as HexColor;
       handleColorChange(hex);
       commitRecentColor(hex);
     };
@@ -192,7 +234,8 @@ export function Editor() {
   }, [drawing, activeLayerId, handleCapturePixels]);
 
   if (status === 'loading') return <EditorLoading />;
-  if (status === 'error' || !drawing) return <EditorError />;
+  // 'error' une fois le dessin chargé = échec de sauvegarde : badge, pas d'écran d'erreur.
+  if (!drawing) return <EditorError />;
 
   const editorCtx: EditorContextValue = {
     title: drawing.title,
@@ -200,8 +243,8 @@ export function Editor() {
     onToolChange: setTool,
     canUndo,
     canRedo,
-    onUndo: handleUndo,
-    onRedo: handleRedo,
+    onUndo: undo,
+    onRedo: redo,
     activeLayerId,
     layers: drawing.data.layers,
     canvasWidth: drawing.data.width,
@@ -209,12 +252,12 @@ export function Editor() {
     openPanel,
     onPanelToggle: handlePanelToggle,
     onPanelClose: handlePanelClose,
-    onLayerAdd: handleLayerAdd,
+    onLayerAdd: afterCommit(handleLayerAdd),
     onLayerSelect: setActiveLayerId,
-    onLayerVisibilityToggle: handleLayerVisibilityToggle,
-    onLayerDuplicate: handleLayerDuplicate,
-    onLayerDelete: handleLayerDelete,
-    onLayerReorder: handleLayerReorder,
+    onLayerVisibilityToggle: afterCommit(handleLayerVisibilityToggle),
+    onLayerDuplicate: afterCommit(handleLayerDuplicate),
+    onLayerDelete: afterCommit(handleLayerDelete),
+    onLayerReorder: afterCommit(handleLayerReorder),
     onBack: handleBack,
     refImage: topbarRefImage,
     refImageError,
@@ -384,6 +427,7 @@ export function Editor() {
         )}
 
         {status === 'saving' && <div className={styles.savingBadge} aria-live="polite">Enregistrement…</div>}
+        {status === 'error' && <div className={styles.savingBadge} role="status">Non enregistré</div>}
 
         {showInvisibleModal && (
           <ConfirmModal

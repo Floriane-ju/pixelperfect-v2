@@ -321,11 +321,12 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
     placeFood();
     draw();
 
-    const interval = setInterval(tick, TICK_MS);
+    const interval = setInterval(() => { if (!document.hidden) tick(); }, TICK_MS);
 
     const onKey = (e: KeyboardEvent) => {
-      const target = e.target as Element | null;
-      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return;
+      // Seulement quand rien n'a le focus : sinon les flèches/lettres d'un bouton ou d'une
+      // modale basculent en mode jeu et figent la galerie (pointer-events: none).
+      if (e.target !== document.body) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (gameOverRef.current) return;
 

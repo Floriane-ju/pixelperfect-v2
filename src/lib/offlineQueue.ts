@@ -1,3 +1,4 @@
+import { parseDrawingData } from './drawingValidation';
 import type { DrawingData } from '@/types';
 
 const DB_NAME = 'pixelperfect';
@@ -19,8 +20,18 @@ function openDb(): Promise<IDBDatabase> {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
     };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const db = req.result;
+      // iOS ferme la connexion en arrière-plan : sans reset, chaque transaction lèverait
+      // InvalidStateError jusqu'au rechargement.
+      db.onclose = () => { dbPromise = null; };
+      db.onversionchange = () => { db.close(); dbPromise = null; };
+      resolve(db);
+    };
+    req.onerror = () => {
+      dbPromise = null;
+      reject(req.error);
+    };
   });
   return dbPromise;
 }
@@ -29,8 +40,10 @@ function run<T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRequ
   return openDb().then(db => new Promise<T>((resolve, reject) => {
     const tx = db.transaction(STORE, mode);
     const req = fn(tx.objectStore(STORE));
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    // Résout sur le commit de la transaction : req.onsuccess précède l'écriture durable.
+    tx.oncomplete = () => resolve(req.result);
+    tx.onerror = () => reject(req.error ?? tx.error);
+    tx.onabort = () => reject(tx.error);
   }));
 }
 
@@ -38,9 +51,8 @@ function migrateLegacy(id: string): DrawingData | null {
   try {
     const raw = localStorage.getItem(LEGACY_PREFIX + id);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as DrawingData;
     localStorage.removeItem(LEGACY_PREFIX + id);
-    return parsed;
+    return parseDrawingData(JSON.parse(raw));
   } catch {
     return null;
   }
@@ -65,11 +77,17 @@ export async function dequeue(id: string): Promise<void> {
 
 export async function getPending(id: string): Promise<DrawingData | null> {
   try {
-    const existing = await run<DrawingData | undefined>(
-      'readonly',
-      store => store.get(id) as IDBRequest<DrawingData | undefined>,
-    );
-    if (existing) return existing;
+    const existing = await run<unknown>('readonly', store => store.get(id));
+    // Donnée locale non fiable (version antérieure, corruption) : validée avant d'être renvoyée
+    // au serveur, et purgée si invalide pour ne pas être relue à chaque synchro.
+    if (existing !== undefined) {
+      try {
+        return parseDrawingData(existing);
+      } catch {
+        await dequeue(id);
+        return null;
+      }
+    }
     const legacy = migrateLegacy(id);
     if (legacy) {
       await enqueue(id, legacy);

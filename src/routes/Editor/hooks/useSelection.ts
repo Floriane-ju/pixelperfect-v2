@@ -7,6 +7,8 @@ export type SelectionState =
   | { kind: 'defining'; start: { x: number; y: number }; end: { x: number; y: number } }
   | {
       kind: 'floating';
+      /** Calque d'où les pixels ont été levés : commit/cancel y écrivent, pas dans le calque actif. */
+      layerId: string;
       w: number;
       h: number;
       pixels: Record<string, HexColor>;
@@ -112,6 +114,7 @@ export function useSelection({
     onLayerChange(activeLayerId, remainingPixels);
     setState({
       kind: 'floating',
+      layerId: activeLayerId,
       w: rect.w,
       h: rect.h,
       pixels: liftedPixels,
@@ -163,6 +166,17 @@ export function useSelection({
       setState({ kind: 'idle' });
       return;
     }
+    const reset = () => {
+      beforeRef.current = null;
+      layerPixelsAfterLiftRef.current = {};
+      dragRef.current = null;
+      setState({ kind: 'idle' });
+    };
+    // Calque d'origine supprimé entre-temps : rien où poser, pas d'entrée d'historique fantôme.
+    if (!data.layers.some(l => l.id === state.layerId)) {
+      reset();
+      return;
+    }
     const base = layerPixelsAfterLiftRef.current;
     const merged: Record<string, HexColor> = { ...base };
     for (const [k, c] of Object.entries(state.pixels)) {
@@ -175,27 +189,33 @@ export function useSelection({
       merged[`${cx},${cy}`] = c;
     }
     if (beforeRef.current) pushHistory(beforeRef.current);
-    onLayerChange(activeLayerId, merged);
-    beforeRef.current = null;
-    layerPixelsAfterLiftRef.current = {};
-    dragRef.current = null;
-    setState({ kind: 'idle' });
-  }, [state, data.width, data.height, activeLayerId, onLayerChange, pushHistory]);
+    onLayerChange(state.layerId, merged);
+    // latestDataRef n'est resynchronisé qu'au prochain rendu : une opération enchaînée dans le
+    // même événement (cf. afterCommit dans Editor) doit déjà voir la sélection posée.
+    const latest = latestDataRef.current;
+    if (latest) {
+      latestDataRef.current = {
+        ...latest,
+        layers: latest.layers.map(l => (l.id === state.layerId ? { ...l, pixels: merged } : l)),
+      };
+    }
+    reset();
+  }, [state, data.width, data.height, data.layers, latestDataRef, onLayerChange, pushHistory]);
 
   const cancel = useCallback(() => {
     if (state.kind === 'idle') return;
     if (state.kind === 'floating') {
       const before = beforeRef.current;
       if (before) {
-        const origLayer = before.layers.find(l => l.id === activeLayerId);
-        if (origLayer) onLayerChange(activeLayerId, origLayer.pixels);
+        const origLayer = before.layers.find(l => l.id === state.layerId);
+        if (origLayer) onLayerChange(state.layerId, origLayer.pixels);
       }
     }
     beforeRef.current = null;
     layerPixelsAfterLiftRef.current = {};
     dragRef.current = null;
     setState({ kind: 'idle' });
-  }, [state, activeLayerId, onLayerChange]);
+  }, [state, onLayerChange]);
 
   return {
     state,

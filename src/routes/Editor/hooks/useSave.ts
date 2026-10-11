@@ -63,7 +63,7 @@ export function useSave({ id, drawing, authed, setStatus }: UseSaveParams) {
             void enqueue(currentId, data);
           });
         } else {
-          void localUpdateDrawingData(currentId, data);
+          localUpdateDrawingData(currentId, data).catch(() => undefined);
         }
       }
     };

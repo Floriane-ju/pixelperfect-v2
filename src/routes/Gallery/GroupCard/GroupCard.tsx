@@ -55,7 +55,7 @@ export function GroupCard({
       tabIndex={rename.isRenaming ? -1 : 0}
       aria-label={`Groupe ${name}`}
       onKeyDown={(e) => {
-        if (rename.isRenaming) return;
+        if (rename.isRenaming || e.target !== e.currentTarget) return;
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); }
       }}
       onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(true); }}

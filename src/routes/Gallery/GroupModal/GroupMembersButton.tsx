@@ -51,13 +51,16 @@ export function GroupMembersButton({ groupName, onRemoved }: GroupMembersButtonP
     }
   }, [groupName, onRemoved]);
 
+  // Un échec n'est retenté qu'à la réouverture (status hors des deps : sinon boucle de refetch).
   useEffect(() => {
-    if (!open || members !== null || status === 'loading') return;
+    if (!open || members !== null) return;
+    let cancelled = false;
     setStatus('loading');
     listGroupMembers(groupName)
-      .then((rows) => { setMembers(rows); setStatus('idle'); })
-      .catch(() => setStatus('error'));
-  }, [open, groupName, members, status]);
+      .then((rows) => { if (!cancelled) { setMembers(rows); setStatus('idle'); } })
+      .catch(() => { if (!cancelled) setStatus('error'); });
+    return () => { cancelled = true; };
+  }, [open, groupName, members]);
 
   return (
     <div ref={rootRef} className={styles.root} onClick={(e) => e.stopPropagation()}>

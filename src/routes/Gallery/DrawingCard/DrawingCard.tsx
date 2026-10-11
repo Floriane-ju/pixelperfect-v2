@@ -107,6 +107,8 @@ export function DrawingCard({
           if (isIdle) onClick?.();
         }}
         onKeyDown={(e) => {
+          // Les touches des boutons internes (menu, collaborateurs) remontent jusqu'ici.
+          if (e.target !== e.currentTarget) return;
           if (isIdle && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault();
             onClick?.();

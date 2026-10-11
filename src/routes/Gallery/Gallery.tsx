@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, UIEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/Button';
+import { ConfirmModal } from '@/components/ConfirmModal';
 import { useSnackbar } from '@/components/Snackbar';
 import { useSession } from '@/components/SessionProvider';
 import { DrawingCard } from './DrawingCard/DrawingCard';
@@ -60,22 +61,35 @@ export function Gallery() {
   const [isContentDragOver, setIsContentDragOver] = useState(false);
   const [inviteTarget, setInviteTarget] = useState<InviteTarget | null>(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
   const [snakeActive, setSnakeActive] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const touchStartY = useRef(0);
+  /** Génération de l'identité courante : les réponses d'une session précédente sont ignorées. */
+  const fetchGenRef = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Recharge la bibliothèque à chaque changement d'auth (login/logout) une fois la session résolue.
   useEffect(() => {
     if (sessionLoading) return;
+    // Une réponse de l'identité précédente (fetch lent) ne doit pas écraser la nouvelle.
+    let cancelled = false;
+    fetchGenRef.current += 1;
+    setDrawings([]);
     setStatus('loading');
     fetchDrawings()
-      .then((rows) => { setDrawings(rows); setStatus('idle'); })
+      .then((rows) => {
+        if (cancelled) return;
+        setDrawings(rows);
+        setStatus('idle');
+      })
       .catch((err: unknown) => {
+        if (cancelled) return;
         const raw = err instanceof Error ? err.message : 'Erreur inconnue';
         setErrorMsg(raw === 'IndexedDB unavailable' ? 'Stockage local indisponible (navigation privée ?).' : raw);
         setStatus('error');
       });
+    return () => { cancelled = true; };
   }, [isAuth, sessionLoading]);
 
   const handleExport = () => {
@@ -111,26 +125,35 @@ export function Gallery() {
   };
 
   const refetchSilent = () => {
-    fetchDrawings().then(setDrawings).catch(() => {});
+    const gen = fetchGenRef.current;
+    fetchDrawings()
+      .then((rows) => { if (gen === fetchGenRef.current) setDrawings(rows); })
+      .catch(() => {});
+  };
+
+  // Mise à jour optimiste refusée : on prévient et on resynchronise avec la source.
+  const onMutationError = () => {
+    snackbar.show('Échec de la modification, liste rechargée');
+    refetchSilent();
   };
 
   const handleRename = (id: string, newTitle: string) => {
     setDrawings((prev) =>
       prev.map((d) => (d.id === id ? { ...d, title: newTitle } : d)),
     );
-    renameDrawing(id, newTitle).catch(refetchSilent);
+    renameDrawing(id, newTitle).catch(onMutationError);
   };
 
   const handleDelete = (id: string) => {
     setDrawings((prev) => prev.filter((d) => d.id !== id));
-    deleteDrawing(id).catch(refetchSilent);
+    deleteDrawing(id).catch(onMutationError);
   };
 
   const handleRemoveFromGroup = (id: string) => {
     setDrawings((prev) =>
       prev.map((d) => (d.id === id ? { ...d, group: null } : d)),
     );
-    removeFromGroup(id).catch(refetchSilent);
+    removeFromGroup(id).catch(onMutationError);
   };
 
   const handleCreateGroup = (groupName: string) => {
@@ -145,14 +168,14 @@ export function Gallery() {
     Promise.all([
       moveToGroup(sourceId, groupName),
       moveToGroup(targetId, groupName),
-    ]).catch(refetchSilent);
+    ]).catch(onMutationError);
   };
 
   // Dissoudre passe par un seul appel : les membres du groupe doivent disparaître avec lui,
   // sinon un dessin re-déposé plus tard sous le même nom serait re-partagé silencieusement.
   const handleUngroupAll = (groupName: string) => {
     setDrawings((prev) => prev.map((d) => d.group === groupName ? { ...d, group: null } : d));
-    dissolveGroup(groupName).then(refetchSilent).catch(refetchSilent);
+    dissolveGroup(groupName).then(refetchSilent, onMutationError);
   };
 
   const handleRenameGroup = (oldName: string, newName: string) => {
@@ -162,15 +185,19 @@ export function Gallery() {
       prev.map((d) => (d.group === oldName ? { ...d, group: newName } : d)),
     );
     setActiveGroups((arr) => arr.map((n) => (n === oldName ? newName : n)));
-    renameGroup(oldName, newName).catch(refetchSilent);
+    renameGroup(oldName, newName).catch(onMutationError);
   };
 
+  // Seuls les dessins de l'appelant sont supprimés : ceux partagés par d'autres sous le même
+  // nom de groupe ne lui appartiennent pas (la suppression échouerait et laisserait le groupe
+  // à moitié détruit).
   const handleDeleteGroup = (groupName: string) => {
-    const ids = drawings.filter((d) => d.group === groupName).map((d) => d.id);
-    setDrawings((prev) => prev.filter((d) => d.group !== groupName));
+    const isMine = (d: DrawingRow) => d.group === groupName && d.owner_id === currentUserId;
+    const ids = drawings.filter(isMine).map((d) => d.id);
+    setDrawings((prev) => prev.filter((d) => !isMine(d)));
     Promise.all(ids.map((id) => deleteDrawing(id)))
       .then(() => dissolveGroup(groupName))
-      .catch(refetchSilent);
+      .then(refetchSilent, onMutationError);
   };
 
   // Le serveur partage automatiquement le dessin aux membres du groupe : on relit pour que le
@@ -179,12 +206,17 @@ export function Gallery() {
     setDrawings((prev) =>
       prev.map((d) => (d.id === drawingId ? { ...d, group: groupName } : d)),
     );
-    moveToGroup(drawingId, groupName).then(refetchSilent).catch(refetchSilent);
+    moveToGroup(drawingId, groupName).then(refetchSilent, onMutationError);
   };
 
   const handleCreate = async (name: string, width: number, height: number) => {
     const newDrawing = await createDrawing(name, width, height);
-    if (newDrawingGroup) await moveToGroup(newDrawing.id, newDrawingGroup);
+    // Le dessin existe déjà : un échec ici ne doit pas inviter à recréer (doublon).
+    if (newDrawingGroup) {
+      await moveToGroup(newDrawing.id, newDrawingGroup).catch(() =>
+        snackbar.show('Dessin créé hors du groupe'),
+      );
+    }
     navigate(`/editor/${newDrawing.id}`);
   };
 
@@ -322,7 +354,7 @@ export function Gallery() {
               onShare={isAuth && ownsGroup(g) ? () => setInviteTarget({ kind: 'group', name: g.name }) : undefined}
               onRename={(newName) => handleRenameGroup(g.name, newName)}
               onUngroup={() => handleUngroupAll(g.name)}
-              onDelete={() => handleDeleteGroup(g.name)}
+              onDelete={ownsGroup(g) ? () => setGroupToDelete(g.name) : undefined}
               existingGroupNames={groups.map((x) => x.name)}
             />
           ))}
@@ -343,6 +375,18 @@ export function Gallery() {
             );
           })}
         </div>
+      )}
+
+      {groupToDelete !== null && (
+        <ConfirmModal
+          message={`Supprimer définitivement vos dessins du groupe « ${groupToDelete} » ?`}
+          confirmLabel="Supprimer"
+          onCancel={() => setGroupToDelete(null)}
+          onConfirm={() => {
+            handleDeleteGroup(groupToDelete);
+            setGroupToDelete(null);
+          }}
+        />
       )}
 
       {pendingGroup && (

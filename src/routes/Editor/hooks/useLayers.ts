@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
+import { MAX_LAYERS } from '@/lib/drawingValidation';
 import type { DrawingData, DrawingRow, HexColor, PixelLayer } from '@/types';
 
 interface UseLayersParams {
@@ -39,13 +40,16 @@ export function useLayers({ drawing, setDrawing, setActiveLayerId, scheduleSave,
     scheduleSave();
   }, [latestDataRef, pushHistory, setDrawing, scheduleSave]);
 
+  // Au-delà de MAX_LAYERS, parseDrawingData rejette le dessin au rechargement (illisible).
   const handleLayerDuplicate = useCallback((layerId: string) => {
-    if (latestDataRef.current) pushHistory(latestDataRef.current);
+    if (!latestDataRef.current || latestDataRef.current.layers.length >= MAX_LAYERS) return;
+    pushHistory(latestDataRef.current);
+    const cloneId = crypto.randomUUID();
     setDrawing(prev => {
       if (!prev) return prev;
       const src = prev.data.layers.find(l => l.id === layerId);
       if (!src) return prev;
-      const clone: PixelLayer = { ...src, id: crypto.randomUUID(), name: `${src.name} copie`, pixels: { ...src.pixels } };
+      const clone: PixelLayer = { ...src, id: cloneId, name: `${src.name} copie`, pixels: { ...src.pixels } };
       const idx = prev.data.layers.findIndex(l => l.id === layerId);
       const layers = [...prev.data.layers.slice(0, idx + 1), clone, ...prev.data.layers.slice(idx + 1)];
       return { ...prev, data: { ...prev.data, layers } };
@@ -54,20 +58,23 @@ export function useLayers({ drawing, setDrawing, setActiveLayerId, scheduleSave,
   }, [latestDataRef, pushHistory, setDrawing, scheduleSave]);
 
   const handleLayerAdd = useCallback(() => {
-    if (latestDataRef.current) pushHistory(latestDataRef.current);
+    if (!latestDataRef.current || latestDataRef.current.layers.length >= MAX_LAYERS) return;
+    pushHistory(latestDataRef.current);
+    // Id et setActiveLayerId hors de l'updater : il doit rester pur (rejoué en StrictMode).
+    const newId = crypto.randomUUID();
     setDrawing(prev => {
       if (!prev) return prev;
       const newLayer: PixelLayer = {
-        id: crypto.randomUUID(),
+        id: newId,
         name: `Calque ${prev.data.layers.length + 1}`,
         pixels: {},
         opacity: 1,
         visible: true,
       };
       const layers = [...prev.data.layers, newLayer];
-      setActiveLayerId(newLayer.id);
       return { ...prev, data: { ...prev.data, layers } };
     });
+    setActiveLayerId(newId);
     scheduleSave();
   }, [latestDataRef, pushHistory, setDrawing, setActiveLayerId, scheduleSave]);
 

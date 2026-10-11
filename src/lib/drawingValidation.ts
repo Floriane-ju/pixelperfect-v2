@@ -1,7 +1,7 @@
 import type { DrawingData, HexColor, PixelLayer } from '@/types';
 
 const MAX_DIMENSION = 512;
-const MAX_LAYERS = 64;
+export const MAX_LAYERS = 64;
 const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
 export function isRecord(v: unknown): v is Record<string, unknown> {
