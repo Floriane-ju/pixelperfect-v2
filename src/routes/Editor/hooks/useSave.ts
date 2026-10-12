@@ -16,8 +16,34 @@ interface UseSaveParams {
   setStatus: (s: Status) => void;
 }
 
+/** Écrit le dessin ; renvoie false en cas d'échec (l'entrée reste en file si l'erreur est transitoire). */
+async function persist(id: string, data: DrawingData, authed: boolean): Promise<boolean> {
+  if (!authed) {
+    try {
+      await localUpdateDrawingData(id, data);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  // Écriture anticipée dans la file : une sauvegarde en vol au moment où iOS suspend la PWA
+  // n'est pas perdue. Retirée seulement si personne ne l'a remplacée entre-temps.
+  const rev = await enqueue(id, data);
+  try {
+    await updateDrawingData(id, data);
+    await dequeue(id, rev);
+    return true;
+  } catch (err) {
+    // Refus définitif : inutile de garder en file une écriture qui sera toujours rejetée.
+    if (err instanceof SaveRejectedError) await dequeue(id, rev);
+    return false;
+  }
+}
+
 export function useSave({ id, drawing, authed, setStatus }: UseSaveParams) {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inFlightRef = useRef<Promise<void>>(Promise.resolve());
+  const saveSeqRef = useRef(0);
   const latestDataRef = useRef<DrawingData | null>(null);
 
   useEffect(() => {
@@ -59,16 +85,25 @@ export function useSave({ id, drawing, authed, setStatus }: UseSaveParams) {
         clearTimeout(saveTimerRef.current);
         saveTimerRef.current = null;
         const data = latestDataRef.current;
-        if (currentAuthed) {
-          // File d'abord, en parallèle de l'envoi : le .catch d'un fetch coupé par la suspension
-          // iOS n'aurait jamais le temps de s'exécuter.
-          const rev = enqueue(currentId, data);
-          updateDrawingData(currentId, data)
-            .then(async () => dequeue(currentId, await rev))
-            .catch(() => undefined);
-        } else {
-          localUpdateDrawingData(currentId, data).catch(() => undefined);
-        }
+        const seq = ++saveSeqRef.current;
+        // File d'abord, tout de suite : la suite peut attendre un envoi en vol, et le .catch d'un
+        // fetch coupé par la suspension iOS n'aurait jamais le temps de s'exécuter.
+        const rev = currentAuthed ? enqueue(currentId, data) : null;
+        // Même chaîne que scheduleSave : un envoi plus ancien encore en vol ne doit pas arriver après.
+        inFlightRef.current = inFlightRef.current.then(async () => {
+          let ok = true;
+          try {
+            if (rev) {
+              await updateDrawingData(currentId, data);
+              await dequeue(currentId, await rev);
+            } else {
+              await localUpdateDrawingData(currentId, data);
+            }
+          } catch {
+            ok = false;
+          }
+          if (seq === saveSeqRef.current) setStatus(ok ? 'ready' : 'error');
+        });
       }
     };
     const handleVisibilityChange = () => {
@@ -81,37 +116,24 @@ export function useSave({ id, drawing, authed, setStatus }: UseSaveParams) {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       flushImmediate();
     };
-  }, [id, authed]);
+  }, [id, authed, setStatus]);
 
   const scheduleSave = useCallback(() => {
     if (!id) return;
     if (saveTimerRef.current !== null) clearTimeout(saveTimerRef.current);
     setStatus('saving');
-    saveTimerRef.current = setTimeout(async () => {
+    saveTimerRef.current = setTimeout(() => {
       saveTimerRef.current = null;
       const data = latestDataRef.current;
       if (!data) return;
-      if (!authed) {
-        try {
-          await localUpdateDrawingData(id, data);
-          setStatus('ready');
-        } catch {
-          setStatus('error');
-        }
-        return;
-      }
-      // Écriture anticipée dans la file : une sauvegarde en vol au moment où iOS suspend la PWA
-      // n'est pas perdue. Retirée seulement si personne ne l'a remplacée entre-temps.
-      const rev = await enqueue(id, data);
-      try {
-        await updateDrawingData(id, data);
-        await dequeue(id, rev);
-        setStatus('ready');
-      } catch (err) {
-        // Refus définitif : inutile de garder en file une écriture qui sera toujours rejetée.
-        if (err instanceof SaveRejectedError) await dequeue(id, rev);
-        setStatus('error');
-      }
+      // Envois en série : un envoi lent (> SAVE_DELAY) arrivant après le suivant écraserait
+      // côté serveur une version plus récente.
+      const seq = ++saveSeqRef.current;
+      inFlightRef.current = inFlightRef.current.then(async () => {
+        const ok = await persist(id, data, authed);
+        // Une sauvegarde plus récente est programmée ou en attente : le badge reste sur « Enregistrement… ».
+        if (seq === saveSeqRef.current && saveTimerRef.current === null) setStatus(ok ? 'ready' : 'error');
+      });
     }, SAVE_DELAY);
   }, [id, authed, setStatus]);
 

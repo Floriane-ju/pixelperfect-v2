@@ -35,6 +35,8 @@ export interface EditorContextValue {
   onRefImageRemove: () => void;
   onRefImageTransform: (x: number, y: number, scale: number, opacity: number) => void;
   onRefImageCapture: () => void;
+  /** Pose la sélection flottante puis rend les calques à jour (sinon l'export perdrait les pixels levés). */
+  getCommittedLayers: () => PixelLayer[];
   canvasDisplaySize: { w: number; h: number };
 }
 

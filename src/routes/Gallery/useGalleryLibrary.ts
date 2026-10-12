@@ -42,7 +42,7 @@ export function useGalleryLibrary({
   const [status, setStatus] = useState<Status>('loading');
   const [errorMsg, setErrorMsg] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
-  /** Génération de l'identité courante : les réponses d'une session précédente sont ignorées. */
+  /** Génération courante : identité, relecture ou mutation optimiste. */
   const fetchGenRef = useRef(0);
 
   // Recharge la bibliothèque à chaque changement d'auth (login/logout) une fois la session résolue.
@@ -70,11 +70,18 @@ export function useGalleryLibrary({
 
   const reload = () => setReloadKey((k) => k + 1);
 
+  // Chaque relecture et chaque mutation optimiste ouvrent une nouvelle génération : une relecture
+  // partie avant elles (réponse plus lente) ne doit pas les écraser avec des lignes périmées.
   const refetchSilent = () => {
-    const gen = fetchGenRef.current;
+    const gen = ++fetchGenRef.current;
     fetchDrawings()
       .then((rows) => { if (gen === fetchGenRef.current) setDrawings(rows); })
       .catch(() => {});
+  };
+
+  const updateDrawings: Dispatch<SetStateAction<DrawingRow[]>> = (next) => {
+    fetchGenRef.current += 1;
+    setDrawings(next);
   };
 
   // Mise à jour optimiste refusée : on prévient et on resynchronise avec la source.
@@ -84,7 +91,7 @@ export function useGalleryLibrary({
   };
 
   const handleCollaboratorRemoved = (drawingId: string) => {
-    setDrawings((prev) =>
+    updateDrawings((prev) =>
       prev.map((d) =>
         d.id === drawingId ? { ...d, collaborator_count: Math.max(0, d.collaborator_count - 1) } : d,
       ),
@@ -92,26 +99,26 @@ export function useGalleryLibrary({
   };
 
   const handleRename = (id: string, newTitle: string) => {
-    setDrawings((prev) =>
+    updateDrawings((prev) =>
       prev.map((d) => (d.id === id ? { ...d, title: newTitle } : d)),
     );
     renameDrawing(id, newTitle).catch(onMutationError);
   };
 
   const handleDelete = (id: string) => {
-    setDrawings((prev) => prev.filter((d) => d.id !== id));
+    updateDrawings((prev) => prev.filter((d) => d.id !== id));
     deleteDrawing(id).catch(onMutationError);
   };
 
   const handleRemoveFromGroup = (id: string) => {
-    setDrawings((prev) =>
+    updateDrawings((prev) =>
       prev.map((d) => (d.id === id ? { ...d, group: null } : d)),
     );
     removeFromGroup(id).catch(onMutationError);
   };
 
   const handleGroupPair = (sourceId: string, targetId: string, groupName: string) => {
-    setDrawings((prev) =>
+    updateDrawings((prev) =>
       prev.map((d) =>
         d.id === sourceId || d.id === targetId ? { ...d, group: groupName } : d,
       ),
@@ -125,14 +132,14 @@ export function useGalleryLibrary({
   // Dissoudre passe par un seul appel : les membres du groupe doivent disparaître avec lui,
   // sinon un dessin re-déposé plus tard sous le même nom serait re-partagé silencieusement.
   const handleUngroupAll = (groupName: string) => {
-    setDrawings((prev) => prev.map((d) => d.group === groupName ? { ...d, group: null } : d));
+    updateDrawings((prev) => prev.map((d) => d.group === groupName ? { ...d, group: null } : d));
     dissolveGroup(groupName).then(refetchSilent, onMutationError);
   };
 
   const handleRenameGroup = (oldName: string, newName: string): boolean => {
     if (!newName || newName === oldName) return false;
     if (drawings.some((d) => d.group === newName)) return false;
-    setDrawings((prev) =>
+    updateDrawings((prev) =>
       prev.map((d) => (d.group === oldName ? { ...d, group: newName } : d)),
     );
     renameGroup(oldName, newName).catch(onMutationError);
@@ -145,7 +152,7 @@ export function useGalleryLibrary({
   const handleDeleteGroup = (groupName: string) => {
     const isMine = (d: DrawingRow) => d.group === groupName && d.owner_id === currentUserId;
     const ids = drawings.filter(isMine).map((d) => d.id);
-    setDrawings((prev) => prev.filter((d) => !isMine(d)));
+    updateDrawings((prev) => prev.filter((d) => !isMine(d)));
     Promise.all(ids.map((id) => deleteDrawing(id)))
       .then(() => dissolveGroup(groupName))
       .then(refetchSilent, onMutationError);
@@ -154,7 +161,7 @@ export function useGalleryLibrary({
   // Le serveur partage automatiquement le dessin aux membres du groupe : on relit pour que le
   // compteur de collaborateurs de la carte reflète ce partage.
   const handleMoveToGroup = (drawingId: string, groupName: string) => {
-    setDrawings((prev) =>
+    updateDrawings((prev) =>
       prev.map((d) => (d.id === drawingId ? { ...d, group: groupName } : d)),
     );
     moveToGroup(drawingId, groupName).then(refetchSilent, onMutationError);
@@ -162,7 +169,7 @@ export function useGalleryLibrary({
 
   return {
     drawings,
-    setDrawings,
+    setDrawings: updateDrawings,
     status,
     errorMsg,
     reload,

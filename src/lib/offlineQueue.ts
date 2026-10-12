@@ -66,12 +66,6 @@ export interface PendingEntry {
   savedAt: number | null;
 }
 
-/**
- * Dernière révision mise en file par cet onglet, par dessin : un envoi plus ancien qui se termine
- * après ne doit pas effacer l'entrée plus récente (sans relire ni comparer le dessin entier).
- */
-const lastRev = new Map<string, number>();
-let revSeq = 0;
 /** Dessins ouverts dans l'éditeur : leur file est gérée par useSave, flushAll les ignore. */
 const heldByEditor = new Set<string>();
 
@@ -83,8 +77,8 @@ export function holdForEditor(id: string): () => void {
 /** Met le dessin en file et renvoie sa révision (réservée dès l'appel, avant l'écriture). */
 export async function enqueue(id: string, data: DrawingData): Promise<number> {
   const savedAt = Date.now();
-  const rev = savedAt * 1000 + (revSeq++ % 1000);
-  lastRev.set(id, rev);
+  // Identifiant opaque (seule l'égalité compte), unique même entre onglets dans la même milliseconde.
+  const rev = savedAt + Math.random();
   try {
     await run('readwrite', store => store.put({ rev, savedAt, data }, id));
   } catch {
@@ -93,13 +87,25 @@ export async function enqueue(id: string, data: DrawingData): Promise<number> {
   return rev;
 }
 
-/** Retire l'entrée ; avec `rev`, seulement si aucune révision plus récente n'a été mise en file depuis. */
+function storedRev(raw: unknown): number {
+  return isRecord(raw) && typeof raw.rev === 'number' ? raw.rev : 0;
+}
+
+/**
+ * Retire l'entrée ; avec `rev`, seulement si c'est encore elle qui est stockée. La comparaison se
+ * fait dans la transaction : un autre onglet a pu mettre en file une révision plus récente.
+ */
 export async function dequeue(id: string, rev?: number): Promise<void> {
-  const latest = lastRev.get(id);
-  if (rev !== undefined && latest !== undefined && latest !== rev) return;
-  lastRev.delete(id);
   try {
-    await run('readwrite', store => store.delete(id));
+    await run('readwrite', store => {
+      const req = store.get(id);
+      req.onsuccess = () => {
+        if (req.result !== undefined && (rev === undefined || storedRev(req.result) === rev)) {
+          store.delete(id);
+        }
+      };
+      return req;
+    });
   } catch {
     /* IDB unavailable */
   }
@@ -160,8 +166,18 @@ export async function replay(
   }
 }
 
-/** Renvoie au serveur toutes les entrées en file, y compris celles des dessins jamais rouverts. */
-export async function flushAll(upload: (id: string, data: DrawingData) => Promise<void>): Promise<void> {
+let flushing: Promise<void> | null = null;
+
+/**
+ * Renvoie au serveur toutes les entrées en file, y compris celles des dessins jamais rouverts.
+ * Un seul passage à la fois (retour réseau + déconnexion) : sinon chaque entrée partirait deux fois.
+ */
+export function flushAll(upload: (id: string, data: DrawingData) => Promise<void>): Promise<void> {
+  flushing ??= flushQueue(upload).finally(() => { flushing = null; });
+  return flushing;
+}
+
+async function flushQueue(upload: (id: string, data: DrawingData) => Promise<void>): Promise<void> {
   let ids: IDBValidKey[];
   try {
     ids = await run('readonly', store => store.getAllKeys());

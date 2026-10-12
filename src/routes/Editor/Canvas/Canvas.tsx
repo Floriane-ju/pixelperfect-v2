@@ -118,6 +118,9 @@ export function Canvas({
     setPickerIndicator(null);
   }, []);
 
+  // Quitter l'éditeur pendant un appui long : le minuteur pipette ne doit pas se déclencher après coup.
+  useEffect(() => clearLongPress, [clearLongPress]);
+
   const pickColorAt = useCallback((px: { x: number; y: number }) => {
     const c = pickColorFrom(canvasRef.current, px, data.width, data.height);
     if (c) onPickColor?.(c);
@@ -231,6 +234,15 @@ export function Canvas({
       return;
     }
 
+    // Avant la sélection aussi : lever des pixels d'un calque masqué est une édition à l'aveugle.
+    const activeLayer = data.layers.find(l => l.id === activeLayerId);
+    if (activeLayer && !activeLayer.visible) {
+      onInvisibleLayerAttempt();
+      onNavPointerUp(e.pointerId);
+      wrapperRef.current?.releasePointerCapture(e.pointerId);
+      return;
+    }
+
     if (tool === 'select' && selection) {
       if (selection.state.kind === 'floating') {
         if (selection.isInsideFloating(px)) selection.startMove(px);
@@ -239,14 +251,6 @@ export function Canvas({
         selection.startDefining(px);
       }
       isDrawing.current = true;
-      return;
-    }
-
-    const activeLayer = data.layers.find(l => l.id === activeLayerId);
-    if (activeLayer && !activeLayer.visible) {
-      onInvisibleLayerAttempt();
-      onNavPointerUp(e.pointerId);
-      wrapperRef.current?.releasePointerCapture(e.pointerId);
       return;
     }
 

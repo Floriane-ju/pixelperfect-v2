@@ -198,6 +198,20 @@ describe('parseDrawingData', () => {
     expect(result).toEqual(validData);
   });
 
+  it('ignore les clés de pixel mal formées ou hors cadre', () => {
+    const layer = validData.layers[0]!;
+    const result = parseDrawingData({
+      ...validData,
+      layers: [{ ...layer, pixels: { '9,9': '#ff0000', '10,0': '#ff0000', '0,-1': '#ff0000', foo: '#ff0000' } }],
+    });
+    expect(result.layers[0]!.pixels).toEqual({ '9,9': '#ff0000' });
+  });
+
+  it('rejette une opacité NaN (possible via IndexedDB, pas via JSON)', () => {
+    const layer = validData.layers[0]!;
+    expect(() => parseDrawingData({ ...validData, layers: [{ ...layer, opacity: NaN }] })).toThrow('layer.opacity');
+  });
+
   it('throws if data is not an object', () => {
     expect(() => parseDrawingData(null)).toThrow('data must be object');
     expect(() => parseDrawingData('string')).toThrow('data must be object');

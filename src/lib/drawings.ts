@@ -1,7 +1,10 @@
 import { supabase } from './supabase';
 import { isRecord, parseDrawingData } from './drawingValidation';
 import { SaveRejectedError } from './saveErrors';
+import { shareErrorMessage } from './groupSharing';
 import type { CollaboratorRole, DrawingData, DrawingRow, PixelLayer } from '@/types';
+
+const DRAWING_COLUMNS = 'id, title, data, created_at, updated_at, group, owner_id, drawing_users(count)';
 
 function parseCollaboratorCount(raw: unknown): number {
   if (!Array.isArray(raw) || raw.length === 0) return 0;
@@ -34,7 +37,7 @@ function parseDrawingRow(raw: unknown): DrawingRow {
 export async function fetchDrawings(): Promise<DrawingRow[]> {
   const { data, error } = await supabase
     .from('drawings')
-    .select('id, title, data, created_at, updated_at, group, owner_id, drawing_users(count)')
+    .select(DRAWING_COLUMNS)
     .order('updated_at', { ascending: false });
 
   if (error) throw error;
@@ -101,7 +104,7 @@ export async function dissolveGroup(groupName: string): Promise<void> {
 export async function fetchDrawing(id: string): Promise<DrawingRow> {
   const { data, error } = await supabase
     .from('drawings')
-    .select('id, title, data, created_at, updated_at, group, owner_id, drawing_users(count)')
+    .select(DRAWING_COLUMNS)
     .eq('id', id)
     .single();
   if (error) throw error;
@@ -109,10 +112,6 @@ export async function fetchDrawing(id: string): Promise<DrawingRow> {
 }
 
 export async function createDrawing(title: string, width: number, height: number): Promise<DrawingRow> {
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError) throw userError;
-  if (!userData.user) throw new Error('Utilisateur non authentifié');
-
   const layer: PixelLayer = {
     id: crypto.randomUUID(),
     name: 'Calque 1',
@@ -122,15 +121,16 @@ export async function createDrawing(title: string, width: number, height: number
   };
   const drawingData: DrawingData = { width, height, layers: [layer] };
 
-  const id = crypto.randomUUID();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('drawings')
-    .insert({ id, title, data: drawingData });
+    .insert({ id: crypto.randomUUID(), title, data: drawingData })
+    .select(DRAWING_COLUMNS)
+    .single();
 
   if (error) {
     throw new Error(`${error.message}${error.details ? ` — ${error.details}` : ''}${error.hint ? ` (${error.hint})` : ''}`);
   }
-  return fetchDrawing(id);
+  return parseDrawingRow(data);
 }
 
 export async function updateDrawingData(id: string, drawingData: DrawingData): Promise<void> {
@@ -140,8 +140,13 @@ export async function updateDrawingData(id: string, drawingData: DrawingData): P
     .eq('id', id)
     .select('id');
   if (error) throw error;
-  // RLS filtre silencieusement (session expirée, accès retiré, dessin supprimé) : 0 ligne, pas d'erreur.
-  if (!data || data.length === 0) throw new SaveRejectedError();
+  if (data && data.length > 0) return;
+  // RLS filtre silencieusement : 0 ligne, pas d'erreur. Session expirée ou déconnexion pendant
+  // l'envoi → échec transitoire (l'entrée reste en file) ; seul un utilisateur bien authentifié
+  // à qui l'écriture est refusée signifie accès retiré ou dessin supprimé.
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) throw new Error('Session expirée : enregistrement reporté');
+  throw new SaveRejectedError();
 }
 
 export async function removeCollaborator(drawingId: string, userId: string): Promise<void> {
@@ -182,12 +187,7 @@ export async function addCollaboratorByHandle(drawingId: string, handle: string)
     d_id: drawingId,
     handle_in: handle,
   });
-  if (error) {
-    if (error.code === 'P0002') throw new Error('Aucun utilisateur trouvé avec ce pseudo ou cet email.');
-    if (error.code === '42501') throw new Error('Action non autorisée.');
-    if (error.code === '54000') throw new Error("Trop d'invitations envoyées. Réessayez dans quelques minutes.");
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(shareErrorMessage(error));
   if (typeof data !== 'string') throw new Error('Réponse invalide du serveur.');
   return data;
 }

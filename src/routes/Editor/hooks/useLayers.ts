@@ -4,16 +4,14 @@ import { MAX_LAYERS } from '@/lib/drawingValidation';
 import type { DrawingData, DrawingRow, HexColor, PixelLayer } from '@/types';
 
 interface UseLayersParams {
-  drawing: DrawingRow | null;
   setDrawing: Dispatch<SetStateAction<DrawingRow | null>>;
-  activeLayerId: string;
   setActiveLayerId: Dispatch<SetStateAction<string>>;
   scheduleSave: () => void;
   pushHistory: (before: DrawingData) => void;
   latestDataRef: MutableRefObject<DrawingData | null>;
 }
 
-export function useLayers({ drawing, setDrawing, setActiveLayerId, scheduleSave, pushHistory, latestDataRef }: UseLayersParams) {
+export function useLayers({ setDrawing, setActiveLayerId, scheduleSave, pushHistory, latestDataRef }: UseLayersParams) {
   const handleLayerChange = useCallback(
     (layerId: string, pixels: Record<string, HexColor>) => {
       setDrawing(prev => {
@@ -104,13 +102,9 @@ export function useLayers({ drawing, setDrawing, setActiveLayerId, scheduleSave,
       if (!prev || prev.data.layers.length <= 1) return prev;
       return { ...prev, data: { ...prev.data, layers: prev.data.layers.filter(l => l.id !== layerId) } };
     });
-    setActiveLayerId(prev => {
-      if (prev !== layerId) return prev;
-      const remaining = drawing?.data.layers.filter(l => l.id !== layerId) ?? [];
-      return remaining[0]?.id ?? '';
-    });
+    // Calque actif supprimé : useEditorDrawing retombe sur le calque du dessus.
     scheduleSave();
-  }, [latestDataRef, pushHistory, setDrawing, setActiveLayerId, drawing, scheduleSave]);
+  }, [latestDataRef, pushHistory, setDrawing, scheduleSave]);
 
   return {
     handleLayerChange,

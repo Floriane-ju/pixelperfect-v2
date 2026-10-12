@@ -7,11 +7,20 @@ export function useCheckerboard(canvasRef: RefObject<HTMLCanvasElement | null>, 
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        ctx.fillStyle = (x + y) % 2 === 0 ? '#8f8f8f' : '#b8b8b8';
-        ctx.fillRect(x, y, 1, 1);
-      }
-    }
+    // Motif 2×2 répété : un seul fillRect au lieu d'un par pixel (262 144 en 512²).
+    const tile = document.createElement('canvas');
+    tile.width = 2;
+    tile.height = 2;
+    const tctx = tile.getContext('2d');
+    if (!tctx) return;
+    tctx.fillStyle = '#b8b8b8';
+    tctx.fillRect(0, 0, 2, 2);
+    tctx.fillStyle = '#8f8f8f';
+    tctx.fillRect(0, 0, 1, 1);
+    tctx.fillRect(1, 1, 1, 1);
+    const pattern = ctx.createPattern(tile, 'repeat');
+    if (!pattern) return;
+    ctx.fillStyle = pattern;
+    ctx.fillRect(0, 0, width, height);
   }, [canvasRef, width, height]);
 }

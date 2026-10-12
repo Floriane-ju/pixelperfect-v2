@@ -240,3 +240,35 @@ describe('offlineQueue — IndexedDB indisponible', () => {
     expect(localStorage.getItem(LEGACY_PREFIX + 'd1')).toBeNull();
   });
 });
+
+describe('offlineQueue — révisions et concurrence', () => {
+  it('dequeue(rev) garde une révision plus récente mise en file par un autre onglet', async () => {
+    const tabA = await freshModule();
+    const oldRev = await tabA.enqueue('d1', validData);
+    const tabB = await freshModule();
+    const newer = { ...validData, width: 8 };
+    await tabB.enqueue('d1', newer);
+
+    await tabA.dequeue('d1', oldRev);
+
+    expect(await tabA.getPending('d1')).toEqual(newer);
+  });
+
+  it('dequeue(rev) retire l’entrée quand c’est encore elle', async () => {
+    const { enqueue, dequeue, getPending } = await freshModule();
+    const rev = await enqueue('d1', validData);
+    await dequeue('d1', rev);
+
+    expect(await getPending('d1')).toBeNull();
+  });
+
+  it('flushAll ne lance qu’un passage à la fois', async () => {
+    const { enqueue, flushAll } = await freshModule();
+    await enqueue('d1', validData);
+    const upload = vi.fn(() => Promise.resolve());
+
+    await Promise.all([flushAll(upload), flushAll(upload)]);
+
+    expect(upload).toHaveBeenCalledTimes(1);
+  });
+});

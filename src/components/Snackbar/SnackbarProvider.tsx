@@ -14,22 +14,26 @@ export interface SnackbarProviderProps {
   children: ReactNode;
 }
 
+// Clé React : deux show() dans la même milliseconde doivent quand même relancer le minuteur.
+let nextId = 0;
+
 export function SnackbarProvider({ children }: SnackbarProviderProps) {
   const [current, setCurrent] = useState<SnackbarItem | null>(null);
 
   const show = useCallback((message: string, options?: ShowSnackbarOptions) => {
     setCurrent({
-      id: Date.now(),
+      id: ++nextId,
       message,
       icon: options?.icon,
       duration: options?.duration,
     });
   }, []);
 
+  const close = useCallback(() => setCurrent(null), []);
   const value = useMemo<SnackbarContextValue>(() => ({ show }), [show]);
 
   return (
-    <SnackbarContext.Provider value={value}>
+    <SnackbarContext value={value}>
       {children}
       {/* Région montée en permanence : les lecteurs d'écran annoncent mal un role=status créé avec son contenu. */}
       <div role="status" aria-live="polite">
@@ -39,10 +43,10 @@ export function SnackbarProvider({ children }: SnackbarProviderProps) {
             message={current.message}
             icon={current.icon}
             duration={current.duration}
-            onClose={() => setCurrent(null)}
+            onClose={close}
           />
         )}
       </div>
-    </SnackbarContext.Provider>
+    </SnackbarContext>
   );
 }

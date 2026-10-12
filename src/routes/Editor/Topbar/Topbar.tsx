@@ -44,6 +44,7 @@ export function Topbar() {
     activeLayerId, layers, canvasWidth, canvasHeight, openPanel, onPanelToggle, onPanelClose,
     onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete, onLayerReorder,
     onBack, refImage, refImageError, onRefImageImport, onRefImageErrorClear, onRefImageRemove, onRefImageTransform, onRefImageCapture,
+    getCommittedLayers,
     canvasDisplaySize,
   } = useEditorContext();
 
@@ -283,11 +284,11 @@ export function Topbar() {
                 {
                   label: 'Copier en SVG',
                   onClick: () => copyWithFeedback(() =>
-                    navigator.clipboard.writeText(buildLayersSvg(layers, canvasWidth, canvasHeight))),
+                    navigator.clipboard.writeText(buildLayersSvg(getCommittedLayers(), canvasWidth, canvasHeight))),
                 },
                 {
                   label: 'Copier en PNG',
-                  onClick: () => copyWithFeedback(() => copyLayersPng(layers, canvasWidth, canvasHeight)),
+                  onClick: () => copyWithFeedback(() => copyLayersPng(getCommittedLayers(), canvasWidth, canvasHeight)),
                 },
               ]}
             />

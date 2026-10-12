@@ -25,6 +25,9 @@ export function useEditorShortcuts({ handleUndo, handleRedo, setTool, selectionR
 
       // Dans un champ (hex du sélecteur…), Cmd+Z reste l'undo natif du texte.
       if (inText) return;
+      // Modale ouverte (confirmation…) : l'éditeur derrière ne doit réagir à rien, et Entrée doit
+      // pouvoir activer le bouton focalisé.
+      if (e.defaultPrevented || document.querySelector('[aria-modal="true"]')) return;
       // Insensible à la casse : CapsLock, et Shift+Z renvoie 'Z' sous Windows.
       const key = e.key.toLowerCase();
       if ((e.ctrlKey || e.metaKey) && key === 'z' && !e.shiftKey) {

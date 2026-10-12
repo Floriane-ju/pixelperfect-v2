@@ -79,8 +79,11 @@ export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory
           },
         };
       });
+      // Sauvegarde programmée dès l'édition : si iOS tue la PWA panneau ouvert, flushImmediate
+      // n'a rien à envoyer tant qu'aucun minuteur n'est en cours.
+      scheduleSave();
     }
-  }, [setDrawing]);
+  }, [setDrawing, scheduleSave]);
 
   const commitRecentColor = useCallback((c: HexColor) => {
     setRecentColors(recents => {
@@ -99,14 +102,10 @@ export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory
       editColorModeRef.current = null;
       setEditColorMode(null);
     } else {
-      const c = colorRef.current;
-      setRecentColors(recents => {
-        const filtered = recents.filter(r => r !== c);
-        return [c, ...filtered].slice(0, MAX_RECENT_COLORS);
-      });
+      commitRecentColor(colorRef.current);
     }
     setOpenPanel(null);
-  }, [pushHistory, scheduleSave]);
+  }, [pushHistory, scheduleSave, commitRecentColor]);
 
   const handlePanelToggle = useCallback((panel: 'layers' | 'color' | 'ref' | 'export') => {
     if (panel === 'color') {

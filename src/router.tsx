@@ -1,20 +1,31 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 import { AppLayout } from './AppLayout';
 import { Gallery } from './routes/Gallery/Gallery';
-import { Editor } from './routes/Editor/Editor';
 import { Login } from './routes/Login';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorBoundary, ErrorFallback } from '@/components/ErrorBoundary';
+
+// Erreurs hors des limites React (chargement d'un chunk après déploiement, layout, page de login).
+const routeError = <ErrorFallback onRetry={() => window.location.reload()} />;
 
 export const router = createBrowserRouter([
   {
     path: 'login',
     element: <Login />,
+    errorElement: routeError,
   },
   {
     element: <AppLayout />,
+    errorElement: routeError,
     children: [
       { index: true, element: <ErrorBoundary><Gallery /></ErrorBoundary> },
-      { path: 'editor/:id', element: <ErrorBoundary><Editor /></ErrorBoundary> },
+      {
+        path: 'editor/:id',
+        // Canvas, calques, export : hors du bundle initial de la galerie.
+        lazy: async () => {
+          const { Editor } = await import('./routes/Editor/Editor');
+          return { element: <ErrorBoundary><Editor /></ErrorBoundary> };
+        },
+      },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

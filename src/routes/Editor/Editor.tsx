@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { LOCAL_OWNER } from '@/lib/localLibrary';
-import type { HexColor } from '@/types';
+import type { DrawingData, HexColor } from '@/types';
 import { ColorSwatch } from '@/components/ColorSwatch';
 import { ColorWheelIcon } from '@/components/ColorWheelIcon';
 import { BrushSizeSlider } from '@/components/BrushSizeSlider';
@@ -32,6 +32,8 @@ import { useSelection } from './hooks/useSelection';
 import { EditorContext } from './EditorContext';
 import type { EditorContextValue } from './EditorContext';
 import styles from './Editor.module.scss';
+
+const FALLBACK_DATA: DrawingData = { width: 1, height: 1, layers: [] };
 
 export function Editor() {
   const { id } = useParams<{ id: string }>();
@@ -66,7 +68,7 @@ export function Editor() {
     setStatus,
   });
   const { canUndo, canRedo, pushHistory, handleDrawStart, handleDrawEnd, handleUndo, handleRedo } = useUndoRedo({ latestDataRef, setDrawing, scheduleSave });
-  const { handleLayerChange, handleLayerVisibilityToggle, handleLayerDuplicate, handleLayerAdd, handleLayerDelete, handleLayerReorder } = useLayers({ drawing, setDrawing, activeLayerId, setActiveLayerId, scheduleSave, pushHistory, latestDataRef });
+  const { handleLayerChange, handleLayerVisibilityToggle, handleLayerDuplicate, handleLayerAdd, handleLayerDelete, handleLayerReorder } = useLayers({ setDrawing, setActiveLayerId, scheduleSave, pushHistory, latestDataRef });
   const { refImage, refImageError, clearRefImageError, handleRefImageImport, handleRefImageRemove, handleRefImageTransform, handleCapturePixels } = useReferenceImage({ canvasDisplaySize, activeLayerId, drawing, handleLayerChange, pushHistory, latestDataRef });
   const {
     color, drawingColors, openPanel, setOpenPanel, hoveredColor, setHoveredColor,
@@ -75,9 +77,8 @@ export function Editor() {
     handleColorChange, commitRecentColor, handlePanelToggle, handleEditDrawingColor,
   } = useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory, latestDataRef, rightSidebarRef });
 
-  const fallbackData = useMemo(() => ({ width: 1, height: 1, layers: [] }), []);
   const selection = useSelection({
-    data: drawing?.data ?? fallbackData,
+    data: drawing?.data ?? FALLBACK_DATA,
     activeLayerId,
     onLayerChange: handleLayerChange,
     pushHistory,
@@ -203,12 +204,16 @@ export function Editor() {
     onRefImageErrorClear: clearRefImageError,
     onRefImageRemove: handleRefImageRemove,
     onRefImageTransform: handleRefImageTransform,
-    onRefImageCapture: handleCaptureRequest,
+    onRefImageCapture: afterCommit(handleCaptureRequest),
+    getCommittedLayers: () => {
+      selectionRef.current.commit();
+      return latestDataRef.current?.layers ?? drawing.data.layers;
+    },
     canvasDisplaySize,
   };
 
   return (
-    <EditorContext.Provider value={editorCtx}>
+    <EditorContext value={editorCtx}>
       <main className={styles.editor}>
         <a className="skip-link" href="#canvas">Aller au canvas</a>
         <Topbar />
@@ -339,7 +344,7 @@ export function Editor() {
                     color={c}
                     displayColor={editColorMode?.originalColor === c ? color : undefined}
                     onColorChange={handleColorChange}
-                    onEdit={handleEditDrawingColor}
+                    onEdit={afterCommit(handleEditDrawingColor)}
                     onHoverEnter={setHoveredColor}
                     onHoverLeave={handleHoverLeave}
                   />
@@ -381,6 +386,6 @@ export function Editor() {
           />
         )}
       </main>
-    </EditorContext.Provider>
+    </EditorContext>
   );
 }

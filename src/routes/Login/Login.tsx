@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { isAuthApiError } from '@supabase/supabase-js';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
@@ -20,15 +20,16 @@ export function Login() {
   const [remaining, setRemaining] = useState(0);
   const attemptsRef = useRef(0);
   const navigate = useNavigate();
-  const location = useLocation();
-  const rawFrom = (location.state as { from?: { pathname: string } } | null)?.from?.pathname;
-  const from = rawFrom && rawFrom.startsWith('/') && !rawFrom.startsWith('//') ? rawFrom : '/';
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate(from, { replace: true });
-    });
-  }, [from, navigate]);
+    // Déjà connecté : retour à la galerie. Ignoré si l'utilisateur est parti entre-temps.
+    let ignore = false;
+    supabase.auth.getSession().then(
+      ({ data }) => { if (!ignore && data.session) navigate('/', { replace: true }); },
+      () => {},
+    );
+    return () => { ignore = true; };
+  }, [navigate]);
 
   useEffect(() => {
     if (lockUntil === null) return;
@@ -56,7 +57,7 @@ export function Login() {
     try {
       await signIn(email, password);
       attemptsRef.current = 0;
-      navigate(from, { replace: true });
+      navigate('/', { replace: true });
     } catch (err: unknown) {
       // Le message affiché est volontairement générique : sans ce log, une panne
       // d'infra (clé API révoquée, réseau) est indiscernable d'un mauvais mot de passe.
@@ -87,7 +88,7 @@ export function Login() {
         iconLeft="back"
         aria-label="Retour"
         className={styles.back}
-        onClick={() => navigate(from, { replace: true })}
+        onClick={() => navigate('/', { replace: true })}
       />
       <div className={styles.card}>
         <h1 className={styles.title}>Pixel Perfect</h1>

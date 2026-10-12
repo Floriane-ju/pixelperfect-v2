@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { CSSProperties, PointerEvent } from 'react';
 import type { HexColor } from '@/types';
 import styles from './ColorPicker.module.scss';
@@ -54,11 +54,14 @@ export function ColorPicker({ value, onChange, recentColors, drawingColors, onCo
   const [hsv, setHsv] = useState<HSV>(() => hexToHsv(value));
   const [hexInput, setHexInput] = useState<string>(value);
 
-  // Sync incoming value when it changes externally (e.g. swatch click)
-  useEffect(() => {
-    setHsv(hexToHsv(value));
+  // Resynchronise sur une valeur externe (clic sur une pastille). Si la valeur est celle que le
+  // sélecteur vient d'émettre, on garde le HSV courant : l'hex perd la teinte des gris/noirs.
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
     setHexInput(value);
-  }, [value]);
+    if (value.toLowerCase() !== hsvToHex(hsv.h, hsv.s, hsv.v)) setHsv(hexToHsv(value));
+  }
 
   const applyHsv = useCallback((next: HSV) => {
     setHsv(next);

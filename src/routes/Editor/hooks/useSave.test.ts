@@ -114,6 +114,24 @@ describe('useSave', () => {
     expect(updateMock).toHaveBeenCalledTimes(1);
   });
 
+  it('serializes saves: a slow upload finishes before the next one starts', async () => {
+    let release: () => void = () => {};
+    updateMock.mockImplementationOnce(() => new Promise<void>((r) => { release = r; }));
+    const { hook, setStatus } = setup();
+
+    act(() => { hook.result.current.save.scheduleSave(); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    act(() => { hook.result.current.save.scheduleSave(); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+
+    expect(updateMock).toHaveBeenCalledTimes(1);
+    expect(setStatus).not.toHaveBeenCalledWith('ready');
+
+    await act(async () => { release(); await vi.advanceTimersByTimeAsync(0); });
+    expect(updateMock).toHaveBeenCalledTimes(2);
+    expect(setStatus).toHaveBeenLastCalledWith('ready');
+  });
+
   it('enqueues to offline queue and sets error on failure', async () => {
     updateMock.mockRejectedValueOnce(new Error('network'));
     const { hook, setStatus } = setup();
@@ -216,6 +234,7 @@ describe('useSave', () => {
     const { hook } = setup(row(data), false);
     act(() => { hook.result.current.save.scheduleSave(); });
     act(() => { hook.unmount(); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
     expect(localUpdateMock).toHaveBeenCalledWith('d1', data);
     expect(updateMock).not.toHaveBeenCalled();
     expect(enqueueMock).not.toHaveBeenCalled();

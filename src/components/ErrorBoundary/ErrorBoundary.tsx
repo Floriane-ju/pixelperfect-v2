@@ -7,6 +7,23 @@ export interface ErrorBoundaryProps {
   children: ReactNode;
 }
 
+export interface ErrorFallbackProps {
+  onRetry: () => void;
+}
+
+/** Écran d'erreur partagé : limite de rendu React et `errorElement` du routeur. */
+export function ErrorFallback({ onRetry }: ErrorFallbackProps) {
+  return (
+    <div className={styles.container}>
+      <p className={styles.message}>Une erreur inattendue s'est produite.</p>
+      <div className={styles.actions}>
+        <Button variant="primary" onClick={onRetry}>Réessayer</Button>
+        <Button variant="secondary" onClick={() => { window.location.href = '/'; }}>← Retour à la galerie</Button>
+      </div>
+    </div>
+  );
+}
+
 interface State {
   hasError: boolean;
 }
@@ -23,17 +40,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   };
 
   render() {
-    if (this.state.hasError) {
-      return (
-        <div className={styles.container}>
-          <p className={styles.message}>Une erreur inattendue s'est produite.</p>
-          <div className={styles.actions}>
-            <Button variant="primary" onClick={this.handleRetry}>Réessayer</Button>
-            <Button variant="secondary" onClick={() => { window.location.href = '/'; }}>← Retour à la galerie</Button>
-          </div>
-        </div>
-      );
-    }
+    if (this.state.hasError) return <ErrorFallback onRetry={this.handleRetry} />;
     return this.props.children;
   }
 }

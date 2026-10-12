@@ -133,6 +133,8 @@ export function LayerPanel({
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
     setDrag(null);
+    // Annulation système (rejet de paume, appel entrant…) : on n'applique pas le déplacement.
+    if (e.type === 'pointercancel') return;
     if (!current || !current.targetId || current.targetId === current.id) return;
     const realPos: 'before' | 'after' = current.pos === 'before' ? 'after' : 'before';
     onReorder(current.id, current.targetId, realPos);
