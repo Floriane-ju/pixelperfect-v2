@@ -1,4 +1,4 @@
-import { parseDrawingData } from './drawingValidation';
+import { DEFAULT_DRAWING_SETTINGS, parseDrawingData } from './drawingValidation';
 import type { DrawingData, DrawingRow } from '@/types';
 
 /**
@@ -197,6 +197,7 @@ export async function createDrawing(
     width,
     height,
     layers: [{ id: crypto.randomUUID(), name: 'Calque 1', pixels: {}, opacity: 1, visible: true }],
+    settings: { ...DEFAULT_DRAWING_SETTINGS },
   };
   const ts = nowIso();
   const drawing: LocalDrawing = {

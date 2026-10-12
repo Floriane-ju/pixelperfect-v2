@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { isRecord, parseDrawingData } from './drawingValidation';
+import { DEFAULT_DRAWING_SETTINGS, isRecord, parseDrawingData } from './drawingValidation';
 import { SaveRejectedError } from './saveErrors';
 import { shareErrorMessage } from './groupSharing';
 import type { CollaboratorRole, DrawingData, DrawingRow, PixelLayer } from '@/types';
@@ -119,7 +119,7 @@ export async function createDrawing(title: string, width: number, height: number
     opacity: 1,
     visible: true,
   };
-  const drawingData: DrawingData = { width, height, layers: [layer] };
+  const drawingData: DrawingData = { width, height, layers: [layer], settings: { ...DEFAULT_DRAWING_SETTINGS } };
 
   // Pas de `.select()` chaîné : le RETURNING applique la policy SELECT (`is_drawing_member`), dont
   // la sous-requête ne voit pas encore la ligne insérée par la même instruction → refus RLS.

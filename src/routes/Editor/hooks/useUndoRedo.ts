@@ -88,7 +88,8 @@ export function useUndoRedo({ latestDataRef, setDrawing, scheduleSave }: UseUndo
     pastRef.current = past.slice(0, -1);
     const current = latestDataRef.current;
     if (current) futureRef.current = [...futureRef.current, current];
-    setDrawing(prev => prev ? { ...prev, data: before } : prev);
+    // Les réglages d'affichage ne font pas partie de l'historique : on garde ceux du moment.
+    setDrawing(prev => prev ? { ...prev, data: { ...before, settings: prev.data.settings } } : prev);
     scheduleSave();
     syncHistoryFlags();
   }, [latestDataRef, scheduleSave, setDrawing, syncHistoryFlags]);
@@ -101,7 +102,7 @@ export function useUndoRedo({ latestDataRef, setDrawing, scheduleSave }: UseUndo
     futureRef.current = future.slice(0, -1);
     const current = latestDataRef.current;
     if (current) pastRef.current = [...pastRef.current, current];
-    setDrawing(prev => prev ? { ...prev, data: after } : prev);
+    setDrawing(prev => prev ? { ...prev, data: { ...after, settings: prev.data.settings } } : prev);
     scheduleSave();
     syncHistoryFlags();
   }, [latestDataRef, scheduleSave, setDrawing, syncHistoryFlags]);

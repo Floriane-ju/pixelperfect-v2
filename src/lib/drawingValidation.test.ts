@@ -198,6 +198,17 @@ describe('parseDrawingData', () => {
     expect(result).toEqual(validData);
   });
 
+  it('conserve les réglages valides du dessin', () => {
+    const settings = { animationMode: true, fps: 12, bgColor: 'black' } as const;
+    expect(parseDrawingData({ ...validData, settings }).settings).toEqual(settings);
+  });
+
+  it('ignore les réglages invalides sans rejeter le dessin', () => {
+    const settings = { animationMode: 'oui', fps: 999, bgColor: 'rose' };
+    expect(parseDrawingData({ ...validData, settings }).settings).toEqual({});
+    expect(parseDrawingData({ ...validData, settings: 'x' }).settings).toBeUndefined();
+  });
+
   it('ignore les clés de pixel mal formées ou hors cadre', () => {
     const layer = validData.layers[0]!;
     const result = parseDrawingData({

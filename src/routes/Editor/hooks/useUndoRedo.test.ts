@@ -75,6 +75,21 @@ describe('useUndoRedo', () => {
     expect(scheduleSave).toHaveBeenCalled();
   });
 
+  it('undo/redo gardent les réglages courants du dessin', () => {
+    const { result } = setup(makeData('a'));
+    act(() => {
+      result.result.current.undo.handleDrawStart();
+      result.result.current.setDrawing(makeRow(makeData('b')));
+      result.result.current.undo.handleDrawEnd();
+    });
+    act(() => { result.result.current.setDrawing(makeRow({ ...makeData('b'), settings: { fps: 12 } })); });
+    act(() => { result.result.current.undo.handleUndo(); });
+    expect(result.result.current.drawing?.data.layers[0]!.name).toBe('a');
+    expect(result.result.current.drawing?.data.settings).toEqual({ fps: 12 });
+    act(() => { result.result.current.undo.handleRedo(); });
+    expect(result.result.current.drawing?.data.settings).toEqual({ fps: 12 });
+  });
+
   it('redo replays after undo', () => {
     const { result } = setup(makeData('a'));
     act(() => {

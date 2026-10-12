@@ -2,8 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { CSSProperties } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { LOCAL_OWNER } from '@/lib/localLibrary';
-import { MAX_LAYERS } from '@/lib/drawingValidation';
-import type { DrawingData, HexColor } from '@/types';
+import { DEFAULT_DRAWING_SETTINGS, MAX_LAYERS } from '@/lib/drawingValidation';
+import type { DrawingData, DrawingSettings, HexColor } from '@/types';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { cx } from '@/lib/cx';
 import { ColorPicker } from './ColorPicker/ColorPicker';
@@ -51,11 +51,8 @@ export function Editor() {
   const [radialSegments, setRadialSegments] = useState<RadialSegments>(4);
   const [showGrid, setShowGrid] = useState(false);
   const [gridOpacity, setGridOpacity] = useState(0.4);
-  const [bgColor, setBgColor] = useState<EditorBgColor>('white');
-  const [animationMode, setAnimationMode] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [onionSkin, setOnionSkin] = useState(true);
-  const [fps, setFps] = useState(8);
   const [canvasDisplaySize, setCanvasDisplaySize] = useState({ w: 256, h: 256 });
   const rightSidebarRef = useRef<HTMLElement>(null);
 
@@ -67,6 +64,15 @@ export function Editor() {
     authed: drawing !== null && drawing.owner_id !== LOCAL_OWNER,
     setStatus,
   });
+  // Réglages enregistrés avec le dessin, hors historique d'undo.
+  const { bgColor, animationMode, fps } = { ...DEFAULT_DRAWING_SETTINGS, ...drawing?.data.settings };
+  const updateSettings = useCallback((patch: DrawingSettings) => {
+    setDrawing(prev => prev ? { ...prev, data: { ...prev.data, settings: { ...prev.data.settings, ...patch } } } : prev);
+    scheduleSave();
+  }, [setDrawing, scheduleSave]);
+  const setBgColor = useCallback((c: EditorBgColor) => updateSettings({ bgColor: c }), [updateSettings]);
+  const setFps = useCallback((v: number) => updateSettings({ fps: v }), [updateSettings]);
+
   const { canUndo, canRedo, pushHistory, handleDrawStart, handleDrawEnd, handleUndo, handleRedo } = useUndoRedo({ latestDataRef, setDrawing, scheduleSave });
   const { handleLayerChange, handleCanvasResize, handleLayerVisibilityToggle, handleLayerDuplicate, handleLayerAdd, handleLayerDelete, handleLayerReorder } = useLayers({ setDrawing, setActiveLayerId, scheduleSave, pushHistory, latestDataRef });
   const { refImage, refImageError, clearRefImageError, handleRefImageImport, handleRefImageRemove, handleRefImageTransform, handleCapturePixels } = useReferenceImage({ canvasDisplaySize, activeLayerId, drawing, handleLayerChange, pushHistory, latestDataRef });
@@ -147,11 +153,11 @@ export function Editor() {
     setActiveLayerId(layerId);
   }, [setActiveLayerId]);
   const handleAnimationModeToggle = useCallback(() => {
-    setAnimationMode(v => !v);
+    updateSettings({ animationMode: !animationMode });
     setPlaying(false);
     // Le panneau Calques n'existe pas en mode animation : la timeline le remplace.
     setOpenPanel(p => (p === 'layers' ? null : p));
-  }, [setOpenPanel]);
+  }, [animationMode, updateSettings, setOpenPanel]);
 
   const handleOnionSkinToggle = useCallback(() => setOnionSkin(v => !v), []);
 

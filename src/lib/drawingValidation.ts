@@ -1,7 +1,12 @@
-import type { DrawingData, HexColor, PixelLayer } from '@/types';
+import type { CanvasBgColor, DrawingData, DrawingSettings, HexColor, PixelLayer } from '@/types';
 
 export const MAX_DIMENSION = 512;
 export const MAX_LAYERS = 64;
+export const MIN_FPS = 1;
+export const MAX_FPS = 24;
+/** Réglages d'un nouveau dessin ; aussi le backfill de `20261012120000_drawing_settings.sql`. */
+export const DEFAULT_DRAWING_SETTINGS = { animationMode: false, bgColor: 'white', fps: 8 } as const satisfies Required<DrawingSettings>;
+const BG_COLORS: readonly CanvasBgColor[] = ['white', 'gray', 'black'];
 const PIXEL_KEY_RE = /^(\d+),(\d+)$/;
 const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
@@ -51,9 +56,20 @@ export function parsePixelLayer(
   return { id, name, pixels: parsedPixels, opacity, visible };
 }
 
+/** Réglages d'affichage : un champ invalide est ignoré (valeur par défaut) plutôt que de rejeter le dessin. */
+function parseDrawingSettings(raw: unknown): DrawingSettings | undefined {
+  if (!isRecord(raw)) return undefined;
+  const { animationMode, fps, bgColor } = raw;
+  return {
+    ...(typeof animationMode === 'boolean' && { animationMode }),
+    ...(typeof fps === 'number' && Number.isInteger(fps) && fps >= MIN_FPS && fps <= MAX_FPS && { fps }),
+    ...(BG_COLORS.some(c => c === bgColor) && { bgColor: bgColor as CanvasBgColor }),
+  };
+}
+
 export function parseDrawingData(raw: unknown): DrawingData {
   if (!isRecord(raw)) throw new Error('Invalid DrawingRow: data must be object');
-  const { width, height, layers } = raw;
+  const { width, height, layers, settings } = raw;
   if (typeof width !== 'number' || !Number.isInteger(width) || width < 1 || width > MAX_DIMENSION) {
     throw new Error(`Invalid DrawingRow: width must be integer in [1, ${MAX_DIMENSION}]`);
   }
@@ -65,5 +81,11 @@ export function parseDrawingData(raw: unknown): DrawingData {
     throw new Error(`Invalid DrawingRow: layers exceeds cap ${MAX_LAYERS}`);
   }
   const maxPixels = width * height;
-  return { width, height, layers: layers.map((l) => parsePixelLayer(l, maxPixels, { width, height })) };
+  const parsedSettings = parseDrawingSettings(settings);
+  return {
+    width,
+    height,
+    layers: layers.map((l) => parsePixelLayer(l, maxPixels, { width, height })),
+    ...(parsedSettings && { settings: parsedSettings }),
+  };
 }

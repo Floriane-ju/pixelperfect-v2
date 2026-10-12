@@ -4,9 +4,11 @@ import { cx } from '@/lib/cx';
 import { Button } from '@/components/Button';
 import { Slider } from '@/components/Slider';
 import { Switch } from '@/components/Switch';
+import { MAX_FPS, MIN_FPS } from '@/lib/drawingValidation';
+import type { CanvasBgColor } from '@/types';
 import styles from './SettingsPanel.module.scss';
 
-export type EditorBgColor = 'white' | 'gray' | 'black';
+export type EditorBgColor = CanvasBgColor;
 
 export interface SettingsPanelProps {
   showGrid: boolean;
@@ -24,9 +26,6 @@ export interface SettingsPanelProps {
   onOnionSkinToggle: () => void;
   onClose: () => void;
 }
-
-const MIN_FPS = 1;
-const MAX_FPS = 24;
 
 const BG_OPTIONS: ReadonlyArray<{ value: EditorBgColor; label: string }> = [
   { value: 'white', label: 'Blanc' },
