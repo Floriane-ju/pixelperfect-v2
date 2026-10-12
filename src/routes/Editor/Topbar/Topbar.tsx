@@ -140,6 +140,20 @@ export function Topbar() {
           </div>
         </div>
 
+        {canShare && (
+          <Menu
+            ariaLabel="Partager"
+            triggerIcon="collaborators"
+            triggerVariant="selectable"
+            triggerSize="md"
+            triggerTitle="Partager"
+            items={[
+              { label: 'Inviter…', icon: 'add', onClick: () => setSharing('invite') },
+              { label: 'Partager un lien', icon: 'link', onClick: () => setSharing('link') },
+            ]}
+          />
+        )}
+
         <Menu
           ariaLabel="Exporter"
           triggerIcon={copied ? 'check' : 'export'}
@@ -161,21 +175,6 @@ export function Topbar() {
             },
           ]}
         />
-
-        {canShare && (
-          <Menu
-            ariaLabel="Partager"
-            triggerIcon="collaborators"
-            triggerVariant="primary"
-            triggerSize="md"
-            triggerTitle="Partager"
-            triggerLabel="Partager"
-            items={[
-              { label: 'Inviter…', icon: 'add', onClick: () => setSharing('invite') },
-              { label: 'Partager un lien', icon: 'link', onClick: () => setSharing('link') },
-            ]}
-          />
-        )}
       </div>
       {sharing === 'invite' && (
         <InviteCollaboratorModal
