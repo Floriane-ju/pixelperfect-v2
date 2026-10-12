@@ -35,6 +35,11 @@
   &[data-bg='black'] { --canvas-bg: #{$black}; }
 }
 
+// Lecture en cours : pas de dessin sur une frame qui défile.
+.playing {
+  pointer-events: none;
+}
+
 // Coins de coupe : 3 pixels rouges de 4 px à chaque angle de la zone de dessin.
 .corner {
   position: absolute;

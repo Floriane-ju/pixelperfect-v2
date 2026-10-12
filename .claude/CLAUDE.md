@@ -78,9 +78,10 @@ src/
                         #   ToolDock (outils + popover taille pinceau à l'appui long, symétrie,
                         #   affichage), Topbar (+ RefImagePanel), ColorRail (+ ColorPicker),
                         #   StatusBar, LayerPanel, SettingsPanel, MirrorPanel, EditorContext, tools.ts,
+                        #   Timeline (mode animation : calques visibles = frames, play/pause, vitesse),
                         #   hooks (useSave, useUndoRedo, useLayers, useSelection,
-                        #   useColorPalette, useReferenceImage, useEditorShortcuts),
-                        #   utilitaires (colorMerge, exportSvg, shapePixels) avec tests
+                        #   useColorPalette, useReferenceImage, useEditorShortcuts, useAnimationPlayback),
+                        #   utilitaires (colorMerge, exportSvg, shapePixels, animationFrames) avec tests
   styles/               # _variables (tokens), _mixins, global.scss
   types/                # DrawingData, PixelLayer, DrawingRow, CollaboratorRole, HexColor
 

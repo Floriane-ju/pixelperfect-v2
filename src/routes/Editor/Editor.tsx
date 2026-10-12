@@ -17,6 +17,8 @@ import { Topbar } from './Topbar/Topbar';
 import { ToolDock } from './ToolDock/ToolDock';
 import { ColorRail } from './ColorRail/ColorRail';
 import { StatusBar } from './StatusBar/StatusBar';
+import { Timeline } from './Timeline';
+import { animationLayers, frameIds, previousFrameId } from './animationFrames';
 import { mirrorLabel, toolDef } from './tools';
 import { useSave } from './hooks/useSave';
 import { useEditorDrawing } from './hooks/useEditorDrawing';
@@ -27,6 +29,7 @@ import { useReferenceImage } from './hooks/useReferenceImage';
 import { useColorPalette } from './hooks/useColorPalette';
 import { useEditorShortcuts } from './hooks/useEditorShortcuts';
 import { useSelection } from './hooks/useSelection';
+import { useAnimationPlayback } from './hooks/useAnimationPlayback';
 import { EditorContext } from './EditorContext';
 import type { EditorContextValue } from './EditorContext';
 import styles from './Editor.module.scss';
@@ -48,6 +51,10 @@ export function Editor() {
   const [showGrid, setShowGrid] = useState(false);
   const [gridOpacity, setGridOpacity] = useState(0.4);
   const [bgColor, setBgColor] = useState<EditorBgColor>('white');
+  const [animationMode, setAnimationMode] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [onionSkin, setOnionSkin] = useState(true);
+  const [fps, setFps] = useState(8);
   const [canvasDisplaySize, setCanvasDisplaySize] = useState({ w: 256, h: 256 });
   const rightSidebarRef = useRef<HTMLElement>(null);
 
@@ -111,6 +118,34 @@ export function Editor() {
 
   const handleShowGridToggle = useCallback(() => setShowGrid(v => !v), []);
   const handleMirrorRotationToggle = useCallback(() => setMirrorRotation(v => !v), []);
+
+  const layers = drawing?.data.layers;
+  const frames = useMemo(() => frameIds(layers ?? []), [layers]);
+  const isPlaying = animationMode && playing && frames.length > 1;
+  const { frameId: playedFrameId } = useAnimationPlayback({ frames, fps, playing: isPlaying });
+  const shownFrameId = isPlaying ? playedFrameId : activeLayerId;
+
+  const canvasData = useMemo(() => {
+    if (!drawing || !animationMode) return drawing?.data ?? FALLBACK_DATA;
+    const onionId = isPlaying || !onionSkin ? null : previousFrameId(frames, activeLayerId);
+    return { ...drawing.data, layers: animationLayers(drawing.data.layers, { shownId: shownFrameId, onionId }) };
+  }, [drawing, animationMode, isPlaying, onionSkin, frames, activeLayerId, shownFrameId]);
+
+  // Pause : on reste sur l'image affichée, qui devient le calque actif.
+  const handlePlayingToggle = useCallback(() => {
+    if (isPlaying && playedFrameId) setActiveLayerId(playedFrameId);
+    setPlaying(!isPlaying);
+  }, [isPlaying, playedFrameId, setActiveLayerId]);
+  const handleFrameSelect = useCallback((layerId: string) => {
+    setPlaying(false);
+    setActiveLayerId(layerId);
+  }, [setActiveLayerId]);
+  const handleAnimationModeToggle = useCallback(() => {
+    setAnimationMode(v => !v);
+    setPlaying(false);
+  }, []);
+
+  const handleOnionSkinToggle = useCallback(() => setOnionSkin(v => !v), []);
 
   const symmetry = useMemo<SymmetryConfig>(() => ({
     axis: mirrorAxis,
@@ -219,13 +254,17 @@ export function Editor() {
             onShowGridToggle: handleShowGridToggle,
             onGridOpacityChange: setGridOpacity,
             onBgColorChange: setBgColor,
+            animationMode,
+            onAnimationModeToggle: handleAnimationModeToggle,
+            onionSkin,
+            onOnionSkinToggle: handleOnionSkinToggle,
           }}
         />
 
         <div className={styles.workspace}>
           <Topbar />
           <div
-            className={styles.canvasArea}
+            className={cx(styles.canvasArea, isPlaying && styles.playing)}
             data-bg={bgColor}
             style={{ ['--checker-opacity' as string]: String(gridOpacity) } as CSSProperties}
           >
@@ -234,7 +273,7 @@ export function Editor() {
             <span className={cx(styles.corner, styles.cornerBl)} aria-hidden="true" />
             <span className={cx(styles.corner, styles.cornerBr)} aria-hidden="true" />
             <Canvas
-              data={drawing.data}
+              data={canvasData}
               activeLayerId={activeLayerId}
               tool={tool}
               color={color}
@@ -253,6 +292,19 @@ export function Editor() {
               title={drawing.title}
             />
           </div>
+          {animationMode && (
+            <Timeline
+              frames={drawing.data.layers.filter(l => l.visible)}
+              currentId={shownFrameId}
+              canvasWidth={drawing.data.width}
+              canvasHeight={drawing.data.height}
+              playing={isPlaying}
+              fps={fps}
+              onPlayingToggle={handlePlayingToggle}
+              onFrameSelect={handleFrameSelect}
+              onFpsChange={setFps}
+            />
+          )}
           <StatusBar
             toolLabel={currentTool?.label ?? tool}
             brushSize={currentTool?.sized ? brushSize : undefined}

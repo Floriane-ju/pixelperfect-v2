@@ -1,0 +1,42 @@
+.timeline {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: $space-m;
+  padding: $space-s $space-l;
+  border-top: $border;
+  background: $color-surface;
+}
+
+.frames {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: $space-s;
+  margin: 0;
+  padding: $space-xs 0;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.frame {
+  flex-direction: column;
+  gap: $space-xxs;
+  height: auto;
+  padding: $space-xs;
+}
+
+.number {
+  font-family: $font-family-display;
+  font-size: $font-size-2xs;
+}
+
+.empty {
+  @include text-meta;
+  color: $color-text-muted;
+}
+
+.speed {
+  flex-shrink: 0;
+  width: $editor-speed-width;
+}

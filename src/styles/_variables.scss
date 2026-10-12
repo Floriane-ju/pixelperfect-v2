@@ -304,6 +304,7 @@ $editor-micro-font:        8px;   // badge de taille sur l'outil, intitulés du 
 $editor-hold-steps:        6;     // barre d'appui long : 6 pas, comme les pixels de chargement
 $editor-dot:               $space-xs; // pastille rouge « actif » sur un bouton
 $editor-corner-inset:      $space-m;  // coins de coupe autour de la zone de dessin
+$editor-speed-width:       160px;     // curseur de vitesse de la timeline d'animation
 $color-grid-on-dark:      rgba($white, 0.4); // grille sur fond de toile noir
 
 // ─── Galerie ───

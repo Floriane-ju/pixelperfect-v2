@@ -15,6 +15,10 @@ export interface SettingsPanelProps {
   onShowGridToggle: () => void;
   onGridOpacityChange: (value: number) => void;
   onBgColorChange: (color: EditorBgColor) => void;
+  animationMode: boolean;
+  onAnimationModeToggle: () => void;
+  onionSkin: boolean;
+  onOnionSkinToggle: () => void;
   onClose: () => void;
 }
 
@@ -31,12 +35,18 @@ export function SettingsPanel({
   onShowGridToggle,
   onGridOpacityChange,
   onBgColorChange,
+  animationMode,
+  onAnimationModeToggle,
+  onionSkin,
+  onOnionSkinToggle,
   onClose,
 }: SettingsPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   useModalA11y({ modalRef: panelRef, onClose, closeOnEscape: true });
 
   const gridLabelId = useId();
+  const animationLabelId = useId();
+  const onionLabelId = useId();
   const gridPercent = Math.round(gridOpacity * 100);
 
   return (
@@ -82,6 +92,19 @@ export function SettingsPanel({
             </Button>
           ))}
         </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.row}>
+          <span className={styles.label} id={animationLabelId}>Mode animation</span>
+          <Switch checked={animationMode} onChange={onAnimationModeToggle} aria-labelledby={animationLabelId} />
+        </div>
+        {animationMode && (
+          <div className={styles.row}>
+            <span className={styles.label} id={onionLabelId}>Pelure d'oignon</span>
+            <Switch checked={onionSkin} onChange={onOnionSkinToggle} aria-labelledby={onionLabelId} />
+          </div>
+        )}
       </section>
     </div>
   );

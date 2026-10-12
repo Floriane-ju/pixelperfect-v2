@@ -84,7 +84,7 @@ export function ToolDock({ tool, onToolChange, brushSize, onBrushSizeChange, onB
           aria-expanded={showSettings}
           onClick={() => setShowSettings((v) => !v)}
         />
-        {settings.showGrid && <span className={styles.dot} aria-hidden="true" />}
+        {(settings.showGrid || settings.animationMode) && <span className={styles.dot} aria-hidden="true" />}
         {showSettings && (
           <div className={styles.anchorEnd}>
             <SettingsPanel {...settings} onClose={closeSettings} />
