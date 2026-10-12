@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import type { PointerEvent } from 'react';
+import type { KeyboardEvent, PointerEvent } from 'react';
 import { Button } from '@/components/Button';
 import { Icons } from '@/components/Icons';
 import { cx } from '@/lib/cx';
@@ -64,7 +64,7 @@ export function LayerPanel({
    * Alt + flèches : réordonnent. `Alt` est exigé pour ne pas confisquer les flèches simples.
    */
   const handleLayerKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLLIElement>, layer: PixelLayer, index: number) => {
+    (e: KeyboardEvent<HTMLLIElement>, layer: PixelLayer, index: number) => {
       if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
 
       const delta = e.key === 'ArrowUp' ? -1 : 1;
