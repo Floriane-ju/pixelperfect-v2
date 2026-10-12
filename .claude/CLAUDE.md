@@ -37,7 +37,7 @@ src/
   router.tsx            # routes (login publique, reste sous AppLayout + ErrorBoundary ; pas de garde d'auth)
   AppLayout.tsx         # layout racine + SessionProvider + SnackbarProvider
   components/           # composants réutilisables (Button, Input, Switch, Slider, Snackbar,
-                        #   ColorSwatch, ColorWheelIcon, BrushSizeSlider, Icons, Menu,
+                        #   ColorSwatch, BrushSizeSlider, Icons, Menu,
                         #   ErrorBoundary, SessionProvider, SnakeCanvas, Tooltip)
     <Name>/<Name>.tsx + <Name>.module.scss + index.ts
     Button/             # variantes primary|secondary|ghost|danger|selected|selectable|ink

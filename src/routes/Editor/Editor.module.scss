@@ -95,7 +95,6 @@ $corner-arm: $pixel-corner * 2;
   position: fixed;
   right: calc(#{$dock-width} + #{$space-l});
   z-index: $z-popover;
-  transform: translateY(-50%);
 }
 
 // ── États (chargement / erreur) ──

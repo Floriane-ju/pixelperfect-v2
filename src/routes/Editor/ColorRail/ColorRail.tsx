@@ -1,6 +1,5 @@
 import type { ReactNode, Ref } from 'react';
 import { ColorSwatch } from '@/components/ColorSwatch';
-import { ColorWheelIcon } from '@/components/ColorWheelIcon';
 import type { HexColor } from '@/types';
 import styles from './ColorRail.module.scss';
 
@@ -31,8 +30,6 @@ export function ColorRail({
 }: ColorRailProps) {
   return (
     <aside ref={ref} className={styles.rail} aria-label="Couleurs">
-      <span className={styles.current} style={{ background: color }} aria-hidden="true" />
-      <span className={styles.hex}>{color.toUpperCase()}</span>
       <div className={styles.pickerSlot}>
         <button
           type="button"
@@ -42,10 +39,11 @@ export function ColorRail({
           aria-expanded={pickerOpen}
           onClick={onPickerToggle}
         >
-          <ColorWheelIcon size={24} />
+          <span className={styles.current} style={{ background: color }} aria-hidden="true" />
         </button>
         {picker}
       </div>
+      <span className={styles.hex}>{color.toUpperCase()}</span>
 
       {recentColors.length > 0 && (
         <>

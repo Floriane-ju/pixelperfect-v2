@@ -348,7 +348,7 @@ export function Editor() {
           <ColorPanel
             panelRef={editColorPanelRef}
             className={styles.editColorPanel}
-            style={{ top: editColorMode.pickerY }}
+            anchorY={editColorMode.pickerY}
             onClose={handlePanelClose}
           >
             <ColorPicker value={color} onChange={handleColorChange} onColorHover={setHoveredColor} recentColors={displayedRecentColors} drawingColors={drawingColors} />
