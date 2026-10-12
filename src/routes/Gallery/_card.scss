@@ -77,6 +77,9 @@
 
 @mixin preview {
   position: relative;
+  // Largeur explicite : sans elle, WebKit (iPad) dérive la largeur de la hauteur du contenu
+  // via aspect-ratio au lieu d'étirer l'aperçu sur la colonne, qui déborde alors.
+  width: 100%;
   aspect-ratio: $card-ratio;
   display: flex;
   align-items: center;

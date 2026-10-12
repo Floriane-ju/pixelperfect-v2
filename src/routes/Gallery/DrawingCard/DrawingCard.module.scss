@@ -39,6 +39,7 @@
 
 // Confirmation de suppression : l'aperçu se trame, bord et ombre rouges.
 .confirm {
+  width: 100%;
   aspect-ratio: $card-ratio;
   display: flex;
   align-items: center;
