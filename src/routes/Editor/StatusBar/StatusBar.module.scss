@@ -5,7 +5,7 @@
   align-items: center;
   column-gap: $space-2xl;
   min-height: $status-height;
-  padding: 0 $space-l;
+  padding: $space-s $space-l;
   @include safe-area-bottom;
   border-top: $border;
   background: $color-surface;
