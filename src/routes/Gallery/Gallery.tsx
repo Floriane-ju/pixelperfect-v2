@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, UIEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/Button';
+import { ConfirmModal } from '@/components/ConfirmModal';
 import { useSnackbar } from '@/components/Snackbar';
 import { useSession } from '@/components/SessionProvider';
 import { DrawingCard } from './DrawingCard/DrawingCard';
@@ -12,19 +13,17 @@ import { NewGroupModal } from './NewGroupModal/NewGroupModal';
 import { InviteCollaboratorModal } from './InviteCollaboratorModal/InviteCollaboratorModal';
 import type { InviteTarget } from './InviteCollaboratorModal/InviteCollaboratorModal';
 import { ProfileModal } from './ProfileModal/ProfileModal';
-import { createDrawing, fetchDrawings, renameDrawing, deleteDrawing, removeFromGroup, moveToGroup, renameGroup, dissolveGroup } from '@/lib/drawingStore';
+import { createDrawing, fetchDrawings, moveToGroup } from '@/lib/drawingStore';
 import { signOut } from '@/lib/auth';
 import { LOCAL_OWNER } from '@/lib/localLibrary';
 import { exportLibrary, importLibrary } from '@/lib/libraryTransfer';
 import { groupDrawings } from '@/lib/groupDrawings';
 import type { DrawingGroup } from '@/lib/groupDrawings';
 import { cx } from '@/lib/cx';
-import type { DrawingRow } from '@/types';
 import { SnakeCanvas } from '@/components/SnakeCanvas';
 import { version as appVersion } from '../../../package.json';
+import { useGalleryLibrary } from './useGalleryLibrary';
 import styles from './Gallery.module.scss';
-
-type Status = 'idle' | 'loading' | 'error';
 
 const MAX_IMPORT_BYTES = 20 * 1024 * 1024; // 20 Mo
 
@@ -49,9 +48,11 @@ export function Gallery() {
   const isAuth = session !== null;
   // Une seule source de vérité pour l'identité : la session du contexte (pas d'appel getUser).
   const currentUserId = session ? session.user.id : LOCAL_OWNER;
-  const [drawings, setDrawings] = useState<DrawingRow[]>([]);
-  const [status, setStatus] = useState<Status>('loading');
-  const [errorMsg, setErrorMsg] = useState('');
+  const {
+    drawings, setDrawings, status, errorMsg, reload, refetchSilent,
+    handleCollaboratorRemoved, handleRename, handleDelete, handleRemoveFromGroup, handleGroupPair,
+    handleUngroupAll, handleRenameGroup, handleDeleteGroup, handleMoveToGroup,
+  } = useGalleryLibrary({ isAuth, sessionLoading, currentUserId });
   const [showNewModal, setShowNewModal] = useState(false);
   /** Groupe dans lequel créer le prochain dessin (null = hors groupe). */
   const [newDrawingGroup, setNewDrawingGroup] = useState<string | null>(null);
@@ -60,23 +61,11 @@ export function Gallery() {
   const [isContentDragOver, setIsContentDragOver] = useState(false);
   const [inviteTarget, setInviteTarget] = useState<InviteTarget | null>(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
   const [snakeActive, setSnakeActive] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const touchStartY = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Recharge la bibliothèque à chaque changement d'auth (login/logout) une fois la session résolue.
-  useEffect(() => {
-    if (sessionLoading) return;
-    setStatus('loading');
-    fetchDrawings()
-      .then((rows) => { setDrawings(rows); setStatus('idle'); })
-      .catch((err: unknown) => {
-        const raw = err instanceof Error ? err.message : 'Erreur inconnue';
-        setErrorMsg(raw === 'IndexedDB unavailable' ? 'Stockage local indisponible (navigation privée ?).' : raw);
-        setStatus('error');
-      });
-  }, [isAuth, sessionLoading]);
 
   const handleExport = () => {
     exportLibrary()
@@ -102,89 +91,26 @@ export function Gallery() {
     }
   };
 
-  const handleCollaboratorRemoved = (drawingId: string) => {
-    setDrawings((prev) =>
-      prev.map((d) =>
-        d.id === drawingId ? { ...d, collaborator_count: Math.max(0, d.collaborator_count - 1) } : d,
-      ),
-    );
-  };
-
-  const refetchSilent = () => {
-    fetchDrawings().then(setDrawings).catch(() => {});
-  };
-
-  const handleRename = (id: string, newTitle: string) => {
-    setDrawings((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, title: newTitle } : d)),
-    );
-    renameDrawing(id, newTitle).catch(refetchSilent);
-  };
-
-  const handleDelete = (id: string) => {
-    setDrawings((prev) => prev.filter((d) => d.id !== id));
-    deleteDrawing(id).catch(refetchSilent);
-  };
-
-  const handleRemoveFromGroup = (id: string) => {
-    setDrawings((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, group: null } : d)),
-    );
-    removeFromGroup(id).catch(refetchSilent);
-  };
-
   const handleCreateGroup = (groupName: string) => {
     if (!pendingGroup) return;
-    const { sourceId, targetId } = pendingGroup;
     setPendingGroup(null);
-    setDrawings((prev) =>
-      prev.map((d) =>
-        d.id === sourceId || d.id === targetId ? { ...d, group: groupName } : d,
-      ),
-    );
-    Promise.all([
-      moveToGroup(sourceId, groupName),
-      moveToGroup(targetId, groupName),
-    ]).catch(refetchSilent);
+    handleGroupPair(pendingGroup.sourceId, pendingGroup.targetId, groupName);
   };
 
-  // Dissoudre passe par un seul appel : les membres du groupe doivent disparaître avec lui,
-  // sinon un dessin re-déposé plus tard sous le même nom serait re-partagé silencieusement.
-  const handleUngroupAll = (groupName: string) => {
-    setDrawings((prev) => prev.map((d) => d.group === groupName ? { ...d, group: null } : d));
-    dissolveGroup(groupName).then(refetchSilent).catch(refetchSilent);
-  };
-
-  const handleRenameGroup = (oldName: string, newName: string) => {
-    if (!newName || newName === oldName) return;
-    if (drawings.some((d) => d.group === newName)) return;
-    setDrawings((prev) =>
-      prev.map((d) => (d.group === oldName ? { ...d, group: newName } : d)),
-    );
-    setActiveGroups((arr) => arr.map((n) => (n === oldName ? newName : n)));
-    renameGroup(oldName, newName).catch(refetchSilent);
-  };
-
-  const handleDeleteGroup = (groupName: string) => {
-    const ids = drawings.filter((d) => d.group === groupName).map((d) => d.id);
-    setDrawings((prev) => prev.filter((d) => d.group !== groupName));
-    Promise.all(ids.map((id) => deleteDrawing(id)))
-      .then(() => dissolveGroup(groupName))
-      .catch(refetchSilent);
-  };
-
-  // Le serveur partage automatiquement le dessin aux membres du groupe : on relit pour que le
-  // compteur de collaborateurs de la carte reflète ce partage.
-  const handleMoveToGroup = (drawingId: string, groupName: string) => {
-    setDrawings((prev) =>
-      prev.map((d) => (d.id === drawingId ? { ...d, group: groupName } : d)),
-    );
-    moveToGroup(drawingId, groupName).then(refetchSilent).catch(refetchSilent);
+  const renameGroupAndOpenModals = (oldName: string, newName: string) => {
+    if (handleRenameGroup(oldName, newName)) {
+      setActiveGroups((arr) => arr.map((n) => (n === oldName ? newName : n)));
+    }
   };
 
   const handleCreate = async (name: string, width: number, height: number) => {
     const newDrawing = await createDrawing(name, width, height);
-    if (newDrawingGroup) await moveToGroup(newDrawing.id, newDrawingGroup);
+    // Le dessin existe déjà : un échec ici ne doit pas inviter à recréer (doublon).
+    if (newDrawingGroup) {
+      await moveToGroup(newDrawing.id, newDrawingGroup).catch(() =>
+        snackbar.show('Dessin créé hors du groupe'),
+      );
+    }
     navigate(`/editor/${newDrawing.id}`);
   };
 
@@ -283,7 +209,10 @@ export function Gallery() {
         <div className={styles.state} role="status" aria-live="polite">Chargement…</div>
       )}
       {status === 'error' && (
-        <div className={styles.stateError} role="alert">{errorMsg}</div>
+        <div className={styles.stateError} role="alert">
+          {errorMsg}
+          <Button variant="ghost" size="sm" onClick={reload}>Réessayer</Button>
+        </div>
       )}
       {status === 'idle' && !hasContent && (
         <div className={styles.state}>Aucun dessin pour le moment.</div>
@@ -320,9 +249,9 @@ export function Gallery() {
               onOpen={() => setActiveGroups((arr) => (arr.includes(g.name) ? arr : [...arr, g.name]))}
               onDropDrawing={(drawingId) => handleMoveToGroup(drawingId, g.name)}
               onShare={isAuth && ownsGroup(g) ? () => setInviteTarget({ kind: 'group', name: g.name }) : undefined}
-              onRename={(newName) => handleRenameGroup(g.name, newName)}
+              onRename={(newName) => renameGroupAndOpenModals(g.name, newName)}
               onUngroup={() => handleUngroupAll(g.name)}
-              onDelete={() => handleDeleteGroup(g.name)}
+              onDelete={ownsGroup(g) ? () => setGroupToDelete(g.name) : undefined}
               existingGroupNames={groups.map((x) => x.name)}
             />
           ))}
@@ -343,6 +272,18 @@ export function Gallery() {
             );
           })}
         </div>
+      )}
+
+      {groupToDelete !== null && (
+        <ConfirmModal
+          message={`Supprimer définitivement vos dessins du groupe « ${groupToDelete} » ?`}
+          confirmLabel="Supprimer"
+          onCancel={() => setGroupToDelete(null)}
+          onConfirm={() => {
+            handleDeleteGroup(groupToDelete);
+            setGroupToDelete(null);
+          }}
+        />
       )}
 
       {pendingGroup && (

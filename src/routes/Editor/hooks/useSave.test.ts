@@ -5,6 +5,7 @@ import { useSave } from './useSave';
 import { updateDrawingData } from '@/lib/drawings';
 import { updateDrawingData as localUpdateDrawingData } from '@/lib/localLibrary';
 import * as offlineQueue from '@/lib/offlineQueue';
+import { SaveRejectedError } from '@/lib/saveErrors';
 import type { DrawingData, DrawingRow } from '@/types';
 
 vi.mock('@/lib/drawings', () => ({
@@ -18,9 +19,22 @@ vi.mock('@/lib/localLibrary', () => ({
 vi.mock('@/lib/offlineQueue', () => {
   const store = new Map<string, DrawingData>();
   return {
-    enqueue: vi.fn(async (id: string, data: DrawingData) => { store.set(id, data); }),
+    enqueue: vi.fn(async (id: string, data: DrawingData) => { store.set(id, data); return 1; }),
     dequeue: vi.fn(async (id: string) => { store.delete(id); }),
-    getPending: vi.fn(async (id: string) => store.get(id) ?? null),
+    getPendingEntry: vi.fn(async (id: string) => {
+      const data = store.get(id);
+      return data ? { data, rev: 0, savedAt: null } : null;
+    }),
+    holdForEditor: vi.fn(() => () => {}),
+    replay: vi.fn(async (id: string, entry: { data: DrawingData }, upload: (id: string, d: DrawingData) => Promise<void>) => {
+      try {
+        await upload(id, entry.data);
+        store.delete(id);
+        return true;
+      } catch {
+        return false;
+      }
+    }),
     __store: store,
   };
 });
@@ -29,7 +43,7 @@ const updateMock = vi.mocked(updateDrawingData);
 const localUpdateMock = vi.mocked(localUpdateDrawingData);
 const enqueueMock = vi.mocked(offlineQueue.enqueue);
 const dequeueMock = vi.mocked(offlineQueue.dequeue);
-const getPendingMock = vi.mocked(offlineQueue.getPending);
+const getPendingMock = vi.mocked(offlineQueue.getPendingEntry);
 const queueStore = offlineQueue as unknown as { __store: Map<string, DrawingData> };
 
 const data: DrawingData = {
@@ -111,12 +125,23 @@ describe('useSave', () => {
     expect(setStatus).toHaveBeenLastCalledWith('error');
   });
 
+  it('drops the queued write when the server rejects it for good', async () => {
+    updateMock.mockRejectedValueOnce(new SaveRejectedError());
+    const { hook, setStatus } = setup();
+    act(() => { hook.result.current.save.scheduleSave(); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+
+    expect(dequeueMock).toHaveBeenCalledWith('d1', 1);
+    expect(queueStore.__store.has('d1')).toBe(false);
+    expect(setStatus).toHaveBeenLastCalledWith('error');
+  });
+
   it('clears offline queue on successful save', async () => {
     queueStore.__store.set('d1', data);
     const { hook } = setup();
     act(() => { hook.result.current.save.scheduleSave(); });
     await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
-    expect(dequeueMock).toHaveBeenCalledWith('d1');
+    expect(dequeueMock).toHaveBeenCalledWith('d1', 1);
     expect(queueStore.__store.has('d1')).toBe(false);
   });
 

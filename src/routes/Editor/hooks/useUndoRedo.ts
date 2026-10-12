@@ -3,6 +3,46 @@ import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import type { DrawingData, DrawingRow } from '@/types';
 
 const MAX_HISTORY = 50;
+// Budget total de pixels stockés dans l'historique : 50 snapshots d'un 512×512 dense dépassent
+// 1 Go et font crasher iOS Safari.
+const MAX_HISTORY_PIXELS = 2_000_000;
+
+const pixelCounts = new WeakMap<object, number>();
+
+function sizeOf(pixels: Record<string, unknown>): number {
+  const cached = pixelCounts.get(pixels);
+  if (cached !== undefined) return cached;
+  const n = Object.keys(pixels).length;
+  pixelCounts.set(pixels, n);
+  return n;
+}
+
+/**
+ * Pixels réellement en mémoire : les snapshots partagent les calques non modifiés (même objet
+ * `pixels`), qui ne sont comptés qu'une fois.
+ */
+function storedPixels(snapshots: DrawingData[]): number {
+  const seen = new Set<object>();
+  let total = 0;
+  for (const snapshot of snapshots) {
+    for (const layer of snapshot.layers) {
+      if (seen.has(layer.pixels)) continue;
+      seen.add(layer.pixels);
+      total += sizeOf(layer.pixels);
+    }
+  }
+  return total;
+}
+
+/** Garde au plus MAX_HISTORY entrées et MAX_HISTORY_PIXELS pixels, en supprimant les plus anciennes. */
+export function trimHistory(past: DrawingData[], budget = MAX_HISTORY_PIXELS): DrawingData[] {
+  const recent = past.length > MAX_HISTORY ? past.slice(past.length - MAX_HISTORY) : past;
+  let start = 0;
+  // Le snapshot le plus récent est toujours conservé, même s'il dépasse seul le budget.
+  // ponytail: recalcul O(n²) sur ≤ 50 snapshots, négligeable devant un trait.
+  while (recent.length - start > 1 && storedPixels(recent.slice(start)) > budget) start++;
+  return start === 0 ? recent : recent.slice(start);
+}
 
 interface UseUndoRedoParams {
   latestDataRef: MutableRefObject<DrawingData | null>;
@@ -24,8 +64,7 @@ export function useUndoRedo({ latestDataRef, setDrawing, scheduleSave }: UseUndo
   }, []);
 
   const pushHistory = useCallback((before: DrawingData) => {
-    const past = pastRef.current;
-    pastRef.current = past.length >= MAX_HISTORY ? [...past.slice(1), before] : [...past, before];
+    pastRef.current = trimHistory([...pastRef.current, before]);
     futureRef.current = [];
     syncHistoryFlags();
   }, [syncHistoryFlags]);

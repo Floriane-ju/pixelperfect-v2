@@ -3,6 +3,7 @@ import type { PointerEvent } from 'react';
 import { Button } from '@/components/Button';
 import { Icons } from '@/components/Icons';
 import { cx } from '@/lib/cx';
+import { MAX_LAYERS } from '@/lib/drawingValidation';
 import type { PixelLayer } from '@/types';
 import { LayerThumbnail } from './LayerThumbnail';
 import styles from './LayerPanel.module.scss';
@@ -40,6 +41,7 @@ export function LayerPanel({
 }: LayerPanelProps) {
   const reversed = [...layers].reverse();
   const canDelete = layers.length > 1;
+  const atLayerCap = layers.length >= MAX_LAYERS;
 
   const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -113,6 +115,7 @@ export function LayerPanel({
           title="Nouveau calque"
           aria-label="Nouveau calque"
           onClick={onAdd}
+          disabled={atLayerCap}
         />
       </div>
       <ul className={styles.list} role="listbox">
@@ -167,6 +170,7 @@ export function LayerPanel({
                 title="Dupliquer"
                 aria-label="Dupliquer le calque"
                 onClick={e => { e.stopPropagation(); onDuplicate(layer.id); }}
+                disabled={atLayerCap}
               />
               <Button
                 variant="ghost"

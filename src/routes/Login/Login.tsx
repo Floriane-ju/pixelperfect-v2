@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router';
+import { isAuthApiError } from '@supabase/supabase-js';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { signIn } from '@/lib/auth';
@@ -60,6 +61,12 @@ export function Login() {
       // Le message affiché est volontairement générique : sans ce log, une panne
       // d'infra (clé API révoquée, réseau) est indiscernable d'un mauvais mot de passe.
       if (import.meta.env.DEV) console.error('[login]', err);
+      // Seul un refus d'auth compte pour le verrouillage : une panne réseau ou serveur n'est pas
+      // une mauvaise tentative.
+      if (!isAuthApiError(err)) {
+        setError('Connexion impossible. Vérifiez votre réseau et réessayez.');
+        return;
+      }
       attemptsRef.current += 1;
       if (attemptsRef.current >= MAX_ATTEMPTS) {
         setLockUntil(Date.now() + LOCKOUT_MS);

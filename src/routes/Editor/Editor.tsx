@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { fetchDrawing } from '@/lib/drawingStore';
 import { LOCAL_OWNER } from '@/lib/localLibrary';
-import type { DrawingRow, HexColor } from '@/types';
+import type { HexColor } from '@/types';
 import { ColorSwatch } from '@/components/ColorSwatch';
 import { ColorWheelIcon } from '@/components/ColorWheelIcon';
 import { BrushSizeSlider } from '@/components/BrushSizeSlider';
@@ -19,10 +18,10 @@ import type { RadialSegments } from './MirrorPanel';
 import type { MirrorAxis, SymmetryConfig } from './shapePixels';
 import { Canvas } from './Canvas/Canvas';
 import type { Tool } from './Canvas/Canvas';
-import { buildLayersSvg } from './exportSvg';
-import { copyLayersPng } from './exportPng';
 import { Topbar } from './Topbar/Topbar';
 import { useSave } from './hooks/useSave';
+import { useEditorDrawing } from './hooks/useEditorDrawing';
+import { useHexPaste } from './hooks/useHexPaste';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { useLayers } from './hooks/useLayers';
 import { useReferenceImage } from './hooks/useReferenceImage';
@@ -34,17 +33,13 @@ import { EditorContext } from './EditorContext';
 import type { EditorContextValue } from './EditorContext';
 import styles from './Editor.module.scss';
 
-type Status = 'loading' | 'ready' | 'error' | 'saving';
-
 export function Editor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [drawing, setDrawing] = useState<DrawingRow | null>(null);
-  const [status, setStatus] = useState<Status>('loading');
+  const { drawing, setDrawing, status, setStatus, activeLayerId, setActiveLayerId } = useEditorDrawing(id);
   const [tool, setTool] = useState<Tool>('pencil');
   const [brushSize, setBrushSize] = useState<number>(1);
-  const [activeLayerId, setActiveLayerId] = useState<string>('');
   const [showInvisibleModal, setShowInvisibleModal] = useState(false);
   const [showCaptureModal, setShowCaptureModal] = useState(false);
   const [mirrorAxis, setMirrorAxis] = useState<MirrorAxis>('none');
@@ -61,20 +56,6 @@ export function Editor() {
   const mirrorContainerRef = useRef<HTMLDivElement>(null);
   const settingsContainerRef = useRef<HTMLDivElement>(null);
   const rightSidebarRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    if (!id) return;
-    setStatus('loading');
-    fetchDrawing(id)
-      .then(row => {
-        setDrawing(row);
-        const visibleLayers = row.data.layers.filter(l => l.visible);
-        const topmost = visibleLayers[visibleLayers.length - 1] ?? row.data.layers[row.data.layers.length - 1];
-        setActiveLayerId(topmost?.id ?? '');
-        setStatus('ready');
-      })
-      .catch(() => setStatus('error'));
-  }, [id]);
 
   // Le backend est lié au dessin chargé (immuable), pas à la session vivante : un changement
   // d'auth en cours d'édition ne doit pas réorienter les sauvegardes vers le mauvais backend.
@@ -111,7 +92,28 @@ export function Editor() {
     }
   }, [tool]);
 
-  useEditorShortcuts({ handleUndo, handleRedo, setTool, selectionRef });
+  useEffect(() => {
+    if (selectionRef.current.hasFloating) selectionRef.current.commit();
+  }, [activeLayerId]);
+
+  // Sélection flottante : son commit repartirait de l'instantané pris à la levée et annulerait
+  // l'undo/redo. Undo = abandon de la sélection ; redo attend qu'elle soit posée.
+  const undo = useCallback(() => {
+    if (selectionRef.current.hasFloating) selectionRef.current.cancel();
+    else handleUndo();
+  }, [handleUndo]);
+  const redo = useCallback(() => {
+    if (!selectionRef.current.hasFloating) handleRedo();
+  }, [handleRedo]);
+
+  useEditorShortcuts({ handleUndo: undo, handleRedo: redo, setTool, selectionRef });
+
+  // Opération structurelle sur les calques : la sélection flottante est posée d'abord, sinon
+  // l'historique capturerait l'état « pixels levés » et l'undo ferait disparaître la sélection.
+  const afterCommit = <A extends unknown[]>(fn: (...args: A) => void) => (...args: A) => {
+    selectionRef.current.commit();
+    fn(...args);
+  };
 
   const handleShowGridToggle = useCallback(() => setShowGrid(v => !v), []);
   const handleSettingsToggle = useCallback(() => setShowSettings(v => !v), []);
@@ -149,35 +151,13 @@ export function Editor() {
     setTool('pencil');
   }, [handleColorChange, commitRecentColor]);
 
-  useEffect(() => {
-    const handler = (e: ClipboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
-      const text = e.clipboardData?.getData('text') ?? '';
-      const raw = text.trim().replace(/^#/, '');
-      if (!/^([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(raw)) return;
-      e.preventDefault();
-      const hex = `#${raw.toUpperCase()}` as HexColor;
-      handleColorChange(hex);
-      commitRecentColor(hex);
-    };
-    document.addEventListener('paste', handler);
-    return () => document.removeEventListener('paste', handler);
+  const handlePastedColor = useCallback((hex: HexColor) => {
+    handleColorChange(hex);
+    commitRecentColor(hex);
   }, [handleColorChange, commitRecentColor]);
+  useHexPaste(handlePastedColor);
 
   const handleHoverLeave = useCallback(() => setHoveredColor(null), [setHoveredColor]);
-
-  const handleCopySvg = useCallback(() => {
-    if (!drawing) return;
-    const { layers, width, height } = drawing.data;
-    navigator.clipboard.writeText(buildLayersSvg(layers, width, height)).catch(() => undefined);
-  }, [drawing]);
-
-  const handleCopyPng = useCallback(() => {
-    if (!drawing) return;
-    const { layers, width, height } = drawing.data;
-    copyLayersPng(layers, width, height).catch(() => undefined);
-  }, [drawing]);
 
   const handleBack = useCallback(() => navigate('/'), [navigate]);
   const handlePanelClose = useCallback(() => setOpenPanel(null), [setOpenPanel]);
@@ -192,7 +172,8 @@ export function Editor() {
   }, [drawing, activeLayerId, handleCapturePixels]);
 
   if (status === 'loading') return <EditorLoading />;
-  if (status === 'error' || !drawing) return <EditorError />;
+  // 'error' une fois le dessin chargé = échec de sauvegarde : badge, pas d'écran d'erreur.
+  if (!drawing) return <EditorError />;
 
   const editorCtx: EditorContextValue = {
     title: drawing.title,
@@ -200,8 +181,8 @@ export function Editor() {
     onToolChange: setTool,
     canUndo,
     canRedo,
-    onUndo: handleUndo,
-    onRedo: handleRedo,
+    onUndo: undo,
+    onRedo: redo,
     activeLayerId,
     layers: drawing.data.layers,
     canvasWidth: drawing.data.width,
@@ -209,12 +190,12 @@ export function Editor() {
     openPanel,
     onPanelToggle: handlePanelToggle,
     onPanelClose: handlePanelClose,
-    onLayerAdd: handleLayerAdd,
+    onLayerAdd: afterCommit(handleLayerAdd),
     onLayerSelect: setActiveLayerId,
-    onLayerVisibilityToggle: handleLayerVisibilityToggle,
-    onLayerDuplicate: handleLayerDuplicate,
-    onLayerDelete: handleLayerDelete,
-    onLayerReorder: handleLayerReorder,
+    onLayerVisibilityToggle: afterCommit(handleLayerVisibilityToggle),
+    onLayerDuplicate: afterCommit(handleLayerDuplicate),
+    onLayerDelete: afterCommit(handleLayerDelete),
+    onLayerReorder: afterCommit(handleLayerReorder),
     onBack: handleBack,
     refImage: topbarRefImage,
     refImageError,
@@ -224,8 +205,6 @@ export function Editor() {
     onRefImageTransform: handleRefImageTransform,
     onRefImageCapture: handleCaptureRequest,
     canvasDisplaySize,
-    onCopySvg: handleCopySvg,
-    onCopyPng: handleCopyPng,
   };
 
   return (
@@ -382,6 +361,7 @@ export function Editor() {
         )}
 
         {status === 'saving' && <div className={styles.savingBadge} aria-live="polite">Enregistrement…</div>}
+        {status === 'error' && <div className={styles.savingBadge} role="status">Non enregistré</div>}
 
         {showInvisibleModal && (
           <ConfirmModal

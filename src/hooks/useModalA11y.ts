@@ -1,6 +1,12 @@
-import { useEffect, type RefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Pile des modales ouvertes (ordre d'ouverture) : seule la plus haute gère Escape et le piège
+ * de focus. Sinon Escape ferme toutes les modales empilées et deux pièges se renvoient le focus.
+ */
+const openModals: object[] = [];
 
 export interface UseModalA11yParams {
   modalRef: RefObject<HTMLElement | null>;
@@ -10,6 +16,16 @@ export interface UseModalA11yParams {
 }
 
 export function useModalA11y({ modalRef, onClose, initialFocusRef, closeOnEscape = true }: UseModalA11yParams): void {
+  const tokenRef = useRef<object>({});
+
+  useEffect(() => {
+    const token = tokenRef.current;
+    openModals.push(token);
+    return () => {
+      openModals.splice(openModals.indexOf(token), 1);
+    };
+  }, []);
+
   useEffect(() => {
     const previouslyFocused = document.activeElement;
     const explicit = initialFocusRef?.current;
@@ -26,7 +42,10 @@ export function useModalA11y({ modalRef, onClose, initialFocusRef, closeOnEscape
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      if (openModals[openModals.length - 1] !== tokenRef.current) return;
       if (e.key === 'Escape') {
+        // Déjà consommé par un menu ou une liste à l'intérieur de la modale.
+        if (e.defaultPrevented) return;
         if (closeOnEscape) onClose();
         return;
       }

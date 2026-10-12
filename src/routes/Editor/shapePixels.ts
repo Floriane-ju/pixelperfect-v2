@@ -55,51 +55,64 @@ export function getRectPixels(x0: number, y0: number, x1: number, y1: number): A
   return pts;
 }
 
+/**
+ * Ellipse inscrite dans la bbox inclusive (x0,y0)-(x1,y1). Le centre est un demi-entier quand
+ * la largeur (ou hauteur) est paire en nombre de pixels : les décalages suivent alors la même
+ * parité (0.5 ou 0) pour que chaque pixel tombe sur un entier, sans arrondi asymétrique.
+ */
 export function getEllipsePixels(x0: number, y0: number, x1: number, y1: number): Array<{ x: number; y: number }> {
-  const cx = (x0 + x1) / 2;
-  const cy = (y0 + y1) / 2;
-  const rx = Math.abs(x1 - x0) / 2;
-  const ry = Math.abs(y1 - y0) / 2;
+  const minX = Math.min(x0, x1), maxX = Math.max(x0, x1);
+  const minY = Math.min(y0, y1), maxY = Math.max(y0, y1);
+  const w = maxX - minX, h = maxY - minY;
+  const pts: Array<{ x: number; y: number }> = [];
+
+  if (w === 0 || h === 0) {
+    for (let x = minX; x <= maxX; x++) for (let y = minY; y <= maxY; y++) pts.push({ x, y });
+    return pts;
+  }
 
   const seen = new Set<string>();
-  const pts: Array<{ x: number; y: number }> = [];
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const rx = w / 2, ry = h / 2;
+  const startX = w % 2 === 1 ? 0.5 : 0;
+  const startY = h % 2 === 1 ? 0.5 : 0;
   const add = (px: number, py: number) => {
     const k = `${px},${py}`;
     if (!seen.has(k)) { seen.add(k); pts.push({ x: px, y: py }); }
   };
-
-  if (rx < 0.5 && ry < 0.5) { add(Math.round(cx), Math.round(cy)); return pts; }
-  if (rx < 0.5) {
-    for (let y = Math.round(cy - ry); y <= Math.round(cy + ry); y++) add(Math.round(cx), y);
-    return pts;
-  }
-  if (ry < 0.5) {
-    for (let x = Math.round(cx - rx); x <= Math.round(cx + rx); x++) add(x, Math.round(cy));
-    return pts;
-  }
+  let minMidX = rx;
+  const addSymmetric = (dx: number, dy: number) => {
+    if (dy === startY && dx < minMidX) minMidX = dx;
+    add(cx + dx, cy + dy);
+    add(cx - dx, cy + dy);
+    add(cx + dx, cy - dy);
+    add(cx - dx, cy - dy);
+  };
 
   const rx2 = rx * rx, ry2 = ry * ry;
-  let x = 0, y = ry;
-  let p1 = ry2 - rx2 * ry + 0.25 * rx2;
+  let x = startX, y = ry;
+  let p1 = ry2 * (x + 1) * (x + 1) + rx2 * (y - 0.5) * (y - 0.5) - rx2 * ry2;
   while (2 * ry2 * x < 2 * rx2 * y) {
-    add(Math.round(cx + x), Math.round(cy + y));
-    add(Math.round(cx - x), Math.round(cy + y));
-    add(Math.round(cx + x), Math.round(cy - y));
-    add(Math.round(cx - x), Math.round(cy - y));
+    addSymmetric(x, y);
     x++;
     if (p1 < 0) { p1 += 2 * ry2 * x + ry2; }
     else { y--; p1 += 2 * ry2 * x - 2 * rx2 * y + ry2; }
   }
+  // Demi-grille : la dernière décrémentation de la zone 1 peut faire sortir y de la grille (-0.5)
+  // en emportant le pixel (x, startY) ; on le rattrape. Sur grille entière, (rx, 0) est un point exact du bord.
+  if (y < startY) y = startY;
+  if (startY === 0) addSymmetric(rx, 0);
   let p2 = ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2;
   while (y >= 0) {
-    add(Math.round(cx + x), Math.round(cy + y));
-    add(Math.round(cx - x), Math.round(cy + y));
-    add(Math.round(cx + x), Math.round(cy - y));
-    add(Math.round(cx - x), Math.round(cy - y));
+    addSymmetric(x, y);
     y--;
     if (p2 > 0) { p2 -= 2 * rx2 * y + rx2; }
     else { x++; p2 += 2 * ry2 * x - 2 * rx2 * y + rx2; }
   }
+  // Ellipses très plates : la zone 1 descend sur la rangée médiane avant d'atteindre rx et la zone 2
+  // n'y ajoute qu'un pixel, d'où un trou avant l'extrémité. La rangée médiane est continue jusqu'au bord.
+  for (let dx = minMidX; dx < rx; dx++) addSymmetric(dx, startY);
   return pts;
 }
 

@@ -20,9 +20,14 @@ export function applyShape(
   symmetry: SymmetryConfig,
 ): Record<string, HexColor> {
   const pts = expandSymmetry(getShapePixels(tool, start, end), width, height, symmetry);
-  const next = { ...current };
+  // Retourne `current` tel quel quand la forme ne change rien : l'appelant ne doit pas enregistrer d'historique.
+  let next: Record<string, HexColor> | null = null;
   for (const { x, y } of pts) {
-    if (x >= 0 && y >= 0 && x < width && y < height) next[`${x},${y}`] = color;
+    if (x < 0 || y < 0 || x >= width || y >= height) continue;
+    const key = `${x},${y}`;
+    if (current[key] === color) continue;
+    next ??= { ...current };
+    next[key] = color;
   }
-  return next;
+  return next ?? current;
 }
