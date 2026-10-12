@@ -8,6 +8,7 @@ import { Menu } from '@/components/Menu';
 import type { MenuItem } from '@/components/Menu';
 import { MembersMenu } from '@/components/MembersMenu';
 import { useInlineRename } from '@/hooks/useInlineRename';
+import { usePublicLink } from '@/hooks/usePublicLink';
 import { listCollaborators, removeCollaborator } from '@/lib/drawings';
 import { cx } from '@/lib/cx';
 import styles from './DrawingCard.module.scss';
@@ -22,7 +23,8 @@ export interface DrawingCardProps {
   onDelete?: () => void;
   onRemoveFromGroup?: () => void;
   onInvite?: () => void;
-  onShareLink?: () => void;
+  /** Propriétaire connecté : interrupteur du lien public dans le menu. */
+  canShareLink?: boolean;
   onCollaboratorRemoved?: () => void;
   onDropDrawing?: (sourceId: string) => void;
 }
@@ -39,7 +41,7 @@ export function DrawingCard({
   onDelete,
   onRemoveFromGroup,
   onInvite,
-  onShareLink,
+  canShareLink = false,
   onCollaboratorRemoved,
   onDropDrawing,
 }: DrawingCardProps) {
@@ -47,6 +49,7 @@ export function DrawingCard({
   const [isDragging, setIsDragging] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const rename = useInlineRename({ currentName: drawing.title, onRename });
+  const publicLink = usePublicLink(drawing.id);
 
   const isIdle = !rename.isRenaming && !isConfirmingDelete;
   const number = String(index + 1).padStart(2, '0');
@@ -57,7 +60,7 @@ export function DrawingCard({
       ? [{ label: 'Retirer du groupe', icon: 'back' as const, onClick: () => onRemoveFromGroup() }]
       : []),
     ...(onInvite ? [{ label: 'Inviter…', icon: 'add' as const, onClick: () => onInvite() }] : []),
-    ...(onShareLink ? [{ label: 'Partager un lien', icon: 'link' as const, onClick: () => onShareLink() }] : []),
+    ...(canShareLink ? [publicLink.item] : []),
     ...(onDelete
       ? [
           {
@@ -114,7 +117,11 @@ export function DrawingCard({
           />
         )}
         {menuItems.length > 0 && isIdle && (
-          <Menu items={menuItems} ariaLabel={`Options de ${drawing.title}`} />
+          <Menu
+            items={menuItems}
+            ariaLabel={`Options de ${drawing.title}`}
+            onOpenChange={(open) => { if (open && canShareLink) publicLink.load(); }}
+          />
         )}
       </div>
 

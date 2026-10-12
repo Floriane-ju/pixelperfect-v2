@@ -5,7 +5,6 @@ import { Button } from '@/components/Button';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useSnackbar } from '@/components/Snackbar';
 import { useSession } from '@/components/SessionProvider';
-import { ShareLinkDialog } from '@/components/ShareLinkDialog';
 import { DrawingCard } from './DrawingCard/DrawingCard';
 import { GroupCard } from './GroupCard/GroupCard';
 import { GroupModal } from './GroupModal/GroupModal';
@@ -20,7 +19,6 @@ import { LOCAL_OWNER } from '@/lib/localLibrary';
 import { exportLibrary, importLibrary } from '@/lib/libraryTransfer';
 import { groupDrawings } from '@/lib/groupDrawings';
 import type { DrawingGroup } from '@/lib/groupDrawings';
-import type { DrawingRow } from '@/types';
 import { cx } from '@/lib/cx';
 import { SnakeCanvas } from '@/components/SnakeCanvas';
 import { GalleryDock } from './GalleryDock';
@@ -71,7 +69,6 @@ export function Gallery() {
   );
   const [isContentDragOver, setIsContentDragOver] = useState(false);
   const [inviteTarget, setInviteTarget] = useState<InviteTarget | null>(null);
-  const [shareLinkTarget, setShareLinkTarget] = useState<DrawingRow | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
   const [snakeActive, setSnakeActive] = useState(false);
@@ -282,7 +279,7 @@ export function Gallery() {
                           ? () => setInviteTarget({ kind: 'drawing', id: d.id, title: d.title })
                           : undefined
                       }
-                      onShareLink={isAuth && isOwner ? () => setShareLinkTarget(d) : undefined}
+                      canShareLink={isAuth && isOwner}
                       onCollaboratorRemoved={() => handleCollaboratorRemoved(d.id)}
                       onDropDrawing={(sourceId) => setPendingGroup({ sourceId, targetId: d.id })}
                     />
@@ -343,7 +340,7 @@ export function Gallery() {
                 ? (d) => setInviteTarget({ kind: 'drawing', id: d.id, title: d.title })
                 : undefined
             }
-            onShareLink={isAuth ? setShareLinkTarget : undefined}
+            canShareLink={isAuth}
             onCollaboratorRemoved={handleCollaboratorRemoved}
           />
         ))}
@@ -370,13 +367,6 @@ export function Gallery() {
           />
         )}
 
-        {shareLinkTarget && (
-          <ShareLinkDialog
-            drawingId={shareLinkTarget.id}
-            title={shareLinkTarget.title}
-            onClose={() => setShareLinkTarget(null)}
-          />
-        )}
 
         {showProfile && (
           <ProfileModal

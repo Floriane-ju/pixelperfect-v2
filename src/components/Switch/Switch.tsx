@@ -10,7 +10,7 @@ export interface SwitchProps
 }
 
 export function Switch({ checked, onChange, disabled, className, ref, ...rest }: SwitchProps) {
-  const classes = cx(styles.switch, checked && styles.checked, className);
+  const classes = cx(styles.switch, className);
 
   return (
     <button
@@ -23,9 +23,16 @@ export function Switch({ checked, onChange, disabled, className, ref, ...rest }:
       onClick={() => onChange(!checked)}
       {...rest}
     >
-      <span className={styles.track} aria-hidden="true">
-        <span className={styles.thumb} />
-      </span>
+      <SwitchTrack checked={checked} />
     </button>
+  );
+}
+
+/** Visuel seul de l'interrupteur, pour un contrôle porté par un autre élément (item de menu). */
+export function SwitchTrack({ checked }: { checked: boolean }) {
+  return (
+    <span className={cx(styles.track, checked && styles.checked)} aria-hidden="true">
+      <span className={styles.thumb} />
+    </span>
   );
 }

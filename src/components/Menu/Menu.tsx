@@ -3,6 +3,7 @@ import type { KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Button, type ButtonSize, type ButtonVariant } from '@/components/Button';
 import { Icons, type IconName } from '@/components/Icons';
+import { SwitchTrack } from '@/components/Switch';
 import { useAnchoredMenu } from '@/hooks/useAnchoredMenu';
 import { cx } from '@/lib/cx';
 import styles from './Menu.module.scss';
@@ -12,6 +13,11 @@ export interface MenuItem {
   onClick: () => void;
   variant?: 'default' | 'danger';
   icon?: IconName;
+  /** Interrupteur : l'item bascule (`onClick`) sans fermer le menu. */
+  checked?: boolean;
+  disabled?: boolean;
+  /** Bouton icône à droite de l'item (ex. copier). */
+  action?: { icon: IconName; label: string; onClick: () => void };
 }
 
 export interface MenuProps {
@@ -31,7 +37,7 @@ export interface MenuProps {
 const MENU_FALLBACK_WIDTH = 208;
 
 function getMenuItems(menu: HTMLElement | null): HTMLButtonElement[] {
-  return menu ? Array.from(menu.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')) : [];
+  return menu ? Array.from(menu.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)')) : [];
 }
 
 export function Menu({
@@ -122,30 +128,50 @@ export function Menu({
           onClick={(e) => e.stopPropagation()}
           onKeyDown={handleMenuKeyDown}
         >
-          {items.map((item, idx) => (
-            <li key={item.label} role="none" className={styles.row}>
-              {/* Un seul séparateur, avant la première action dangereuse. */}
-              {item.variant === 'danger' && idx > 0 && items[idx - 1]?.variant !== 'danger' && (
-                <span className={styles.divider} aria-hidden="true" />
-              )}
-              <button
-                type="button"
-                role="menuitem"
-                tabIndex={-1}
-                className={cx(styles.item, item.variant === 'danger' && styles.itemDanger)}
-                onClick={() => {
-                  // Le menu va se démonter : le focus revient d'abord au déclencheur, pour qu'une
-                  // modale ouverte par l'action le mémorise comme élément à restaurer.
-                  triggerRef.current?.focus();
-                  item.onClick();
-                  close();
-                }}
-              >
-                {item.icon && <Icons className={styles.icon} icon={item.icon} size={16} />}
-                <span className={styles.label}>{item.label}</span>
-              </button>
-            </li>
-          ))}
+          {items.map((item, idx) => {
+            const isToggle = item.checked !== undefined;
+            // Le menu va se démonter : le focus revient d'abord au déclencheur, pour qu'une
+            // modale ouverte par l'action le mémorise comme élément à restaurer.
+            const run = (onClick: () => void) => {
+              triggerRef.current?.focus();
+              onClick();
+              close();
+            };
+            return (
+              <li key={item.label} role="none" className={cx(styles.row, item.action && styles.rowSplit)}>
+                {/* Un seul séparateur, avant la première action dangereuse. */}
+                {item.variant === 'danger' && idx > 0 && items[idx - 1]?.variant !== 'danger' && (
+                  <span className={styles.divider} aria-hidden="true" />
+                )}
+                <button
+                  type="button"
+                  role={isToggle ? 'menuitemcheckbox' : 'menuitem'}
+                  aria-checked={isToggle ? item.checked : undefined}
+                  tabIndex={-1}
+                  disabled={item.disabled}
+                  className={cx(styles.item, item.variant === 'danger' && styles.itemDanger)}
+                  onClick={isToggle ? item.onClick : () => run(item.onClick)}
+                >
+                  {item.icon && <Icons className={styles.icon} icon={item.icon} size={16} />}
+                  <span className={styles.label}>{item.label}</span>
+                  {isToggle && <SwitchTrack checked={item.checked === true} />}
+                </button>
+                {item.action && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    tabIndex={-1}
+                    aria-label={item.action.label}
+                    title={item.action.label}
+                    className={cx(styles.item, styles.actionItem)}
+                    onClick={() => item.action && run(item.action.onClick)}
+                  >
+                    <Icons className={styles.icon} icon={item.action.icon} size={16} />
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>,
         document.body,
       )}

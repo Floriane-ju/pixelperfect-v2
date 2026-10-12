@@ -26,7 +26,8 @@ export interface GroupModalProps {
   onDelete?: (id: string) => void;
   onRemoveFromGroup?: (id: string) => void;
   onInvite?: (drawing: DrawingRow) => void;
-  onShareLink?: (drawing: DrawingRow) => void;
+  /** Connecté : lien public sur les dessins possédés. */
+  canShareLink?: boolean;
   onCollaboratorRemoved?: (drawingId: string) => void;
 }
 
@@ -43,7 +44,7 @@ export function GroupModal({
   onDelete,
   onRemoveFromGroup,
   onInvite,
-  onShareLink,
+  canShareLink = false,
   onCollaboratorRemoved,
 }: GroupModalProps) {
   const { zIndex, panelStyle, raiseHandlers, dragHandlers } = useDraggableModal();
@@ -160,7 +161,7 @@ export function GroupModal({
                 onDelete={onDelete && isOwner ? () => onDelete(d.id) : undefined}
                 onRemoveFromGroup={onRemoveFromGroup ? () => onRemoveFromGroup(d.id) : undefined}
                 onInvite={onInvite && isOwner ? () => onInvite(d) : undefined}
-                onShareLink={onShareLink && isOwner ? () => onShareLink(d) : undefined}
+                canShareLink={canShareLink && isOwner}
                 onCollaboratorRemoved={
                   onCollaboratorRemoved ? () => onCollaboratorRemoved(d.id) : undefined
                 }

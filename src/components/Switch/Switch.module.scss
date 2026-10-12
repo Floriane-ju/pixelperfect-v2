@@ -22,6 +22,7 @@
 
 .track {
   position: relative;
+  flex-shrink: 0;
   display: block;
   width: $switch-width;
   height: $switch-height;
@@ -44,9 +45,9 @@
   background: $color-surface-hover;
 }
 
-.checked {
-  .track,
-  &:hover:not(:disabled) .track {
+.track.checked {
+  &,
+  .switch:hover:not(:disabled) & {
     background: $color-primary;
   }
 

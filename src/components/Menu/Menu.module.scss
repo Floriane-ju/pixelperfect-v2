@@ -23,6 +23,10 @@
   width: 100%;
 }
 
+.rowSplit {
+  flex-direction: row;
+}
+
 .item {
   display: flex;
   align-items: center;
@@ -54,6 +58,18 @@
   &:focus-visible {
     @include focus-ring(-$space-s + $outline-width);
   }
+
+  &:disabled {
+    opacity: $opacity-disabled;
+    cursor: not-allowed;
+  }
+}
+
+.actionItem {
+  flex-shrink: 0;
+  justify-content: center;
+  width: $control-md;
+  padding: 0;
 }
 
 .icon {
