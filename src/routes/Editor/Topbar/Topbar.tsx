@@ -3,6 +3,8 @@ import { Link } from 'react-router';
 import { Button } from '@/components/Button';
 import { Menu } from '@/components/Menu';
 import { useSnackbar } from '@/components/Snackbar';
+import { ShareLinkDialog } from '@/components/ShareLinkDialog';
+import { InviteCollaboratorModal } from '@/routes/Gallery/InviteCollaboratorModal/InviteCollaboratorModal';
 import { LayerPanel } from '@/routes/Editor/LayerPanel/LayerPanel';
 import { useOutsideDismiss } from '@/hooks/useOutsideDismiss';
 import { useEditorContext } from '../useEditorContext';
@@ -16,7 +18,7 @@ const COPIED_FEEDBACK_MS = 2000;
 
 export function Topbar() {
   const {
-    title, groupName, canUndo, canRedo, onUndo, onRedo,
+    drawingId, title, canShare, groupName, canUndo, canRedo, onUndo, onRedo,
     activeLayerId, animationMode, layers, canvasWidth, canvasHeight, onCanvasResize, openPanel, onPanelToggle, onPanelClose,
     onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete, onLayerReorder,
     onBack, refImage, getCommittedLayers,
@@ -25,6 +27,7 @@ export function Topbar() {
   const topbarRef = useRef<HTMLElement>(null);
   const [copied, setCopied] = useState(false);
   const [resizing, setResizing] = useState(false);
+  const [sharing, setSharing] = useState<'invite' | 'link' | null>(null);
   const snackbar = useSnackbar();
 
   // La coche ne s'affiche que si le presse-papier a réellement accepté l'écriture.
@@ -158,7 +161,32 @@ export function Topbar() {
             },
           ]}
         />
+
+        {canShare && (
+          <Menu
+            ariaLabel="Partager"
+            triggerIcon="collaborators"
+            triggerVariant="primary"
+            triggerSize="md"
+            triggerTitle="Partager"
+            triggerLabel="Partager"
+            items={[
+              { label: 'Inviter…', icon: 'add', onClick: () => setSharing('invite') },
+              { label: 'Partager un lien', icon: 'link', onClick: () => setSharing('link') },
+            ]}
+          />
+        )}
       </div>
+      {sharing === 'invite' && (
+        <InviteCollaboratorModal
+          target={{ kind: 'drawing', id: drawingId, title }}
+          onClose={() => setSharing(null)}
+          onInvited={(_userId, handle) => snackbar.show(`${handle} a été invité`, { icon: 'collaborators' })}
+        />
+      )}
+      {sharing === 'link' && (
+        <ShareLinkDialog drawingId={drawingId} title={title} onClose={() => setSharing(null)} />
+      )}
       {resizing && (
         <ResizeCanvasModal
           width={canvasWidth}

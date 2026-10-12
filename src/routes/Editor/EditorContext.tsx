@@ -7,7 +7,10 @@ import type { RefImageState } from './hooks/useReferenceImage';
 type RefImageInfo = Omit<RefImageState, 'src'>;
 
 export interface EditorContextValue {
+  drawingId: string;
   title: string;
+  /** Propriétaire connecté : invitations et lien public. */
+  canShare: boolean;
   /** Groupe du dessin dans la bibliothèque (fil d'Ariane). */
   groupName: string | null;
   tool: Tool;

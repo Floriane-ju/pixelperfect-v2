@@ -22,6 +22,7 @@ export interface DrawingCardProps {
   onDelete?: () => void;
   onRemoveFromGroup?: () => void;
   onInvite?: () => void;
+  onShareLink?: () => void;
   onCollaboratorRemoved?: () => void;
   onDropDrawing?: (sourceId: string) => void;
 }
@@ -38,6 +39,7 @@ export function DrawingCard({
   onDelete,
   onRemoveFromGroup,
   onInvite,
+  onShareLink,
   onCollaboratorRemoved,
   onDropDrawing,
 }: DrawingCardProps) {
@@ -55,6 +57,7 @@ export function DrawingCard({
       ? [{ label: 'Retirer du groupe', icon: 'back' as const, onClick: () => onRemoveFromGroup() }]
       : []),
     ...(onInvite ? [{ label: 'Inviter…', icon: 'add' as const, onClick: () => onInvite() }] : []),
+    ...(onShareLink ? [{ label: 'Partager un lien', icon: 'link' as const, onClick: () => onShareLink() }] : []),
     ...(onDelete
       ? [
           {

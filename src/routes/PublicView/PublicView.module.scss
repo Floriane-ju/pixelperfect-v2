@@ -1,0 +1,45 @@
+.page {
+  @include paper-dots;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-m;
+  min-height: 100dvh;
+  padding: max(#{$space-2xl}, env(safe-area-inset-top)) $space-m max(#{$space-2xl}, env(safe-area-inset-bottom));
+}
+
+.title {
+  @include text-title($font-size-xl);
+  margin: 0;
+  text-align: center;
+}
+
+.canvas {
+  display: block;
+  width: min(100%, #{$public-preview-max}, calc(70dvh * var(--ratio)));
+  height: auto;
+  aspect-ratio: var(--ratio);
+  border: $border;
+  box-shadow: $shadow-layer;
+  background: $white;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+
+  &[data-bg='gray'] { background: $gray; }
+  &[data-bg='black'] { background: $black; }
+}
+
+.meta,
+.message {
+  @include text-meta;
+  margin: 0;
+  color: $color-text-muted;
+}
+
+.home {
+  @include text-meta;
+  color: $color-text-muted;
+  text-decoration: underline;
+  text-underline-offset: $space-xxs;
+}

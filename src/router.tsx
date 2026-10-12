@@ -14,6 +14,15 @@ export const router = createBrowserRouter([
     errorElement: routeError,
   },
   {
+    // Lien public en lecture seule : sans session ni layout de l'application.
+    path: 'p/:token',
+    errorElement: routeError,
+    lazy: async () => {
+      const { PublicView } = await import('./routes/PublicView/PublicView');
+      return { element: <ErrorBoundary><PublicView /></ErrorBoundary> };
+    },
+  },
+  {
     element: <AppLayout />,
     errorElement: routeError,
     children: [

@@ -5,6 +5,7 @@ import { LOCAL_OWNER } from '@/lib/localLibrary';
 import { DEFAULT_DRAWING_SETTINGS, MAX_LAYERS } from '@/lib/drawingValidation';
 import type { DrawingData, DrawingSettings, HexColor } from '@/types';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { useSession } from '@/components/SessionProvider';
 import { cx } from '@/lib/cx';
 import { ColorPicker } from './ColorPicker/ColorPicker';
 import { ColorPanel } from './ColorPanel';
@@ -40,6 +41,7 @@ const FALLBACK_DATA: DrawingData = { width: 1, height: 1, layers: [] };
 export function Editor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { session } = useSession();
 
   const { drawing, setDrawing, status, setStatus, activeLayerId, setActiveLayerId } = useEditorDrawing(id);
   const [tool, setTool] = useState<Tool>('pencil');
@@ -203,7 +205,9 @@ export function Editor() {
   if (!drawing) return <EditorError />;
 
   const editorCtx: EditorContextValue = {
+    drawingId: drawing.id,
     title: drawing.title,
+    canShare: drawing.owner_id !== LOCAL_OWNER && drawing.owner_id === session?.user.id,
     groupName: drawing.group,
     tool,
     onToolChange: setTool,
