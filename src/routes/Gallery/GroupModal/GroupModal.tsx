@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { DrawingCard } from '@/routes/Gallery/DrawingCard/DrawingCard';
-import { GroupMembersButton } from './GroupMembersButton';
+import { MembersMenu } from '@/components/MembersMenu';
+import { listGroupMembers, removeGroupMember } from '@/lib/groupSharing';
 import { ModalHeader } from '@/components/Modal';
 import { Button } from '@/components/Button';
 import { useModalA11y } from '@/hooks/useModalA11y';
@@ -103,7 +104,22 @@ export function GroupModal({
           dragHandlers={dragHandlers}
           actions={(
             <>
-              {onShare && <GroupMembersButton groupName={name} onRemoved={onSharingChanged} />}
+              {onShare && (
+                // Le nom du groupe est sa clé : un renommage remonte le menu (liste rechargée).
+                <MembersMenu
+                  key={name}
+                  label="Membres du groupe"
+                  title="Membres du groupe"
+                  load={() => listGroupMembers(name)}
+                  remove={(userId) => removeGroupMember(name, userId)}
+                  canRemove={() => true}
+                  onRemoved={onSharingChanged}
+                  emptyMessage="Groupe non partagé."
+                  confirmMessage={<>Retirer du groupe&nbsp;?</>}
+                  removeLabel={(memberName) => `Retirer ${memberName} du groupe`}
+                  stopPointerPropagation
+                />
+              )}
               {onShare && (
                 <Button
                   variant="secondary"

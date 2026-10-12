@@ -46,6 +46,26 @@
   word-break: break-all;
 }
 
+.role {
+  flex-shrink: 0;
+  padding: $space-xxs $space-s;
+  border: $border-s-accent-2;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-caps;
+
+  &[data-role='owner'] {
+    color: $accent-1-600;
+    background: $accent-1-500;
+  }
+
+  &[data-role='editor'] {
+    color: $accent-1-600;
+    background: transparent;
+  }
+}
+
 .state {
   padding: $space-l;
   color: $accent-1-600;

@@ -8,7 +8,8 @@ import { InlineConfirm } from '@/components/InlineConfirm';
 import { Menu } from '@/components/Menu';
 import type { MenuItem } from '@/components/Menu';
 import { cx } from '@/lib/cx';
-import { CollaboratorsButton } from './CollaboratorsButton';
+import { MembersMenu } from '@/components/MembersMenu';
+import { listCollaborators, removeCollaborator } from '@/lib/drawings';
 import styles from './DrawingCard.module.scss';
 
 export interface DrawingCardProps {
@@ -139,11 +140,16 @@ export function DrawingCard({
                 </span>
               </span>
               {isIdle && drawing.collaborator_count >= 1 && (
-                <CollaboratorsButton
-                  drawingId={drawing.id}
-                  count={drawing.collaborator_count}
-                  canRemove={isOwner}
+                <MembersMenu
+                  label={`Collaborateurs (${drawing.collaborator_count})`}
+                  size="sm"
+                  load={() => listCollaborators(drawing.id)}
+                  remove={(userId) => removeCollaborator(drawing.id, userId)}
+                  canRemove={(m) => isOwner && m.role !== 'owner'}
                   onRemoved={onCollaboratorRemoved}
+                  emptyMessage="Aucun collaborateur."
+                  confirmMessage={<>Retirer&nbsp;?</>}
+                  removeLabel={(name) => `Retirer ${name}`}
                 />
               )}
               {menuItems.length > 0 && isIdle && <Menu items={menuItems} ariaLabel="Actions" />}

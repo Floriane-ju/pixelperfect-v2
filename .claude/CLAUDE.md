@@ -44,6 +44,7 @@ src/
                         #   NewGroup, InviteCollaborator passent par lui
     Modal/              # modale flottante déplaçable + ModalHeader (réutilisé par GroupModal)
     InlineConfirm/      # confirmation en place (carte, ligne de menu), layout row|column
+    MembersMenu/        # menu des membres (collaborateurs d'un dessin, membres d'un groupe) + retrait
     SessionProvider/    # contexte session (useSession) — split Context/Provider/hook (cf. Snackbar)
   hooks/                # hooks transverses (useModalA11y, useOutsideDismiss, useAnchoredMenu,
                         #   useInlineRename, useDraggableModal)
