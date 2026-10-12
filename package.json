@@ -15,6 +15,7 @@
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,scss}\"",
     "test": "vitest",
+    "test:run": "vitest run",
     "prepare": "husky"
   },
   "dependencies": {
