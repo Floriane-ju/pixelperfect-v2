@@ -1,5 +1,11 @@
 @use 'sass:list';
 
+// Interpole entre l'état plein et l'état réduit du header selon `--compact` (0 → 1),
+// posé par Gallery.tsx en fonction du défilement.
+@function compact($full, $compact) {
+  @return calc(#{$full} + (#{$compact} - #{$full}) * var(--compact, 0));
+}
+
 .page {
   position: relative;
   width: 100%;
@@ -45,19 +51,17 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: $space-l $space-2xl;
-  padding: max(#{$page-gutter}, env(safe-area-inset-top)) 0 $space-3xl;
+  padding: compact(
+      max(#{$page-gutter}, env(safe-area-inset-top)),
+      max(#{$space-l}, env(safe-area-inset-top))
+    )
+    0 compact($space-3xl, $space-l);
   border-bottom: $border;
-  transition: padding $transition-base;
 
   @include phone-only {
-    padding-top: $space-2xl;
+    padding-top: compact($space-2xl, max(#{$space-l}, env(safe-area-inset-top)));
     padding-bottom: $space-l;
   }
-}
-
-.headerCompact {
-  padding-top: max(#{$space-l}, env(safe-area-inset-top));
-  padding-bottom: $space-l;
 }
 
 .title {
@@ -67,7 +71,10 @@
   margin: 0;
   font-family: $font-family-display;
   font-weight: $font-weight-bold;
-  font-size: clamp(#{$font-size-logo-min}, #{$font-size-logo-fluid}, #{$font-size-logo-max});
+  font-size: compact(
+    clamp(#{$font-size-logo-min}, #{$font-size-logo-fluid}, #{$font-size-logo-max}),
+    $font-size-display-compact
+  );
   line-height: $line-height-tight;
   letter-spacing: $letter-spacing-logo;
   white-space: nowrap;
@@ -84,7 +91,7 @@
   }
 }
 
-// Réduit au défilement : une seule ligne.
+// Fin de course du défilement : une seule ligne.
 .titleCompact {
   flex-direction: row;
   gap: $logo-mark-gap * 4;
@@ -114,7 +121,11 @@
   display: grid;
   grid-template-columns: auto auto;
   gap: $space-s $space-2xl;
-  margin: 0;
+  // Replié au défilement, gap du parent compris.
+  max-height: calc(#{$gallery-meta-max-height} * (1 - var(--compact, 0)));
+  margin: 0 0 calc(-1 * #{$space-l} * var(--compact, 0));
+  overflow: hidden;
+  opacity: calc(1 - var(--compact, 0));
   @include text-meta;
 
   dt {

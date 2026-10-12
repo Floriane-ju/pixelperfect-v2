@@ -307,6 +307,7 @@ $color-grid-on-dark:      rgba($white, 0.4); // grille sur fond de toile noir
 $logo-mark-size:       0.16em; // point rouge du logo, proportionnel au titre
 $logo-mark-gap:        0.08em;
 $logo-mark-offset:     0.06em;
+$gallery-meta-max-height: 4 * $line-height-xs + 3 * $space-s; // 4 lignes du bloc méta de la galerie
 $opacity-dimmed:       0.8;    // galerie derrière le snake actif
 $group-card-min-width: 176px;  // vignettes dans la modale de groupe
 $empty-canvas-width:   160px;  // toile vide de l'état « aucun dessin »

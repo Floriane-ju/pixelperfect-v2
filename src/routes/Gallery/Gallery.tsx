@@ -29,19 +29,12 @@ import styles from './Gallery.module.scss';
 const DECO_STRIP_KEYS = [0, 1, 2, 3, 4, 5]; // bande du pied, couleurs `$deco-strip`
 const MAX_IMPORT_BYTES = 20 * 1024 * 1024; // 20 Mo
 
-/** Défilement (px) à partir duquel le header passe en mode réduit. */
-const SCROLL_COMPACT_THRESHOLD = 24;
-
 /**
- * Marge de défilement restante (px) exigée pour ré-agrandir le header : légèrement au-dessus
- * de la hauteur libérée par la réduction (~220 px : titre 2 lignes → 1 ligne, bloc méta masqué, paddings).
- * En dessous, ré-agrandir supprimerait le débordement, `scrollTop` retomberait à 0 et le
- * header oscillerait entre les deux tailles.
+ * Défilement (px) sur lequel le header passe progressivement de sa taille pleine à sa taille
+ * réduite. La progression suit `scrollTop` sans seuil : si la réduction supprime le débordement,
+ * `scrollTop` est borné et le header se stabilise à mi-course au lieu d'osciller.
  */
-const SCROLL_EXPAND_MIN_OVERFLOW = 260;
-
-/** Distance (px) d'un glissement vers le bas rétablissant le header quand la liste est en haut. */
-const TOUCH_EXPAND_DISTANCE = 8;
+const SCROLL_COMPACT_RANGE = 200;
 
 export function Gallery() {
   const navigate = useNavigate();
@@ -79,8 +72,9 @@ export function Gallery() {
   const [showProfile, setShowProfile] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
   const [snakeActive, setSnakeActive] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const touchStartY = useRef(0);
+  /** Fin de course atteinte : le titre passe sur une ligne et le bloc méta sort du flux. */
+  const [isCompact, setIsCompact] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -131,26 +125,10 @@ export function Gallery() {
   };
 
   const handleContentScroll = (e: UIEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    // Hystérésis : une fois réduit, le header ne revient à sa taille pleine qu'en haut de liste
-    // et si la grille garde assez de débordement pour rester scrollable une fois ré-agrandie —
-    // sinon `scrollTop` retomberait à 0 et le header oscillerait. En deçà, seul un geste
-    // explicite vers le haut le rétablit (cf. expandIfAtTop).
-    const overflow = el.scrollHeight - el.clientHeight;
-    setIsScrolled((prev) =>
-      prev
-        ? !(el.scrollTop === 0 && overflow > SCROLL_EXPAND_MIN_OVERFLOW)
-        : el.scrollTop > SCROLL_COMPACT_THRESHOLD
-    );
-  };
-
-  /**
-   * Rétablit le header sur un geste vers le haut alors que la liste est déjà en butée : à
-   * `scrollTop` 0 le navigateur n'émet plus d'événement `scroll`, molette et toucher sont donc
-   * les seuls signaux disponibles.
-   */
-  const expandIfAtTop = (el: HTMLDivElement) => {
-    if (el.scrollTop === 0) setIsScrolled(false);
+    const progress = Math.min(Math.max(e.currentTarget.scrollTop / SCROLL_COMPACT_RANGE, 0), 1);
+    // Variable CSS posée directement : pas de rendu React à chaque frame de défilement.
+    headerRef.current?.style.setProperty('--compact', String(progress));
+    setIsCompact(progress === 1);
   };
 
   const { groups, ungrouped } = useMemo(() => groupDrawings(drawings), [drawings]);
@@ -189,13 +167,13 @@ export function Gallery() {
         />
 
         <main className={styles.gallery}>
-          <header className={cx(styles.header, isScrolled && styles.headerCompact)}>
-            <h1 className={cx(styles.title, isScrolled && styles.titleCompact)}>
+          <header ref={headerRef} className={styles.header}>
+            <h1 className={cx(styles.title, isCompact && styles.titleCompact)}>
               <span>Pixel</span>
               <span className={styles.titleLast}>Perfect</span>
             </h1>
             <div className={styles.headerAside}>
-              <dl className={cx(styles.meta, isScrolled && styles.metaHidden)}>
+              <dl className={cx(styles.meta, isCompact && styles.metaHidden)}>
                 <dt>Bibliothèque</dt>
                 <dd>{countLabel}</dd>
                 <dt>Stockage</dt>
@@ -230,23 +208,7 @@ export function Gallery() {
             <NewDrawingModal onClose={() => setShowNewModal(false)} onConfirm={handleCreate} />
           )}
 
-          <div
-            id="gallery-content"
-            className={styles.scroller}
-            onScroll={handleContentScroll}
-            onWheel={(e) => {
-              if (e.deltaY < 0) expandIfAtTop(e.currentTarget);
-            }}
-            onTouchStart={(e) => {
-              touchStartY.current = e.touches[0]?.clientY ?? 0;
-            }}
-            onTouchMove={(e) => {
-              const y = e.touches[0]?.clientY;
-              if (y !== undefined && y - touchStartY.current > TOUCH_EXPAND_DISTANCE) {
-                expandIfAtTop(e.currentTarget);
-              }
-            }}
-          >
+          <div id="gallery-content" className={styles.scroller} onScroll={handleContentScroll}>
             {status === 'loading' && <GalleryLoading />}
             {status === 'error' && <GalleryError message={errorMsg} onRetry={reload} />}
             {status === 'idle' && !hasContent && (
@@ -320,7 +282,9 @@ export function Gallery() {
             <footer className={styles.footer}>
               <span>Planche 1 / 1 — PixelPerfect</span>
               <span className={styles.strip} aria-hidden="true">
-                {DECO_STRIP_KEYS.map((k) => <span key={k} />)}
+                {DECO_STRIP_KEYS.map((k) => (
+                  <span key={k} />
+                ))}
               </span>
             </footer>
           </div>
