@@ -324,14 +324,16 @@ export function Editor() {
               playing={isPlaying}
               onPlayingToggle={handlePlayingToggle}
               onFrameSelect={handleFrameSelect}
-              onFrameReorder={afterCommit(handleLayerReorder)}
-              atLayerCap={drawing.data.layers.length >= MAX_LAYERS}
-              canDelete={drawing.data.layers.length > 1}
-              selectedVisible={activeLayer?.visible ?? true}
-              onFrameAdd={afterCommit(handleLayerAdd)}
-              onFrameVisibilityToggle={afterCommit(() => handleLayerVisibilityToggle(activeLayerId))}
-              onFrameDuplicate={afterCommit(() => handleLayerDuplicate(activeLayerId))}
-              onFrameDelete={afterCommit(() => handleLayerDelete(activeLayerId))}
+              edit={{
+                onFrameReorder: afterCommit(handleLayerReorder),
+                atLayerCap: drawing.data.layers.length >= MAX_LAYERS,
+                canDelete: drawing.data.layers.length > 1,
+                selectedVisible: activeLayer?.visible ?? true,
+                onFrameAdd: afterCommit(handleLayerAdd),
+                onFrameVisibilityToggle: afterCommit(() => handleLayerVisibilityToggle(activeLayerId)),
+                onFrameDuplicate: afterCommit(() => handleLayerDuplicate(activeLayerId)),
+                onFrameDelete: afterCommit(() => handleLayerDelete(activeLayerId)),
+              }}
             />
           )}
           <StatusBar

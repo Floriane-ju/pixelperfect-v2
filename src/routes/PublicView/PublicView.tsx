@@ -5,6 +5,7 @@ import { DEFAULT_DRAWING_SETTINGS } from '@/lib/drawingValidation';
 import { fetchPublicDrawing, type PublicDrawing } from '@/lib/publicLinks';
 import { frameIds } from '@/routes/Editor/animationFrames';
 import { useAnimationPlayback } from '@/routes/Editor/hooks/useAnimationPlayback';
+import { Timeline } from '@/routes/Editor/Timeline';
 import type { DrawingData } from '@/types';
 import styles from './PublicView.module.scss';
 
@@ -22,10 +23,16 @@ export function PublicView() {
   useEffect(() => {
     let cancelled = false;
     fetchPublicDrawing(token).then(
-      (drawing) => { if (!cancelled) setState(drawing ? { status: 'ready', drawing } : { status: 'missing' }); },
-      () => { if (!cancelled) setState({ status: 'error' }); },
+      (drawing) => {
+        if (!cancelled) setState(drawing ? { status: 'ready', drawing } : { status: 'missing' });
+      },
+      () => {
+        if (!cancelled) setState({ status: 'error' });
+      }
     );
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [token]);
 
   useEffect(() => {
@@ -34,12 +41,18 @@ export function PublicView() {
 
   return (
     <main className={styles.page}>
-      {state.status === 'loading' && <p className={styles.message} role="status">Chargement…</p>}
+      {state.status === 'loading' && (
+        <p className={styles.message} role="status">
+          Chargement…
+        </p>
+      )}
       {state.status === 'missing' && (
         <p className={styles.message}>Ce lien n’existe pas ou n’est plus partagé.</p>
       )}
       {state.status === 'error' && (
-        <p className={styles.message} role="alert">Impossible de charger le dessin. Vérifiez votre connexion.</p>
+        <p className={styles.message} role="alert">
+          Impossible de charger le dessin. Vérifiez votre connexion.
+        </p>
       )}
       {state.status === 'ready' && (
         <>
@@ -50,7 +63,9 @@ export function PublicView() {
           </span>
         </>
       )}
-      <Link to="/" className={styles.home}>PixelPerfect</Link>
+      <Link to="/" className={styles.home}>
+        PixelPerfect
+      </Link>
     </main>
   );
 }
@@ -59,7 +74,23 @@ function PublicPreview({ data }: { data: DrawingData }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { animationMode, fps, bgColor } = { ...DEFAULT_DRAWING_SETTINGS, ...data.settings };
   const frames = useMemo(() => frameIds(data.layers), [data.layers]);
-  const { frameId } = useAnimationPlayback({ frames, fps, playing: animationMode && frames.length > 1 });
+  const canPlay = animationMode && frames.length > 1;
+  const [playing, setPlaying] = useState(true);
+  const [pausedId, setPausedId] = useState<string | null>(null);
+  const isPlaying = canPlay && playing;
+  const { frameId: playedId } = useAnimationPlayback({ frames, fps, playing: isPlaying });
+  const frameId = isPlaying ? playedId : (pausedId ?? frames[0] ?? null);
+  // Calques masqués : pas des frames, donc absents de la timeline publique.
+  const frameLayers = useMemo(() => data.layers.filter((l) => l.visible), [data.layers]);
+
+  const togglePlaying = () => {
+    if (isPlaying) setPausedId(playedId);
+    setPlaying(!isPlaying);
+  };
+  const selectFrame = (id: string) => {
+    setPlaying(false);
+    setPausedId(id);
+  };
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext('2d');
@@ -80,15 +111,30 @@ function PublicPreview({ data }: { data: DrawingData }) {
   }, [data, animationMode, frameId]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={data.width}
-      height={data.height}
-      className={styles.canvas}
-      data-bg={bgColor}
-      style={{ '--ratio': data.width / data.height } as CSSProperties}
-      role="img"
-      aria-label={animationMode ? 'Animation' : 'Dessin'}
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        width={data.width}
+        height={data.height}
+        className={styles.canvas}
+        data-bg={bgColor}
+        style={{ '--ratio': data.width / data.height } as CSSProperties}
+        role="img"
+        aria-label={animationMode ? 'Animation' : 'Dessin'}
+      />
+      {animationMode && (
+        <div className={styles.timeline}>
+          <Timeline
+            frames={frameLayers}
+            currentId={frameId}
+            canvasWidth={data.width}
+            canvasHeight={data.height}
+            playing={isPlaying}
+            onPlayingToggle={togglePlaying}
+            onFrameSelect={selectFrame}
+          />
+        </div>
+      )}
+    </>
   );
 }

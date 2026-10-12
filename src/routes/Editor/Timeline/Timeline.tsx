@@ -8,17 +8,9 @@ import { LayerThumbnail } from '@/routes/Editor/LayerPanel/LayerThumbnail';
 import styles from './Timeline.module.scss';
 
 const THUMB_SIZE = 32;
+const noReorder = () => {};
 
-export interface TimelineProps {
-  /** Tous les calques, dans l'ordre de lecture ; les masqués sont sautés à la lecture. */
-  frames: PixelLayer[];
-  /** Frame affichée (lecture ou frame active en pause). */
-  currentId: string | null;
-  canvasWidth: number;
-  canvasHeight: number;
-  playing: boolean;
-  onPlayingToggle: () => void;
-  onFrameSelect: (id: string) => void;
+export interface TimelineEditProps {
   onFrameReorder: (fromId: string, toId: string, position: 'before' | 'after') => void;
   /** Plafond de calques atteint : ajout et duplication désactivés. */
   atLayerCap: boolean;
@@ -33,6 +25,20 @@ export interface TimelineProps {
   onFrameDelete: () => void;
 }
 
+export interface TimelineProps {
+  /** Tous les calques, dans l'ordre de lecture ; les masqués sont sautés à la lecture. */
+  frames: PixelLayer[];
+  /** Frame affichée (lecture ou frame active en pause). */
+  currentId: string | null;
+  canvasWidth: number;
+  canvasHeight: number;
+  playing: boolean;
+  onPlayingToggle: () => void;
+  onFrameSelect: (id: string) => void;
+  /** Absent : lecture seule (lien public), sans réordonnancement ni actions sur les calques. */
+  edit?: TimelineEditProps;
+}
+
 /** Bande de lecture : play/pause, frames (calques) et actions sur le calque sélectionné. */
 export function Timeline({
   frames,
@@ -42,21 +48,15 @@ export function Timeline({
   playing,
   onPlayingToggle,
   onFrameSelect,
-  onFrameReorder,
-  atLayerCap,
-  canDelete,
-  selectedVisible,
-  onFrameAdd,
-  onFrameVisibilityToggle,
-  onFrameDuplicate,
-  onFrameDelete,
+  edit,
 }: TimelineProps) {
+  const onFrameReorder = edit?.onFrameReorder ?? noReorder;
   // Frames dans l'ordre de `layers` : « avant » à l'écran = « avant » dans les calques.
   const { drag, setItemRef, handleProps } = useDragReorder<HTMLLIElement>({ axis: 'x', onDrop: onFrameReorder });
 
   /** Alt + ←/→ : déplace la frame d'un cran, pendant clavier du glisser-déposer. */
   const handleFrameKeyDown = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
-    if (!e.altKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+    if (!edit || !e.altKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
     const delta = e.key === 'ArrowLeft' ? -1 : 1;
     const frame = frames[index];
     const target = frames[index + delta];
@@ -93,56 +93,62 @@ export function Timeline({
               size="sm"
               className={styles.frame}
               aria-label={`Frame ${i + 1} : ${layer.name}${layer.visible ? '' : ' (masqué)'}`}
-              aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight"
+              aria-keyshortcuts={edit ? 'Alt+ArrowLeft Alt+ArrowRight' : undefined}
               aria-current={layer.id === currentId ? 'true' : undefined}
               tooltip={false}
               onClick={() => onFrameSelect(layer.id)}
               onKeyDown={e => handleFrameKeyDown(e, i)}
             >
-              <span className={styles.handle} aria-hidden="true" {...handleProps(layer.id)}>
-                <Icons icon="drag" size={16} />
-              </span>
+              {edit && (
+                <span className={styles.handle} aria-hidden="true" {...handleProps(layer.id)}>
+                  <Icons icon="drag" size={16} />
+                </span>
+              )}
               <LayerThumbnail layer={layer} width={canvasWidth} height={canvasHeight} size={THUMB_SIZE} />
             </Button>
           </li>
         ))}
       </ol>
-      <div className={styles.actions}>
-        {/* En lecture, la frame affichée n'est pas le calque sélectionné : on évite l'ambiguïté. */}
-        <Button
-          variant="ghost"
-          iconOnly
-          iconLeft={selectedVisible ? 'eye' : 'eye-off'}
-          aria-label={selectedVisible ? 'Masquer le calque sélectionné' : 'Afficher le calque sélectionné'}
-          disabled={playing}
-          onClick={onFrameVisibilityToggle}
-        />
-        <Button
-          variant="ghost"
-          iconOnly
-          iconLeft="duplicate"
-          aria-label="Dupliquer le calque sélectionné"
-          disabled={atLayerCap || playing}
-          onClick={onFrameDuplicate}
-        />
-        <Button
-          variant="ghost"
-          iconOnly
-          iconLeft="trash"
-          aria-label="Supprimer le calque sélectionné"
-          disabled={!canDelete || playing}
-          onClick={onFrameDelete}
-        />
-      </div>
-      <span className={styles.separator} aria-hidden="true" />
-      <Button
-        variant="ghost"
-        iconOnly
-        iconLeft="add"
-        aria-label="Nouveau calque"
-        disabled={atLayerCap}
-        onClick={onFrameAdd}
-      />
+      {edit && (
+        <>
+          <div className={styles.actions}>
+            {/* En lecture, la frame affichée n'est pas le calque sélectionné : on évite l'ambiguïté. */}
+            <Button
+              variant="ghost"
+              iconOnly
+              iconLeft={edit.selectedVisible ? 'eye' : 'eye-off'}
+              aria-label={edit.selectedVisible ? 'Masquer le calque sélectionné' : 'Afficher le calque sélectionné'}
+              disabled={playing}
+              onClick={edit.onFrameVisibilityToggle}
+            />
+            <Button
+              variant="ghost"
+              iconOnly
+              iconLeft="duplicate"
+              aria-label="Dupliquer le calque sélectionné"
+              disabled={edit.atLayerCap || playing}
+              onClick={edit.onFrameDuplicate}
+            />
+            <Button
+              variant="ghost"
+              iconOnly
+              iconLeft="trash"
+              aria-label="Supprimer le calque sélectionné"
+              disabled={!edit.canDelete || playing}
+              onClick={edit.onFrameDelete}
+            />
+          </div>
+          <span className={styles.separator} aria-hidden="true" />
+          <Button
+            variant="ghost"
+            iconOnly
+            iconLeft="add"
+            aria-label="Nouveau calque"
+            disabled={edit.atLayerCap}
+            onClick={edit.onFrameAdd}
+          />
+        </>
+      )}
     </section>
   );
 }

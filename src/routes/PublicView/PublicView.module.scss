@@ -43,3 +43,8 @@
   text-decoration: underline;
   text-underline-offset: $space-xxs;
 }
+
+.timeline {
+  @include layer-surface;
+  width: min(100%, #{$public-preview-max});
+}
