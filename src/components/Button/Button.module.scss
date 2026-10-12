@@ -133,13 +133,19 @@
     @include focus-ring(-$outline-width);
   }
 
+  // Survol plus spécifique que l'état : on le redéclare pour garder le contraste.
   &[aria-pressed='true'],
   &[aria-expanded='true'] {
     background: $color-ink-text;
     color: $color-ink-bg;
+
+    &:hover:not(:disabled) {
+      background: $color-surface-hover;
+    }
   }
 
-  &[aria-current='page'] {
+  &[aria-current='page'],
+  &[aria-current='page']:hover:not(:disabled) {
     background: $color-primary;
     color: $color-on-primary;
   }
