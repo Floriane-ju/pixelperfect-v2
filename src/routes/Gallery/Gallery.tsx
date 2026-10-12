@@ -72,9 +72,10 @@ export function Gallery() {
   const [showProfile, setShowProfile] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
   const [snakeActive, setSnakeActive] = useState(false);
-  /** Fin de course atteinte : le titre passe sur une ligne et le bloc méta sort du flux. */
+  /** Fin de course atteinte : le bloc méta sort du flux (sans effet sur la hauteur du header). */
   const [isCompact, setIsCompact] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+  const titleFirstRef = useRef<HTMLSpanElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -126,8 +127,15 @@ export function Gallery() {
 
   const handleContentScroll = (e: UIEvent<HTMLDivElement>) => {
     const progress = Math.min(Math.max(e.currentTarget.scrollTop / SCROLL_COMPACT_RANGE, 0), 1);
-    // Variable CSS posée directement : pas de rendu React à chaque frame de défilement.
-    headerRef.current?.style.setProperty('--compact', String(progress));
+    const header = headerRef.current;
+    const first = titleFirstRef.current;
+    if (!header || !first) return;
+    // Largeur de « Pixel » en em (indépendante de la taille du titre) : « Perfect » glisse
+    // d'autant pour rejoindre la première ligne, sans bascule de mise en page.
+    const fontSize = parseFloat(getComputedStyle(first).fontSize);
+    header.style.setProperty('--title-first-width', String(first.offsetWidth / fontSize));
+    // Variables CSS posées directement : pas de rendu React à chaque frame de défilement.
+    header.style.setProperty('--compact', String(progress));
     setIsCompact(progress === 1);
   };
 
@@ -168,8 +176,8 @@ export function Gallery() {
 
         <main className={styles.gallery}>
           <header ref={headerRef} className={styles.header}>
-            <h1 className={cx(styles.title, isCompact && styles.titleCompact)}>
-              <span>Pixel</span>
+            <h1 className={styles.title}>
+              <span ref={titleFirstRef}>Pixel</span>
               <span className={styles.titleLast}>Perfect</span>
             </h1>
             <div className={styles.headerAside}>

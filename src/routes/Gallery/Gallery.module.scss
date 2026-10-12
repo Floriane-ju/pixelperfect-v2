@@ -78,24 +78,27 @@
   line-height: $line-height-tight;
   letter-spacing: $letter-spacing-logo;
   white-space: nowrap;
+  // « Perfect » remonte à côté de « Pixel » (cf. .titleLast) : on retire la 2e ligne de la
+  // hauteur et on réserve la largeur gagnée, au prorata du défilement.
+  margin-bottom: calc(-1 * (#{$line-height-tight} * 1em + #{$space-s}) * var(--compact, 0));
+  margin-right: calc(
+    (var(--title-first-width, 0) * 1em + #{$logo-mark-gap * 4}) * var(--compact, 0)
+  );
 }
 
 .titleLast {
   display: flex;
   align-items: flex-end;
   gap: $logo-mark-gap;
+  transform: translate(
+    calc((var(--title-first-width, 0) * 1em + #{$logo-mark-gap * 4}) * var(--compact, 0)),
+    calc(-1 * (#{$line-height-tight} * 1em + #{$space-s}) * var(--compact, 0))
+  );
 
   &::after {
     @include pixel-mark($logo-mark-size);
     margin-bottom: $logo-mark-offset;
   }
-}
-
-// Fin de course du défilement : une seule ligne.
-.titleCompact {
-  flex-direction: row;
-  gap: $logo-mark-gap * 4;
-  font-size: $font-size-display-compact;
 }
 
 .headerAside {
