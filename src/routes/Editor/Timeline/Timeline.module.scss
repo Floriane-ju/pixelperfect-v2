@@ -19,16 +19,54 @@
   overflow-x: auto;
 }
 
-.frame {
-  flex-direction: column;
-  gap: $space-xxs;
-  height: auto;
-  padding: $space-xs;
+.item {
+  position: relative;
 }
 
-.number {
-  font-family: $font-family-display;
-  font-size: $font-size-2xs;
+.itemDragging {
+  opacity: $opacity-drop-target;
+}
+
+.itemDropBefore::before,
+.itemDropAfter::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: $drop-indicator-height;
+  background: $color-primary;
+  pointer-events: none;
+  z-index: $z-raised;
+}
+
+// Centré dans l'espace entre deux frames ($space-s).
+.itemDropBefore::before {
+  left: calc(#{$space-s} * -0.5 - #{$drop-indicator-height} * 0.5);
+}
+
+.itemDropAfter::after {
+  right: calc(#{$space-s} * -0.5 - #{$drop-indicator-height} * 0.5);
+}
+
+.handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  // Les enfants de <Button> sont dans un `.label` sans gap : l'écart passe par une marge.
+  margin-right: $space-xs;
+  color: inherit;
+  cursor: grab;
+  touch-action: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.frame {
+  height: auto;
+  padding: $space-xs;
 }
 
 .empty {

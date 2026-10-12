@@ -1,10 +1,11 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import type { KeyboardEvent, PointerEvent } from 'react';
+import { useCallback, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import { Button } from '@/components/Button';
 import { Icons } from '@/components/Icons';
 import { cx } from '@/lib/cx';
 import { MAX_LAYERS } from '@/lib/drawingValidation';
 import type { PixelLayer } from '@/types';
+import { useDragReorder } from '@/routes/Editor/hooks/useDragReorder';
 import { LayerThumbnail } from './LayerThumbnail';
 import styles from './LayerPanel.module.scss';
 
@@ -19,12 +20,6 @@ export interface LayerPanelProps {
   onDelete: (id: string) => void;
   onAdd: () => void;
   onReorder: (fromId: string, toId: string, position: 'before' | 'after') => void;
-}
-
-interface DragState {
-  id: string;
-  targetId: string | null;
-  pos: 'before' | 'after';
 }
 
 export function LayerPanel({
@@ -43,16 +38,12 @@ export function LayerPanel({
   const canDelete = layers.length > 1;
   const atLayerCap = layers.length >= MAX_LAYERS;
 
-  const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
-  const [drag, setDrag] = useState<DragState | null>(null);
-  const dragRef = useRef<DragState | null>(null);
-  useLayoutEffect(() => { dragRef.current = drag; });
+  const { drag, itemRefs, setItemRef, handleProps } = useDragReorder<HTMLLIElement>({
+    axis: 'y',
+    // Affichage inversé (dessus en premier) : « avant » à l'écran = « après » dans `layers`.
+    onDrop: (fromId, toId, pos) => onReorder(fromId, toId, pos === 'before' ? 'after' : 'before'),
+  });
   const [announcement, setAnnouncement] = useState<string>('');
-
-  const setItemRef = useCallback((id: string) => (el: HTMLLIElement | null) => {
-    if (el) itemRefs.current.set(id, el);
-    else itemRefs.current.delete(id);
-  }, []);
 
   /**
    * `reversed` est l'ordre d'affichage : l'index 0 est le calque du dessus. Les positions
@@ -85,60 +76,8 @@ export function LayerPanel({
       onSelect(target.id);
       itemRefs.current.get(target.id)?.focus();
     },
-    [reversed, layers.length, onReorder, onSelect]
+    [reversed, layers.length, onReorder, onSelect, itemRefs]
   );
-
-  const handleDragStart = (e: PointerEvent<HTMLSpanElement>, id: string) => {
-    e.stopPropagation();
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    setDrag({ id, targetId: null, pos: 'before' });
-  };
-
-  const handleDragMove = (e: PointerEvent<HTMLSpanElement>) => {
-    const current = dragRef.current;
-    if (!current) return;
-    const y = e.clientY;
-    const entries = Array.from(itemRefs.current.entries());
-    let targetId: string | null = null;
-    let pos: 'before' | 'after' = 'before';
-    for (const [id, el] of entries) {
-      if (id === current.id) continue;
-      const r = el.getBoundingClientRect();
-      if (y >= r.top && y <= r.bottom) {
-        targetId = id;
-        pos = y < r.top + r.height / 2 ? 'before' : 'after';
-        break;
-      }
-    }
-    if (!targetId && entries.length > 0) {
-      const first = entries[0];
-      const last = entries[entries.length - 1];
-      if (first && y < first[1].getBoundingClientRect().top) {
-        targetId = first[0];
-        pos = 'before';
-      } else if (last && y > last[1].getBoundingClientRect().bottom) {
-        targetId = last[0];
-        pos = 'after';
-      }
-    }
-    if (targetId !== current.targetId || pos !== current.pos) {
-      setDrag({ id: current.id, targetId, pos });
-    }
-  };
-
-  const handleDragEnd = (e: PointerEvent<HTMLSpanElement>) => {
-    const current = dragRef.current;
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    }
-    setDrag(null);
-    // Annulation système (rejet de paume, appel entrant…) : on n'applique pas le déplacement.
-    if (e.type === 'pointercancel') return;
-    if (!current || !current.targetId || current.targetId === current.id) return;
-    const realPos: 'before' | 'after' = current.pos === 'before' ? 'after' : 'before';
-    onReorder(current.id, current.targetId, realPos);
-  };
 
   return (
     <div className={styles.panel} role="group" aria-labelledby="layer-panel-title">
@@ -183,11 +122,7 @@ export function LayerPanel({
               <span
                 className={styles.handle}
                 aria-hidden="true"
-                onPointerDown={e => handleDragStart(e, layer.id)}
-                onPointerMove={handleDragMove}
-                onPointerUp={handleDragEnd}
-                onPointerCancel={handleDragEnd}
-                onClick={e => e.stopPropagation()}
+                {...handleProps(layer.id)}
               >
                 <Icons icon="drag" size={16} />
               </span>

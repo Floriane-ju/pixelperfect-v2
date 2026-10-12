@@ -303,6 +303,7 @@ export function Editor() {
               onPlayingToggle={handlePlayingToggle}
               onFrameSelect={handleFrameSelect}
               onFpsChange={setFps}
+              onFrameReorder={afterCommit(handleLayerReorder)}
             />
           )}
           <StatusBar
