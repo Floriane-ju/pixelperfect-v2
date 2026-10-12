@@ -99,12 +99,16 @@ export function SettingsPanel({
           <span className={styles.label} id={animationLabelId}>Mode animation</span>
           <Switch checked={animationMode} onChange={onAnimationModeToggle} aria-labelledby={animationLabelId} />
         </div>
-        {animationMode && (
-          <div className={styles.row}>
-            <span className={styles.label} id={onionLabelId}>Pelure d'oignon</span>
-            <Switch checked={onionSkin} onChange={onOnionSkinToggle} aria-labelledby={onionLabelId} />
-          </div>
-        )}
+        {/* Toujours rendue : le panneau, ancré en bas, ne doit pas grandir au basculement. */}
+        <div className={styles.row}>
+          <span className={styles.label} id={onionLabelId}>Pelure d'oignon</span>
+          <Switch
+            checked={onionSkin}
+            onChange={onOnionSkinToggle}
+            disabled={!animationMode}
+            aria-labelledby={onionLabelId}
+          />
+        </div>
       </section>
     </div>
   );
