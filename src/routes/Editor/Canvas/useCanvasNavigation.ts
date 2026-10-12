@@ -1,11 +1,33 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 
-interface Transform { x: number; y: number; scale: number; angle: number; }
+export interface Transform { x: number; y: number; scale: number; angle: number; }
 
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 48;
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+const WHEEL_LINE_PX = 16;
+
+/**
+ * Bloque le dessin sur le bord du cadre : plus petit que la vue, il reste entièrement
+ * visible ; plus grand, il la couvre toujours (pas de vide au-delà de son bord).
+ * Raisonne sur la boîte englobante après rotation et zoom.
+ */
+export function clampToViewport(
+  t: Transform,
+  size: { w: number; h: number },
+  viewport: { w: number; h: number },
+): Transform {
+  const rad = (t.angle * Math.PI) / 180;
+  const cos = Math.abs(Math.cos(rad));
+  const sin = Math.abs(Math.sin(rad));
+  const halfW = ((size.w * cos + size.h * sin) * t.scale) / 2;
+  const halfH = ((size.w * sin + size.h * cos) * t.scale) / 2;
+  const limX = Math.abs(viewport.w / 2 - halfW);
+  const limY = Math.abs(viewport.h / 2 - halfH);
+  return { ...t, x: clamp(t.x, -limX, limX), y: clamp(t.y, -limY, limY) };
+}
 
 type NavPointerDownResult = 'cancel' | 'pan' | 'draw' | 'skip';
 
@@ -14,7 +36,10 @@ interface NavSnapshot {
   transform: Transform;
 }
 
-export function useCanvasNavigation(wrapperRef: RefObject<HTMLDivElement | null>) {
+export function useCanvasNavigation(
+  wrapperRef: RefObject<HTMLDivElement | null>,
+  displaySizeRef: RefObject<{ w: number; h: number }>,
+) {
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1, angle: 0 });
   const transformRef = useRef<Transform>({ x: 0, y: 0, scale: 1, angle: 0 });
   const navPointers = useRef(new Map<number, { x: number; y: number }>());
@@ -22,19 +47,30 @@ export function useCanvasNavigation(wrapperRef: RefObject<HTMLDivElement | null>
   const panLastPos = useRef<{ x: number; y: number } | null>(null);
 
   const applyTransform = useCallback((t: Transform) => {
-    transformRef.current = t;
-    setTransform(t);
-  }, []);
+    const wrapper = wrapperRef.current;
+    const next = wrapper
+      ? clampToViewport(t, displaySizeRef.current, { w: wrapper.clientWidth, h: wrapper.clientHeight })
+      : t;
+    transformRef.current = next;
+    setTransform(next);
+  }, [wrapperRef, displaySizeRef]);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      const t = transformRef.current;
+      // Trackpad : le pinch arrive en wheel + ctrlKey (zoom), le glissé à deux doigts en
+      // wheel simple (translation). Molette souris : Ctrl/Cmd + molette pour zoomer.
+      if (!e.ctrlKey && !e.metaKey) {
+        const unit = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? WHEEL_LINE_PX : 1;
+        applyTransform({ ...t, x: t.x - e.deltaX * unit, y: t.y - e.deltaY * unit });
+        return;
+      }
       const wr = wrapper.getBoundingClientRect();
       const wcx = wr.left + wr.width / 2;
       const wcy = wr.top + wr.height / 2;
-      const t = transformRef.current;
       const delta = e.ctrlKey ? e.deltaY / 100 : Math.sign(e.deltaY) * 0.15;
       const factor = Math.exp(-delta);
       const newScale = clamp(t.scale * factor, MIN_SCALE, MAX_SCALE);

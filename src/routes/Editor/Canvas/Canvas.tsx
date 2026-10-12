@@ -72,7 +72,7 @@ export function Canvas({
   const [pickerIndicator, setPickerIndicator] = useState<{ x: number; y: number } | null>(null);
 
   const { displaySize, displaySizeRef } = useResponsiveDisplaySize(wrapperRef, data.width, data.height, onDisplaySizeChange);
-  const { transform, transformRef, onNavPointerDown, onNavPointerMove, onNavPointerUp } = useCanvasNavigation(wrapperRef);
+  const { transform, transformRef, onNavPointerDown, onNavPointerMove, onNavPointerUp } = useCanvasNavigation(wrapperRef, displaySizeRef);
   const { layerCanvasesRef, layerPixelsRef, recompositeMain } = useLayerComposite({ mainCanvasRef: canvasRef, data, activeLayerId });
 
   useCheckerboard(checkerRef, data.width, data.height);
