@@ -121,16 +121,15 @@ export async function createDrawing(title: string, width: number, height: number
   };
   const drawingData: DrawingData = { width, height, layers: [layer] };
 
-  const { data, error } = await supabase
-    .from('drawings')
-    .insert({ id: crypto.randomUUID(), title, data: drawingData })
-    .select(DRAWING_COLUMNS)
-    .single();
+  // Pas de `.select()` chaîné : le RETURNING applique la policy SELECT (`is_drawing_member`), dont
+  // la sous-requête ne voit pas encore la ligne insérée par la même instruction → refus RLS.
+  const id = crypto.randomUUID();
+  const { error } = await supabase.from('drawings').insert({ id, title, data: drawingData });
 
   if (error) {
     throw new Error(`${error.message}${error.details ? ` — ${error.details}` : ''}${error.hint ? ` (${error.hint})` : ''}`);
   }
-  return parseDrawingRow(data);
+  return fetchDrawing(id);
 }
 
 export async function updateDrawingData(id: string, drawingData: DrawingData): Promise<void> {
