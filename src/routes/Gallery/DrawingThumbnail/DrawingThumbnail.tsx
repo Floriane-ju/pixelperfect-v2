@@ -2,6 +2,8 @@ import { memo, useEffect, useRef, type CSSProperties } from 'react';
 import type { DrawingRow } from '@/types';
 import styles from './DrawingThumbnail.module.scss';
 
+const WHITE_COLORS = new Set(['#fff', '#ffff', '#ffffff', '#ffffffff']);
+
 export interface DrawingThumbnailProps {
   drawing: Pick<DrawingRow, 'id' | 'updated_at' | 'data'>;
 }
@@ -36,7 +38,7 @@ export const DrawingThumbnail = memo(function DrawingThumbnail({ drawing }: Draw
         const x = parseInt(key.slice(0, comma), 10);
         const y = parseInt(key.slice(comma + 1), 10);
 
-        ctx.fillStyle = color;
+        ctx.fillStyle = WHITE_COLORS.has(color.toLowerCase()) ? (styles.whitePixel ?? color) : color;
         ctx.fillRect(x, y, 1, 1);
       }
     }

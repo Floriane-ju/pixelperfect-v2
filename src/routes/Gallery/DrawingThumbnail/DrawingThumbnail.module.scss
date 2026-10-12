@@ -8,3 +8,8 @@
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
+
+// Lu par le composant : les pixels blancs sont peints dans ce ton pour rester visibles sur la carte.
+:export {
+  whitePixel: $color-thumbnail-white;
+}

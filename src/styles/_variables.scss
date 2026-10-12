@@ -64,6 +64,9 @@ $color-selection-tint: rgba($red, 0.08);
 $color-checker-light: $white;
 $color-checker-dark:  $paper-subtle;
 
+// Pixels blancs des vignettes de galerie (invisibles sinon sur la carte papier)
+$color-thumbnail-white: $paper-hover;
+
 // Grille de pixels
 $color-grid: rgba($ink, 0.4);
 
