@@ -150,6 +150,22 @@
   gap: $grid-gap-y $grid-gap-x;
   align-content: flex-start;
   padding-top: $space-l;
+  container-type: inline-size;
+
+  // Pas de séparateur au-dessus de la première ligne : on déduit le nombre de colonnes
+  // de la largeur (même calcul que `auto-fill` + `minmax`).
+  > :first-child {
+    --card-divider: 0;
+  }
+
+  // ponytail: plafonné à 8 colonnes (~2150 px), monter la borne si l'écran s'élargit.
+  @for $n from 2 through 8 {
+    @container (min-width: #{$n * ($card-min-width + $grid-gap-x) - $grid-gap-x}) {
+      > :nth-child(-n + #{$n}) {
+        --card-divider: 0;
+      }
+    }
+  }
 }
 
 .contentDropTarget {

@@ -32,7 +32,8 @@
   align-items: center;
   gap: $space-m;
   min-height: $control-md;
-  border-top: $border-thin;
+  // Retiré par la grille sur la première ligne (cf. `.content` dans Gallery.module.scss).
+  border-top: var(--card-divider, #{$border-thin});
 
   // Bouton d'options ouvert : inversé en encre.
   [aria-expanded='true'] {
