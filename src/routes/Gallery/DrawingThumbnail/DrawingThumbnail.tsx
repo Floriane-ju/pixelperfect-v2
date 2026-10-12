@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, type CSSProperties } from 'react';
 import type { DrawingRow } from '@/types';
 import { toneDownLight } from '@/lib/color';
+import { frameIds } from '@/routes/Editor/animationFrames';
 import styles from './DrawingThumbnail.module.scss';
 
 export interface DrawingThumbnailProps {
@@ -36,8 +37,12 @@ export const DrawingThumbnail = memo(function DrawingThumbnail({ drawing }: Draw
       return css;
     };
 
+    // En mode animation, la vignette ne montre que la première frame.
+    const firstFrame = data.settings?.animationMode ? frameIds(data.layers)[0] : undefined;
+
     for (const layer of data.layers) {
       if (!layer.visible) continue;
+      if (firstFrame !== undefined && layer.id !== firstFrame) continue;
 
       ctx.globalAlpha = layer.opacity;
 
