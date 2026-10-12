@@ -4,6 +4,9 @@ import type { LocalDrawing } from './localLibrary';
 
 const FORMAT = 'pixelperfect-library';
 const FORMAT_VERSION = 1;
+const MAX_TITLE_LENGTH = 80;
+const MAX_GROUP_LENGTH = 80;
+const MAX_IMPORT_ENTRIES = 1000;
 
 export interface LibraryFile {
   format: typeof FORMAT;
@@ -24,19 +27,37 @@ export function serializeLibrary(drawings: LocalDrawing[], exportedAt: string): 
  */
 export function parseLibraryFile(raw: unknown): LocalDrawing[] {
   if (!isRecord(raw)) throw new Error('Fichier invalide : format non reconnu.');
-  if (raw.format !== FORMAT) throw new Error('Fichier invalide : ce n’est pas une bibliothèque PixelPerfect.');
+  if (raw.format !== FORMAT)
+    throw new Error('Fichier invalide : ce n’est pas une bibliothèque PixelPerfect.');
   if (typeof raw.version !== 'number') throw new Error('Fichier invalide : version manquante.');
   if (raw.version > FORMAT_VERSION) {
     throw new Error('Fichier créé par une version plus récente de PixelPerfect.');
   }
   if (!Array.isArray(raw.drawings)) throw new Error('Fichier invalide : aucun dessin.');
 
-  const ts = new Date().toISOString();
   const list = raw.drawings as unknown[];
+  if (list.length > MAX_IMPORT_ENTRIES) {
+    throw new Error(`Fichier invalide : trop de dessins (maximum ${MAX_IMPORT_ENTRIES}).`);
+  }
+
+  const ts = new Date().toISOString();
   return list.map((entry, i) => {
     if (!isRecord(entry)) throw new Error(`Dessin ${i + 1} invalide.`);
     const title = typeof entry.title === 'string' ? entry.title : 'Sans titre';
     const group = typeof entry.group === 'string' ? entry.group : null;
+
+    if (title.length > MAX_TITLE_LENGTH) {
+      throw new Error(
+        `Fichier invalide : le titre du dessin ${i + 1} dépasse ${MAX_TITLE_LENGTH} caractères.`
+      );
+    }
+
+    if (group !== null && group.length > MAX_GROUP_LENGTH) {
+      throw new Error(
+        `Fichier invalide : le groupe du dessin ${i + 1} dépasse ${MAX_GROUP_LENGTH} caractères.`
+      );
+    }
+
     const created_at = typeof entry.created_at === 'string' ? entry.created_at : ts;
     const updated_at = typeof entry.updated_at === 'string' ? entry.updated_at : ts;
     return {
