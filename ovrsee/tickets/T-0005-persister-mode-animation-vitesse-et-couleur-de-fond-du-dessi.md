@@ -2,7 +2,7 @@
 {
   "id": "T-0005",
   "titre": "Persister mode animation, vitesse et couleur de fond du dessin",
-  "colonne": "en-cours",
+  "colonne": "fait",
   "priorite": "moyenne",
   "tags": ["editeur", "persistance"],
   "cree": "2026-10-12",
