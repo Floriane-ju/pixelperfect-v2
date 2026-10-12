@@ -1,0 +1,30 @@
+.tooltip {
+  position: fixed;
+  z-index: $z-tooltip;
+  padding: $space-xs $space-s;
+  background: $color-ink-bg;
+  color: $color-ink-text;
+  white-space: nowrap;
+  pointer-events: none;
+  @include text-meta;
+}
+
+.right {
+  margin-left: $space-s;
+  transform: translateY(-50%);
+}
+
+.left {
+  margin-left: -$space-s;
+  transform: translate(-100%, -50%);
+}
+
+.bottom {
+  margin-top: $space-s;
+  transform: translateX(-50%);
+}
+
+.top {
+  margin-top: -$space-s;
+  transform: translate(-50%, -100%);
+}
