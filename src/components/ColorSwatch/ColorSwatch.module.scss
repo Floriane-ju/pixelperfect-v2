@@ -10,7 +10,7 @@
     outline: $outline-width solid $accent-1-600;
     outline-offset: -$outline-offset;
     position: relative;
-    z-index: 1;
+    z-index: $z-raised;
   }
 }
 
@@ -18,5 +18,5 @@
   outline: $outline-width solid $accent-1-500;
   outline-offset: -$outline-offset;
   position: relative;
-  z-index: 1;
+  z-index: $z-raised;
 }

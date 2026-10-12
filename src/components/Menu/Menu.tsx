@@ -122,6 +122,7 @@ export function Menu({
               <button
                 type="button"
                 role="menuitem"
+                tabIndex={-1}
                 className={cx(styles.item, item.variant === 'danger' && styles.itemDanger)}
                 onClick={() => {
                   // Le menu va se démonter : le focus revient d'abord au déclencheur, pour qu'une

@@ -166,8 +166,18 @@ export function Topbar() {
                 </Button>
 
                 {refImageError && (
-                  <div className={styles.refError} role="alert" onClick={onRefImageErrorClear}>
-                    {refImageError}
+                  <div className={styles.refError} role="alert">
+                    <div className={styles.refErrorContent}>
+                      {refImageError}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      iconOnly
+                      iconLeft="close"
+                      aria-label="Fermer l'erreur"
+                      onClick={onRefImageErrorClear}
+                    />
                   </div>
                 )}
 
