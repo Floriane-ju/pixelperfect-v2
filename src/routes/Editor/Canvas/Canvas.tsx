@@ -36,6 +36,7 @@ interface CanvasProps {
   onDrawStart?: () => void;
   onDrawEnd?: () => void;
   onPickColor?: (color: HexColor) => void;
+  onTwoFingerTap?: () => void;
   hoveredColor?: HexColor | null;
   refImage?: RefImageState | null;
   onDisplaySizeChange?: (size: { w: number; h: number }) => void;
@@ -56,6 +57,7 @@ export function Canvas({
   onDrawStart,
   onDrawEnd,
   onPickColor,
+  onTwoFingerTap,
   hoveredColor,
   refImage,
   onDisplaySizeChange,
@@ -322,7 +324,7 @@ export function Canvas({
 
   const handlePointerUp = useCallback((e: PointerEvent<HTMLDivElement>) => {
     wrapperRef.current?.releasePointerCapture(e.pointerId);
-    onNavPointerUp(e.pointerId);
+    if (onNavPointerUp(e.pointerId)) onTwoFingerTap?.();
     clearLongPress();
 
     if (longPressFiredRef.current) { resetStroke(); return; }
@@ -355,7 +357,7 @@ export function Canvas({
       }
     }
     resetStroke();
-  }, [tool, screenToCanvas, data.width, data.height, color, activeLayerId, layerPixelsRef, onLayerChange, paint, clearPreview, symmetry, onDrawEnd, onNavPointerUp, clearLongPress, selection, resetStroke, commitTap]);
+  }, [tool, screenToCanvas, data.width, data.height, color, activeLayerId, layerPixelsRef, onLayerChange, paint, clearPreview, symmetry, onDrawEnd, onNavPointerUp, clearLongPress, selection, resetStroke, commitTap, onTwoFingerTap]);
 
   // Annulation système (appel entrant, perte de focus…) : jamais de commit ni d'entrée d'historique.
   const handlePointerCancel = useCallback((e: PointerEvent<HTMLDivElement>) => {

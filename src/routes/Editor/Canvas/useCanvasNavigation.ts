@@ -8,6 +8,9 @@ const MAX_SCALE = 48;
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
 const WHEEL_LINE_PX = 16;
+// Tap à deux doigts (= annuler) : bref et quasi immobile, sinon c'est un pinch.
+const TWO_FINGER_TAP_MS = 300;
+const TWO_FINGER_TAP_SLOP_PX = 10;
 
 /**
  * Bloque le dessin sur le bord du cadre : plus petit que la vue, il reste entièrement
@@ -45,6 +48,7 @@ export function useCanvasNavigation(
   const navPointers = useRef(new Map<number, { x: number; y: number }>());
   const navSnapshot = useRef<NavSnapshot | null>(null);
   const panLastPos = useRef<{ x: number; y: number } | null>(null);
+  const twoFingerTap = useRef<{ start: number; valid: boolean } | null>(null);
 
   const applyTransform = useCallback((t: Transform) => {
     const wrapper = wrapperRef.current;
@@ -87,6 +91,9 @@ export function useCanvasNavigation(
     navPointers.current.set(id, { x, y });
 
     if (navPointers.current.size >= 2) {
+      // Un tap ne compte qu'une seule paire de doigts posée d'un coup (ni 3e doigt, ni reprise).
+      if (twoFingerTap.current) twoFingerTap.current.valid = false;
+      else twoFingerTap.current = { start: performance.now(), valid: navPointers.current.size === 2 };
       panLastPos.current = null;
       navSnapshot.current = { pointers: new Map(navPointers.current), transform: { ...transformRef.current } };
       return 'cancel';
@@ -123,6 +130,9 @@ export function useCanvasNavigation(
       const sp1 = snap.pointers.get(id1)!;
       const cp0 = navPointers.current.get(id0);
       const cp1 = navPointers.current.get(id1);
+      const tap = twoFingerTap.current;
+      const start = snap.pointers.get(id);
+      if (tap && start && Math.hypot(x - start.x, y - start.y) > TWO_FINGER_TAP_SLOP_PX) tap.valid = false;
       if (cp0 && cp1) {
         const wrapper = wrapperRef.current;
         if (!wrapper) return true;
@@ -163,7 +173,9 @@ export function useCanvasNavigation(
     return false;
   }, [applyTransform, wrapperRef]);
 
-  const onNavPointerUp = useCallback((id: number): void => {
+  /** Renvoie `true` quand le dernier doigt d'un tap à deux doigts se lève. */
+  const onNavPointerUp = useCallback((id: number): boolean => {
+    if (!navPointers.current.has(id)) return false;
     navPointers.current.delete(id);
     const remaining = navPointers.current.size;
     if (remaining < 2) {
@@ -174,7 +186,11 @@ export function useCanvasNavigation(
         panLastPos.current = pos ?? null;
       }
     }
-    if (remaining === 0) panLastPos.current = null;
+    if (remaining > 0) return false;
+    panLastPos.current = null;
+    const tap = twoFingerTap.current;
+    twoFingerTap.current = null;
+    return !!tap && tap.valid && performance.now() - tap.start <= TWO_FINGER_TAP_MS;
   }, []);
 
   return { transform, transformRef, onNavPointerDown, onNavPointerMove, onNavPointerUp };

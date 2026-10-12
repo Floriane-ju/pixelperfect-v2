@@ -289,6 +289,7 @@ export function Editor() {
               onDrawStart={handleDrawStart}
               onDrawEnd={handleDrawEnd}
               onPickColor={handlePickColor}
+              onTwoFingerTap={undo}
               hoveredColor={hoveredColor}
               refImage={refImage}
               onDisplaySizeChange={setCanvasDisplaySize}
