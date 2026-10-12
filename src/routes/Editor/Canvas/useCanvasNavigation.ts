@@ -72,6 +72,9 @@ export function useCanvasNavigation(wrapperRef: RefObject<HTMLDivElement | null>
   }, []);
 
   const onNavPointerMove = useCallback((id: number, x: number, y: number): boolean => {
+    // Pointeur en survol (Apple Pencil hover, souris sans clic) : jamais de pointerup, il
+    // resterait compté et le prochain doigt déclencherait un faux pinch.
+    if (!navPointers.current.has(id)) return true;
     navPointers.current.set(id, { x, y });
 
     if (navPointers.current.size >= 2 && navSnapshot.current) {

@@ -15,6 +15,7 @@ interface CanvasStackProps {
   refImage: RefImageState | null | undefined;
   showGrid: boolean;
   selectionRect: SelectionRect | null;
+  canvasAriaLabel?: string;
 }
 
 export function CanvasStack({
@@ -28,10 +29,11 @@ export function CanvasStack({
   refImage,
   showGrid,
   selectionRect,
+  canvasAriaLabel,
 }: CanvasStackProps) {
   return (
     <>
-      <canvas ref={checkerRef} className={styles.checker} width={dataWidth} height={dataHeight} />
+      <canvas ref={checkerRef} className={styles.checker} width={dataWidth} height={dataHeight} aria-hidden="true" />
       {refImage && (
         <img
           src={refImage.src}
@@ -48,9 +50,9 @@ export function CanvasStack({
           }}
         />
       )}
-      <canvas ref={canvasRef} className={styles.canvas} width={dataWidth} height={dataHeight} />
-      <canvas ref={previewRef} className={styles.preview} width={dataWidth} height={dataHeight} />
-      <canvas ref={highlightRef} className={styles.highlight} width={displaySize.w} height={displaySize.h} />
+      <canvas ref={canvasRef} className={styles.canvas} width={dataWidth} height={dataHeight} role={canvasAriaLabel ? "img" : undefined} aria-label={canvasAriaLabel} />
+      <canvas ref={previewRef} className={styles.preview} width={dataWidth} height={dataHeight} aria-hidden="true" />
+      <canvas ref={highlightRef} className={styles.highlight} width={displaySize.w} height={displaySize.h} aria-hidden="true" />
       {showGrid && <GridOverlay dataWidth={dataWidth} dataHeight={dataHeight} displaySize={displaySize} />}
       {selectionRect && (
         <svg

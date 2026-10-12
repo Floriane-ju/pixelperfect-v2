@@ -1,13 +1,8 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import styles from './SnakeCanvas.module.scss';
 import { Button } from '@/components/Button';
+import { STEP, drawBorder, drawCell, drawFood } from './snakeDraw';
 
-const CELL = 24;
-const GAP = 3;
-const MINI_CELL = (CELL - 2*GAP)/3;
-const STEP = CELL + GAP;
-const FOOD_SIZE = 24;
-const FOOD_OFFSET = (CELL - FOOD_SIZE) / 2;
 const TICK_MS = 150;
 const INITIAL_LENGTH = 5;
 const COLOR_AUTO = '#FFF5DE';
@@ -81,78 +76,16 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
 
     if (borderActiveRef.current) {
       ctx.fillStyle = COLOR_USER;
-      const cols = colsRef.current;
-      const rows = rowsRef.current;
-      const drawBorderCell = (cx: number, cy: number) => {
-        const px = cx * STEP;
-        const py = cy * STEP;
-        ctx.fillRect(px,                       py,                       MINI_CELL, MINI_CELL);
-        ctx.fillRect(px + MINI_CELL + GAP,     py,                       MINI_CELL, MINI_CELL);
-        ctx.fillRect(px + MINI_CELL*2 + GAP*2, py,                       MINI_CELL, MINI_CELL);
-        ctx.fillRect(px,                       py + MINI_CELL + GAP,     MINI_CELL, MINI_CELL);
-        ctx.fillRect(px + MINI_CELL*2 + GAP*2, py + MINI_CELL + GAP,     MINI_CELL, MINI_CELL);
-        ctx.fillRect(px,                       py + MINI_CELL*2 + GAP*2, MINI_CELL, MINI_CELL);
-        ctx.fillRect(px + MINI_CELL + GAP,     py + MINI_CELL*2 + GAP*2, MINI_CELL, MINI_CELL);
-        ctx.fillRect(px + MINI_CELL*2 + GAP*2, py + MINI_CELL*2 + GAP*2, MINI_CELL, MINI_CELL);
-        ctx.fillRect(px + MINI_CELL + GAP,     py + MINI_CELL + GAP,     MINI_CELL, MINI_CELL);
-      };
-      for (let x = 0; x < cols; x++) {
-        drawBorderCell(x, 0);
-        drawBorderCell(x, rows - 1);
-      }
-      for (let y = 1; y < rows - 1; y++) {
-        drawBorderCell(0, y);
-        drawBorderCell(cols - 1, y);
-      }
+      drawBorder(ctx, colsRef.current, rowsRef.current);
     }
 
     ctx.fillStyle = isUser ? COLOR_USER : COLOR_AUTO;
-    for (const seg of snakeRef.current) {
-      ctx.fillRect(seg.x * STEP,                          seg.y * STEP, MINI_CELL, MINI_CELL);
-      ctx.fillRect(seg.x * STEP + MINI_CELL + GAP,        seg.y * STEP, MINI_CELL, MINI_CELL);
-      ctx.fillRect(seg.x * STEP + MINI_CELL*2 + GAP*2,    seg.y * STEP, MINI_CELL, MINI_CELL);
+    for (const seg of snakeRef.current) drawCell(ctx, seg.x, seg.y);
 
-      ctx.fillRect(seg.x * STEP,                          seg.y * STEP + MINI_CELL + GAP, MINI_CELL, MINI_CELL);
-      ctx.fillRect(seg.x * STEP + MINI_CELL + GAP,        seg.y * STEP + MINI_CELL + GAP, MINI_CELL, MINI_CELL);
-      ctx.fillRect(seg.x * STEP + MINI_CELL*2 + GAP*2,    seg.y * STEP + MINI_CELL + GAP, MINI_CELL, MINI_CELL);
-
-      ctx.fillRect(seg.x * STEP,                          seg.y * STEP + (MINI_CELL)*2 + GAP*2, MINI_CELL, MINI_CELL);
-      ctx.fillRect(seg.x * STEP + MINI_CELL + GAP,        seg.y * STEP + (MINI_CELL)*2 + GAP*2, MINI_CELL, MINI_CELL);
-      ctx.fillRect(seg.x * STEP + MINI_CELL*2 + GAP*2,    seg.y * STEP + (MINI_CELL)*2 + GAP*2, MINI_CELL, MINI_CELL);
-    }
     const food = foodRef.current;
     if (food) {
       ctx.fillStyle = isUser ? COLOR_FOOD_USER : COLOR_FOOD_AUTO;
-      ctx.fillRect(
-        food.x * STEP + FOOD_OFFSET + FOOD_SIZE/2-(FOOD_SIZE/4)/2,
-        food.y * STEP + FOOD_OFFSET + FOOD_SIZE/2-(FOOD_SIZE/4)/2,
-        FOOD_SIZE/4,
-        FOOD_SIZE/4,
-      );
-      ctx.fillRect(
-        food.x * STEP + FOOD_OFFSET + FOOD_SIZE/4,
-        food.y * STEP + FOOD_OFFSET,
-        FOOD_SIZE/2,
-        FOOD_SIZE/6,
-      );
-      ctx.fillRect(
-        food.x * STEP + FOOD_OFFSET + FOOD_SIZE/4,
-        food.y * STEP + FOOD_OFFSET + FOOD_SIZE-FOOD_SIZE/6,
-        FOOD_SIZE/2,
-        FOOD_SIZE/6,
-      );
-      ctx.fillRect(
-        food.x * STEP + FOOD_OFFSET + FOOD_SIZE-FOOD_SIZE/6,
-        food.y * STEP + FOOD_OFFSET + FOOD_SIZE/4,
-        FOOD_SIZE/6,
-        FOOD_SIZE/2,
-      );
-      ctx.fillRect(
-        food.x * STEP + FOOD_OFFSET,
-        food.y * STEP + FOOD_OFFSET + FOOD_SIZE/4,
-        FOOD_SIZE/6,
-        FOOD_SIZE/2,
-      );
+      drawFood(ctx, food);
     }
   }, []);
 
@@ -311,6 +244,8 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
     };
 
     resize();
+    // Préférence d'accessibilité lue au montage : le serpent auto reste figé, le jeu reste jouable.
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const c = colsRef.current;
     const r = rowsRef.current;
@@ -321,11 +256,16 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
     placeFood();
     draw();
 
-    const interval = setInterval(tick, TICK_MS);
+    const interval = setInterval(() => {
+      if (document.hidden) return;
+      if (reducedMotion && modeRef.current === 'auto') return;
+      tick();
+    }, TICK_MS);
 
     const onKey = (e: KeyboardEvent) => {
-      const target = e.target as Element | null;
-      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return;
+      // Seulement quand rien n'a le focus : sinon les flèches/lettres d'un bouton ou d'une
+      // modale basculent en mode jeu et figent la galerie (pointer-events: none).
+      if (e.target !== document.body) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (gameOverRef.current) return;
 
@@ -363,7 +303,16 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
     };
 
     const onResize = () => {
+      const prevCols = colsRef.current;
+      const prevRows = rowsRef.current;
       resize();
+      if (colsRef.current === prevCols && rowsRef.current === prevRows) return;
+      // En mode jeu, recaler les segments sur la nouvelle bordure les ferait se toucher d'un coup
+      // (rotation, barre d'outils iOS) : on repart d'un serpent neuf.
+      if (modeRef.current === 'user') {
+        resetSnake();
+        return;
+      }
       const maxX = Math.max(BORDER_INSET, colsRef.current - BORDER_INSET - 1);
       const maxY = Math.max(BORDER_INSET, rowsRef.current - BORDER_INSET - 1);
       snakeRef.current = snakeRef.current.map((seg) => ({
@@ -386,7 +335,7 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('resize', onResize);
     };
-  }, [tick, draw, placeFood, onModeChange]);
+  }, [tick, draw, placeFood, resetSnake, onModeChange]);
 
   return (
     <>
@@ -405,7 +354,7 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
         <div className={styles.gameOver} role="dialog" aria-modal="true" aria-labelledby="snake-gameover-title">
           <h2 id="snake-gameover-title" className={styles.title}>Game Over</h2>
           <div className={styles.actions}>
-            <Button variant="primary" size="lg" onClick={handleReplay}>Rejouer</Button>
+            <Button variant="primary" size="lg" autoFocus onClick={handleReplay}>Rejouer</Button>
             <Button variant="ghost" size="lg" onClick={handleBackToGallery}>Revenir à la galerie</Button>
           </div>
         </div>

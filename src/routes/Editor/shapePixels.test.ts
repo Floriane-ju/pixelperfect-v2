@@ -152,6 +152,28 @@ describe('getRectPixels', () => {
 });
 
 describe('getEllipsePixels', () => {
+  it('trace un contour 8-connexe, y compris pour les ellipses très plates', () => {
+    for (let w = 1; w <= 40; w++) {
+      for (let h = 1; h <= 12; h++) {
+        const pts = getEllipsePixels(0, 0, w, h);
+        const set = new Set(pts.map(p => `${p.x},${p.y}`));
+        const first = pts[0]!;
+        const reached = new Set([`${first.x},${first.y}`]);
+        const queue = [first];
+        while (queue.length > 0) {
+          const { x, y } = queue.pop()!;
+          for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+              const k = `${x + dx},${y + dy}`;
+              if (set.has(k) && !reached.has(k)) { reached.add(k); queue.push({ x: x + dx, y: y + dy }); }
+            }
+          }
+        }
+        expect(reached.size, `ellipse ${w}×${h}`).toBe(set.size);
+      }
+    }
+  });
+
   it('returns single point for tiny radius', () => {
     expect(getEllipsePixels(2, 2, 2, 2)).toEqual([{ x: 2, y: 2 }]);
   });
@@ -185,6 +207,57 @@ describe('getEllipsePixels', () => {
       const sy = 2 * cy - y;
       expect(set.has(`${sx},${sy}`)).toBe(true);
     }
+  });
+
+  it('small even circle (4px) has a two-pixel top row', () => {
+    const topRow = getEllipsePixels(0, 0, 3, 3).filter(p => p.y === 0).map(p => p.x).sort((a, b) => a - b);
+    expect(topRow).toEqual([1, 2]);
+  });
+
+  it('even circle (10px) has a symmetric four-pixel top row', () => {
+    const topRow = getEllipsePixels(0, 0, 9, 9).filter(p => p.y === 0).map(p => p.x).sort((a, b) => a - b);
+    expect(topRow).toEqual([3, 4, 5, 6]);
+  });
+
+  const sizes: Array<[number, number, number, number]> = [
+    [0, 0, 3, 3], [0, 0, 4, 4], [0, 0, 6, 6], [0, 0, 7, 7], [0, 0, 9, 9], [0, 0, 10, 10],
+    [0, 0, 15, 15], [0, 0, 16, 16], [0, 0, 10, 6], [0, 0, 7, 12], [2, 1, 11, 4], [0, 0, 16, 9],
+    [0, 0, 1, 1], [0, 0, 2, 1], [0, 0, 1, 6], [3, 3, 4, 9], [0, 0, 15, 2], [0, 0, 20, 3],
+  ];
+
+  describe.each(sizes)('bbox (%i,%i)→(%i,%i)', (x0, y0, x1, y1) => {
+    const minX = Math.min(x0, x1), maxX = Math.max(x0, x1);
+    const minY = Math.min(y0, y1), maxY = Math.max(y0, y1);
+    const pts = getEllipsePixels(x0, y0, x1, y1);
+    const set = new Set(pts.map(key));
+
+    it('stays strictly inside the inclusive bbox', () => {
+      for (const { x, y } of pts) {
+        expect(x).toBeGreaterThanOrEqual(minX);
+        expect(x).toBeLessThanOrEqual(maxX);
+        expect(y).toBeGreaterThanOrEqual(minY);
+        expect(y).toBeLessThanOrEqual(maxY);
+      }
+    });
+
+    it('touches all four sides of the bbox', () => {
+      expect(Math.min(...pts.map(p => p.x))).toBe(minX);
+      expect(Math.max(...pts.map(p => p.x))).toBe(maxX);
+      expect(Math.min(...pts.map(p => p.y))).toBe(minY);
+      expect(Math.max(...pts.map(p => p.y))).toBe(maxY);
+    });
+
+    it('is horizontally symmetric', () => {
+      for (const { x, y } of pts) {
+        expect(set.has(`${minX + maxX - x},${y}`)).toBe(true);
+      }
+    });
+
+    it('is vertically symmetric', () => {
+      for (const { x, y } of pts) {
+        expect(set.has(`${x},${minY + maxY - y}`)).toBe(true);
+      }
+    });
   });
 });
 

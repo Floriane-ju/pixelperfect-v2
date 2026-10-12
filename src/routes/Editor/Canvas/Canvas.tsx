@@ -12,7 +12,7 @@ import { useSelectionPreview } from './useSelectionPreview';
 import { useResponsiveDisplaySize } from './useResponsiveDisplaySize';
 import { useLayerComposite } from './useLayerComposite';
 import { computeSelectionRect } from './selectionRect';
-import { stampBrush, restoreLayerFromSnapshot, pickColorAt as pickColorFrom } from './drawUtils';
+import { stampBrush, applyBrushPixels, restoreLayerFromSnapshot, pickColorAt as pickColorFrom } from './drawUtils';
 import { CanvasStack } from './CanvasStack';
 import { PickerIndicator } from './PickerIndicator';
 import type { UseSelectionApi } from '@/routes/Editor/hooks/useSelection';
@@ -41,6 +41,7 @@ interface CanvasProps {
   onDisplaySizeChange?: (size: { w: number; h: number }) => void;
   showGrid?: boolean;
   selection?: UseSelectionApi;
+  title?: string;
 }
 
 export function Canvas({
@@ -60,6 +61,7 @@ export function Canvas({
   onDisplaySizeChange,
   showGrid = false,
   selection,
+  title,
 }: CanvasProps) {
   const checkerRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -86,6 +88,22 @@ export function Canvas({
   const pressOriginRef = useRef<{ sx: number; sy: number } | null>(null);
   const indicatorTimerRef = useRef<number | null>(null);
   const pendingStartRef = useRef<{ x: number; y: number } | null>(null);
+  // Fill / pipette : action différée au pointerup, annulée si un 2e doigt arrive (pinch).
+  const tapRef = useRef<{ pointerId: number; px: { x: number; y: number }; tool: 'fill' | 'eyedropper' } | null>(null);
+  const strokeChangedRef = useRef(false);
+
+  const resetStroke = useCallback(() => {
+    isDrawing.current = false; lastPixel.current = null; drawSessionSnapshot.current = null;
+    shapeStartRef.current = null; pendingStartRef.current = null; tapRef.current = null;
+    strokeChangedRef.current = false; longPressFiredRef.current = false;
+  }, []);
+
+  // Geste de sélection interrompu (pinch) : ni définition ni déplacement ne doivent survivre.
+  const cancelSelectionGesture = useCallback(() => {
+    if (!selection) return;
+    selection.endMove();
+    if (selection.state.kind === 'defining') selection.cancel();
+  }, [selection]);
 
   const clearLongPress = useCallback(() => {
     if (longPressTimerRef.current !== null) {
@@ -154,27 +172,25 @@ export function Canvas({
     previewRef.current?.getContext('2d')?.clearRect(0, 0, data.width, data.height);
   }, [data.width, data.height]);
 
+  // Abandon du geste en cours : restaure le snapshot de stroke, ne committe rien.
+  const abortGesture = useCallback(() => {
+    clearLongPress();
+    if (isDrawing.current) restoreDrawSession();
+    clearPreview();
+    cancelSelectionGesture();
+    resetStroke();
+  }, [clearLongPress, restoreDrawSession, clearPreview, cancelSelectionGesture, resetStroke]);
+
   const paint = useCallback((pixels: Array<{ x: number; y: number }>) => {
     const stamped = stampBrush(pixels, brushSize);
     const expanded = expandSymmetry(stamped, data.width, data.height, symmetry);
     const active = layerCanvasesRef.current.get(activeLayerId);
     const lctx = active?.canvas.getContext('2d') ?? null;
-    const map = layerPixelsRef.current;
-    let changed = false;
-    for (const { x, y } of expanded) {
-      if (x < 0 || y < 0 || x >= data.width || y >= data.height) continue;
-      const key = `${x},${y}`;
-      if (tool === 'pencil') {
-        map[key] = color;
-        if (lctx) { lctx.fillStyle = color; lctx.fillRect(x, y, 1, 1); }
-        changed = true;
-      } else if (tool === 'eraser' && key in map) {
-        delete map[key];
-        if (lctx) lctx.clearRect(x, y, 1, 1);
-        changed = true;
-      }
+    const changed = applyBrushPixels(layerPixelsRef.current, lctx, expanded, tool === 'eraser', color, data.width, data.height);
+    if (changed) {
+      strokeChangedRef.current = true;
+      recompositeMain();
     }
-    if (changed) recompositeMain();
   }, [tool, color, brushSize, activeLayerId, data.width, data.height, symmetry, layerCanvasesRef, layerPixelsRef, recompositeMain]);
 
   const schedulePipetteLongPress = useCallback((sx: number, sy: number, canvasPx: { x: number; y: number }) => {
@@ -189,30 +205,20 @@ export function Canvas({
       restoreDrawSession();
       clearPreview();
       pickColorAt(canvasPx);
-      isDrawing.current = false;
-      lastPixel.current = null;
-      drawSessionSnapshot.current = null;
-      shapeStartRef.current = null;
+      resetStroke();
       longPressFiredRef.current = true;
       longPressTimerRef.current = null;
       pressOriginRef.current = null;
       setPickerIndicator(null);
     }, PIPETTE_HOLD_MS);
-  }, [clearPreview, pickColorAt, restoreDrawSession]);
+  }, [clearPreview, pickColorAt, restoreDrawSession, resetStroke]);
 
   const handlePointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     wrapperRef.current?.setPointerCapture(e.pointerId);
     const navResult = onNavPointerDown(e.pointerId, e.clientX, e.clientY, e.button, e.target === canvasRef.current);
 
     if (navResult === 'cancel') {
-      clearLongPress();
-      if (isDrawing.current) restoreDrawSession();
-      clearPreview();
-      shapeStartRef.current = null;
-      isDrawing.current = false;
-      lastPixel.current = null;
-      drawSessionSnapshot.current = null;
-      pendingStartRef.current = null;
+      abortGesture();
       return;
     }
 
@@ -221,7 +227,7 @@ export function Canvas({
     const px = screenToCanvas(e.clientX, e.clientY);
 
     if (tool === 'eyedropper') {
-      pickColorAt(px);
+      tapRef.current = { pointerId: e.pointerId, px, tool };
       return;
     }
 
@@ -245,10 +251,7 @@ export function Canvas({
     }
 
     if (tool === 'fill') {
-      onDrawStart?.();
-      const filled = floodFill(layerPixelsRef.current, px.x, px.y, data.width, data.height, color);
-      if (filled) { layerPixelsRef.current = filled; onLayerChange(activeLayerId, filled); }
-      onDrawEnd?.();
+      tapRef.current = { pointerId: e.pointerId, px, tool };
       return;
     }
 
@@ -267,10 +270,11 @@ export function Canvas({
     const activeEntry = layerCanvasesRef.current.get(activeLayerId);
     if (activeEntry) activeEntry.pixelsRef = layerPixelsRef.current;
     isDrawing.current = true;
+    strokeChangedRef.current = false;
     lastPixel.current = px;
     pendingStartRef.current = px;
     schedulePipetteLongPress(e.clientX, e.clientY, px);
-  }, [data.layers, data.width, data.height, activeLayerId, tool, color, layerCanvasesRef, layerPixelsRef, onInvisibleLayerAttempt, pickColorAt, screenToCanvas, onLayerChange, drawPreview, clearPreview, onDrawStart, onDrawEnd, onNavPointerDown, onNavPointerUp, restoreDrawSession, clearLongPress, schedulePipetteLongPress, selection]);
+  }, [data.layers, activeLayerId, tool, layerCanvasesRef, layerPixelsRef, onInvisibleLayerAttempt, screenToCanvas, drawPreview, onDrawStart, onNavPointerDown, onNavPointerUp, schedulePipetteLongPress, selection, abortGesture]);
 
   const handlePointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (onNavPointerMove(e.pointerId, e.clientX, e.clientY)) return;
@@ -302,63 +306,75 @@ export function Canvas({
     lastPixel.current = px;
   }, [onNavPointerMove, screenToCanvas, paint, tool, drawPreview, clearLongPress, selection]);
 
+  const commitTap = useCallback((tap: { px: { x: number; y: number }; tool: 'fill' | 'eyedropper' }) => {
+    if (tap.tool === 'eyedropper') { pickColorAt(tap.px); return; }
+    const filled = floodFill(layerPixelsRef.current, tap.px.x, tap.px.y, data.width, data.height, color);
+    if (!filled) return;
+    onDrawStart?.();
+    layerPixelsRef.current = filled;
+    onLayerChange(activeLayerId, filled);
+    onDrawEnd?.();
+  }, [pickColorAt, layerPixelsRef, data.width, data.height, color, activeLayerId, onDrawStart, onLayerChange, onDrawEnd]);
+
   const handlePointerUp = useCallback((e: PointerEvent<HTMLDivElement>) => {
     wrapperRef.current?.releasePointerCapture(e.pointerId);
     onNavPointerUp(e.pointerId);
     clearLongPress();
 
-    if (longPressFiredRef.current) {
-      longPressFiredRef.current = false;
-      isDrawing.current = false;
-      lastPixel.current = null;
-      drawSessionSnapshot.current = null;
-      pendingStartRef.current = null;
-      return;
-    }
+    if (longPressFiredRef.current) { resetStroke(); return; }
+
+    const tap = tapRef.current;
+    if (tap?.pointerId === e.pointerId) { resetStroke(); commitTap(tap); return; }
 
     if (tool === 'select' && selection) {
       if (selection.state.kind === 'defining') selection.finishDefining();
       else if (selection.state.kind === 'floating') selection.endMove();
-      isDrawing.current = false;
-      lastPixel.current = null;
-      drawSessionSnapshot.current = null;
-      pendingStartRef.current = null;
+      resetStroke();
       return;
     }
 
-    const wasDrawing = isDrawing.current;
-    if (wasDrawing && isShapeTool(tool) && shapeStartRef.current) {
+    if (isDrawing.current && isShapeTool(tool) && shapeStartRef.current) {
       const endPx = screenToCanvas(e.clientX, e.clientY);
-      const next = applyShape(tool, shapeStartRef.current, endPx, layerPixelsRef.current, color, data.width, data.height, symmetry);
-      layerPixelsRef.current = next;
-      onLayerChange(activeLayerId, next);
+      const before = layerPixelsRef.current;
+      const next = applyShape(tool, shapeStartRef.current, endPx, before, color, data.width, data.height, symmetry);
       clearPreview();
-      shapeStartRef.current = null;
-      onDrawEnd?.();
-    } else if (wasDrawing) {
+      if (next !== before) {
+        layerPixelsRef.current = next;
+        onLayerChange(activeLayerId, next);
+        onDrawEnd?.();
+      }
+    } else if (isDrawing.current) {
       if (pendingStartRef.current) paint([pendingStartRef.current]);
-      onLayerChange(activeLayerId, layerPixelsRef.current);
-      onDrawEnd?.();
+      if (strokeChangedRef.current) {
+        onLayerChange(activeLayerId, layerPixelsRef.current);
+        onDrawEnd?.();
+      }
     }
+    resetStroke();
+  }, [tool, screenToCanvas, data.width, data.height, color, activeLayerId, layerPixelsRef, onLayerChange, paint, clearPreview, symmetry, onDrawEnd, onNavPointerUp, clearLongPress, selection, resetStroke, commitTap]);
 
-    isDrawing.current = false;
-    lastPixel.current = null;
-    drawSessionSnapshot.current = null;
-    pendingStartRef.current = null;
-  }, [tool, screenToCanvas, data.width, data.height, color, activeLayerId, layerPixelsRef, onLayerChange, paint, clearPreview, symmetry, onDrawEnd, onNavPointerUp, clearLongPress, selection]);
+  // Annulation système (appel entrant, perte de focus…) : jamais de commit ni d'entrée d'historique.
+  const handlePointerCancel = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    wrapperRef.current?.releasePointerCapture(e.pointerId);
+    onNavPointerUp(e.pointerId);
+    abortGesture();
+  }, [onNavPointerUp, abortGesture]);
 
   const cssSize = { width: displaySize.w, height: displaySize.h };
   const { x, y, scale, angle } = transform;
   const selectionRect = computeSelectionRect(selection?.state);
+  const canvasAriaLabel = title ? `Dessin « ${title} » : ${data.width}×${data.height} pixels, ${data.layers.length} calque${data.layers.length > 1 ? 's' : ''}` : undefined;
 
   return (
     <div
       ref={wrapperRef}
+      id="canvas"
       className={styles.wrapper}
+      tabIndex={-1}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
     >
       <div
         className={styles.stack}
@@ -375,6 +391,7 @@ export function Canvas({
           refImage={refImage}
           showGrid={showGrid}
           selectionRect={selectionRect}
+          canvasAriaLabel={canvasAriaLabel}
         />
       </div>
       {pickerIndicator && <PickerIndicator position={pickerIndicator} />}

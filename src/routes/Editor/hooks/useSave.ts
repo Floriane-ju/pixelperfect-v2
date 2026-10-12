@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { updateDrawingData } from '@/lib/drawings';
 import { updateDrawingData as localUpdateDrawingData } from '@/lib/localLibrary';
-import { enqueue, dequeue, getPending } from '@/lib/offlineQueue';
+import { SaveRejectedError } from '@/lib/saveErrors';
+import { enqueue, dequeue, getPendingEntry, holdForEditor, replay } from '@/lib/offlineQueue';
 import type { DrawingData, DrawingRow } from '@/types';
 
 const SAVE_DELAY = 1500;
@@ -27,16 +28,16 @@ export function useSave({ id, drawing, authed, setStatus }: UseSaveParams) {
   // est déjà « hors-ligne » et ne nécessite ni file ni re-sync.
   const flushPending = useCallback(async () => {
     if (!id || !authed) return;
-    const pending = await getPending(id);
-    if (!pending) return;
-    try {
-      await updateDrawingData(id, pending);
-      await dequeue(id);
-      setStatus('ready');
-    } catch {
-      // still offline — keep in queue
-    }
+    const entry = await getPendingEntry(id);
+    if (entry && await replay(id, entry, updateDrawingData)) setStatus('ready');
   }, [id, authed, setStatus]);
+
+  // Tant que le dessin est ouvert, sa file est gérée ici : flushAll (SessionProvider) ne doit pas
+  // renvoyer en parallèle une entrée plus ancienne qui écraserait une sauvegarde en cours.
+  useEffect(() => {
+    if (!id || !authed) return;
+    return holdForEditor(id);
+  }, [id, authed]);
 
   useEffect(() => {
     if (navigator.onLine) void flushPending();
@@ -59,11 +60,14 @@ export function useSave({ id, drawing, authed, setStatus }: UseSaveParams) {
         saveTimerRef.current = null;
         const data = latestDataRef.current;
         if (currentAuthed) {
-          updateDrawingData(currentId, data).catch(() => {
-            void enqueue(currentId, data);
-          });
+          // File d'abord, en parallèle de l'envoi : le .catch d'un fetch coupé par la suspension
+          // iOS n'aurait jamais le temps de s'exécuter.
+          const rev = enqueue(currentId, data);
+          updateDrawingData(currentId, data)
+            .then(async () => dequeue(currentId, await rev))
+            .catch(() => undefined);
         } else {
-          void localUpdateDrawingData(currentId, data);
+          localUpdateDrawingData(currentId, data).catch(() => undefined);
         }
       }
     };
@@ -96,12 +100,16 @@ export function useSave({ id, drawing, authed, setStatus }: UseSaveParams) {
         }
         return;
       }
+      // Écriture anticipée dans la file : une sauvegarde en vol au moment où iOS suspend la PWA
+      // n'est pas perdue. Retirée seulement si personne ne l'a remplacée entre-temps.
+      const rev = await enqueue(id, data);
       try {
         await updateDrawingData(id, data);
-        await dequeue(id);
+        await dequeue(id, rev);
         setStatus('ready');
-      } catch {
-        await enqueue(id, data);
+      } catch (err) {
+        // Refus définitif : inutile de garder en file une écriture qui sera toujours rejetée.
+        if (err instanceof SaveRejectedError) await dequeue(id, rev);
         setStatus('error');
       }
     }, SAVE_DELAY);

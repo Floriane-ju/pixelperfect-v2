@@ -3,6 +3,8 @@ import type { MutableRefObject } from 'react';
 import type { Tool } from '../Canvas/Canvas';
 import type { UseSelectionApi } from './useSelection';
 
+const NON_TEXT_INPUTS = new Set(['range', 'checkbox', 'radio', 'button', 'color']);
+
 interface UseEditorShortcutsParams {
   handleUndo: () => void;
   handleRedo: () => void;
@@ -14,23 +16,30 @@ export function useEditorShortcuts({ handleUndo, handleRedo, setTool, selectionR
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
+      // Seuls les champs de saisie gardent leurs touches : un slider (range) focalisé ne doit pas
+      // bloquer undo/redo ni les raccourcis d'outils.
       const inText =
-        !!target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+        (target instanceof HTMLInputElement && !NON_TEXT_INPUTS.has(target.type)) ||
+        target instanceof HTMLTextAreaElement ||
+        !!target?.isContentEditable;
 
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      // Dans un champ (hex du sélecteur…), Cmd+Z reste l'undo natif du texte.
+      if (inText) return;
+      // Insensible à la casse : CapsLock, et Shift+Z renvoie 'Z' sous Windows.
+      const key = e.key.toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && key === 'z' && !e.shiftKey) {
         e.preventDefault();
         handleUndo();
         return;
       }
       if (
-        ((e.ctrlKey || e.metaKey) && e.key === 'y') ||
-        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z')
+        ((e.ctrlKey || e.metaKey) && key === 'y') ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && key === 'z')
       ) {
         e.preventDefault();
         handleRedo();
         return;
       }
-      if (inText) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
       const toolKeys: Record<string, Tool> = {

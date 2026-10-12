@@ -42,6 +42,23 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        // Polices Google : sans cache runtime, l'app hors ligne retombe sur les polices système.
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\//,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'google-fonts-css' },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-files',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 20, maxAgeSeconds: 365 * 24 * 60 * 60 },
+            },
+          },
+        ],
       },
     }),
     ...(process.env['ANALYZE']
@@ -78,5 +95,10 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // Valeurs factices : lib/supabase.ts lève à l'import sans ces variables.
+    env: {
+      VITE_SUPABASE_URL: 'http://localhost:54321',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key',
+    },
   },
 });

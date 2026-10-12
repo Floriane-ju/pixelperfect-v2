@@ -36,8 +36,6 @@ export interface EditorContextValue {
   onRefImageTransform: (x: number, y: number, scale: number, opacity: number) => void;
   onRefImageCapture: () => void;
   canvasDisplaySize: { w: number; h: number };
-  onCopySvg: () => void;
-  onCopyPng: () => void;
 }
 
 export const EditorContext = createContext<EditorContextValue | null>(null);

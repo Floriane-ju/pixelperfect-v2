@@ -1,4 +1,5 @@
-import type { PointerEvent, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import type { UseDraggableModalReturn } from '@/hooks/useDraggableModal';
 import { Button } from '@/components/Button';
 import { cx } from '@/lib/cx';
 import styles from './ModalHeader.module.scss';
@@ -13,11 +14,7 @@ export interface ModalHeaderProps {
   /** Actions optionnelles affichées à gauche du bouton de fermeture. */
   actions?: ReactNode;
   /** Handlers de glissement fournis par `useDraggableModal`. */
-  dragHandlers: {
-    onPointerDown: (e: PointerEvent<HTMLElement>) => void;
-    onPointerMove: (e: PointerEvent<HTMLElement>) => void;
-    onPointerUp: () => void;
-  };
+  dragHandlers: UseDraggableModalReturn['dragHandlers'];
 }
 
 /** En-tête d'une modale flottante : poignée de glissement, titre décoré et bouton de fermeture. */

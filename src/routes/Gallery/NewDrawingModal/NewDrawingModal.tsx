@@ -44,6 +44,7 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
   const nameRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async () => {
+    if (isCreating) return;
     const trimmed = name.trim() || 'Sans titre';
     let width: number;
     let height: number;

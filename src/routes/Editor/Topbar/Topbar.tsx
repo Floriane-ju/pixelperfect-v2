@@ -4,10 +4,13 @@ import { Button } from '@/components/Button';
 import type { IconName } from '@/components/Icons';
 import { Menu } from '@/components/Menu';
 import { Slider } from '@/components/Slider';
+import { useSnackbar } from '@/components/Snackbar';
 import { LayerPanel } from '@/routes/Editor/LayerPanel/LayerPanel';
 import { useOutsideDismiss } from '@/hooks/useOutsideDismiss';
 import type { Tool } from '../Canvas/Canvas';
 import { useEditorContext } from '../useEditorContext';
+import { buildLayersSvg } from '../exportSvg';
+import { copyLayersPng } from '../exportPng';
 import styles from './Topbar.module.scss';
 
 interface ToolButton {
@@ -41,16 +44,31 @@ export function Topbar() {
     activeLayerId, layers, canvasWidth, canvasHeight, openPanel, onPanelToggle, onPanelClose,
     onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete, onLayerReorder,
     onBack, refImage, refImageError, onRefImageImport, onRefImageErrorClear, onRefImageRemove, onRefImageTransform, onRefImageCapture,
-    canvasDisplaySize, onCopySvg, onCopyPng,
+    canvasDisplaySize,
   } = useEditorContext();
 
   const topbarRef = useRef<HTMLElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState(false);
+  const snackbar = useSnackbar();
 
-  const flashCopied = () => {
-    setCopied(true);
-    setTimeout(() => setCopied(false), COPIED_FEEDBACK_MS);
+  // La coche ne s'affiche que si le presse-papier a réellement accepté l'écriture.
+  const copyWithFeedback = (copy: () => Promise<void>) => {
+    // Appel synchrone (geste utilisateur exigé par iOS) ; sans presse-papier (contexte non sécurisé),
+    // navigator.clipboard est undefined et l'appel lève avant toute promesse.
+    let pending: Promise<void>;
+    try {
+      pending = copy();
+    } catch (err) {
+      pending = Promise.reject(err);
+    }
+    pending.then(
+      () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), COPIED_FEEDBACK_MS);
+      },
+      () => snackbar.show('Échec de la copie'),
+    );
   };
 
   // Les panneaux « color » et « export » gèrent leur propre fermeture.
@@ -262,8 +280,15 @@ export function Topbar() {
               open={openPanel === 'export'}
               onOpenChange={(next) => { if (next) onPanelToggle('export'); else onPanelClose(); }}
               items={[
-                { label: 'Copier en SVG', onClick: () => { onCopySvg(); flashCopied(); } },
-                { label: 'Copier en PNG', onClick: () => { onCopyPng(); flashCopied(); } },
+                {
+                  label: 'Copier en SVG',
+                  onClick: () => copyWithFeedback(() =>
+                    navigator.clipboard.writeText(buildLayersSvg(layers, canvasWidth, canvasHeight))),
+                },
+                {
+                  label: 'Copier en PNG',
+                  onClick: () => copyWithFeedback(() => copyLayersPng(layers, canvasWidth, canvasHeight)),
+                },
               ]}
             />
           </div>

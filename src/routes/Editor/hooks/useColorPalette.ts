@@ -59,7 +59,8 @@ export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory
     setColor(newColor);
     colorRef.current = newColor;
     const editMode = editColorModeRef.current;
-    if (editMode && newColor !== editMode.originalColor) {
+    // Toujours reconstruire depuis originalData : revenir à la couleur d'origine doit annuler le rendu précédent.
+    if (editMode) {
       const { originalColor, originalData } = editMode;
       setDrawing(prev => {
         if (!prev) return prev;

@@ -107,6 +107,8 @@ export function DrawingCard({
           if (isIdle) onClick?.();
         }}
         onKeyDown={(e) => {
+          // Les touches des boutons internes (menu, collaborateurs) remontent jusqu'ici.
+          if (e.target !== e.currentTarget) return;
           if (isIdle && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault();
             onClick?.();
@@ -148,7 +150,7 @@ export function DrawingCard({
             </header>
             <div className={styles.preview}>
               <div className={styles.previewInner}>
-                <DrawingThumbnail data={drawing.data} />
+                <DrawingThumbnail drawing={drawing} />
               </div>
             </div>
           </>

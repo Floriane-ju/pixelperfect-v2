@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useRef, useState } from 'react';
-import { useUndoRedo } from './useUndoRedo';
-import type { DrawingData, DrawingRow } from '@/types';
+import { trimHistory, useUndoRedo } from './useUndoRedo';
+import type { DrawingData, DrawingRow, HexColor } from '@/types';
 
 const makeData = (tag: string): DrawingData => ({
   width: 4,
@@ -129,5 +129,29 @@ describe('useUndoRedo', () => {
     expect(result.result.current.undo.canUndo).toBe(false);
     // earliest reachable snapshot is s5 (s0..s4 dropped)
     expect(result.result.current.drawing?.data.layers[0]!.name).toBe('s5');
+  });
+});
+
+describe('trimHistory', () => {
+  const black = '#000000' as HexColor;
+  const pixels = (n: number, tag: string): Record<string, HexColor> =>
+    Object.fromEntries(Array.from({ length: n }, (_, i) => [`${tag}${i},0`, black]));
+  const snap = (...layers: Record<string, HexColor>[]): DrawingData => ({
+    width: 8,
+    height: 8,
+    layers: layers.map((p, i) => ({ id: `l${i}`, name: '', pixels: p, opacity: 1, visible: true })),
+  });
+
+  it('supprime les plus anciens au-delà du budget en gardant le plus récent', () => {
+    const past = [snap(pixels(4, 'a')), snap(pixels(4, 'b')), snap(pixels(4, 'c'))];
+    expect(trimHistory(past, 8)).toEqual(past.slice(1));
+    expect(trimHistory(past, 1)).toEqual(past.slice(2));
+  });
+
+  it('compte une seule fois un calque partagé entre snapshots', () => {
+    const shared = pixels(6, 's');
+    const past = [snap(shared, pixels(1, 'a')), snap(shared, pixels(1, 'b')), snap(shared, pixels(1, 'c'))];
+    // 6 partagés + 3 propres = 9 pixels réels (21 si chaque snapshot était compté en entier).
+    expect(trimHistory(past, 9)).toBe(past);
   });
 });
