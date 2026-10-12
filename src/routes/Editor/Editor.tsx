@@ -221,7 +221,6 @@ export function Editor() {
     title: drawing.title,
     onRename: handleRename,
     canShare: drawing.owner_id !== LOCAL_OWNER && drawing.owner_id === session?.user.id,
-    groupName: drawing.group,
     tool,
     onToolChange: setTool,
     canUndo,

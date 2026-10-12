@@ -31,27 +31,6 @@
   margin-left: -$space-sm;
 }
 
-.titleGroup {
-  display: flex;
-  flex-direction: column;
-  gap: $space-xs;
-  min-width: 0;
-}
-
-.crumb {
-  @include text-meta;
-  color: $color-text-muted;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.crumbLink {
-  color: $color-text-muted;
-  text-decoration: underline;
-  text-underline-offset: $space-xxs;
-}
-
 .titleRow {
   display: flex;
   align-items: center;

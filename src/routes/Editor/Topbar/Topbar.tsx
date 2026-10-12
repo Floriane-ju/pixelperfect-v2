@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import { Link } from 'react-router';
 import { Button } from '@/components/Button';
 import { Menu } from '@/components/Menu';
 import { useSnackbar } from '@/components/Snackbar';
@@ -19,7 +18,7 @@ const COPIED_FEEDBACK_MS = 2000;
 
 export function Topbar() {
   const {
-    drawingId, title, canShare, groupName, canUndo, canRedo, onUndo, onRedo,
+    drawingId, title, canShare, canUndo, canRedo, onUndo, onRedo,
     activeLayerId, animationMode, layers, canvasWidth, canvasHeight, onCanvasResize, openPanel, onPanelToggle, onPanelClose,
     onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete, onLayerReorder,
     onBack, onRename, refImage, getCommittedLayers,
@@ -70,37 +69,31 @@ export function Topbar() {
           className={styles.back}
           onClick={onBack}
         />
-        <div className={styles.titleGroup}>
-          <span className={styles.crumb}>
-            <Link to="/" className={styles.crumbLink}>Bibliothèque</Link>
-            {groupName ? ` / ${groupName}` : null}
-          </span>
-          <div className={styles.titleRow}>
-            {rename.isRenaming ? (
-              <input
-                autoFocus
-                className={styles.renameInput}
-                aria-label="Nom du dessin"
-                maxLength={80}
-                {...rename.inputProps}
-              />
-            ) : (
-              <h1 className={styles.titleText}>
-                <Button variant="ghost" className={styles.titleButton} title="Renommer le dessin" onClick={rename.start}>
-                  {title}
-                </Button>
-              </h1>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className={styles.sizeChip}
-              title="Modifier la taille du dessin"
-              onClick={() => setResizing(true)}
-            >
-              {canvasWidth} × {canvasHeight} px
-            </Button>
-          </div>
+        <div className={styles.titleRow}>
+          {rename.isRenaming ? (
+            <input
+              autoFocus
+              className={styles.renameInput}
+              aria-label="Nom du dessin"
+              maxLength={80}
+              {...rename.inputProps}
+            />
+          ) : (
+            <h1 className={styles.titleText}>
+              <Button variant="ghost" className={styles.titleButton} title="Renommer le dessin" onClick={rename.start}>
+                {title}
+              </Button>
+            </h1>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={styles.sizeChip}
+            title="Modifier la taille du dessin"
+            onClick={() => setResizing(true)}
+          >
+            {canvasWidth} × {canvasHeight} px
+          </Button>
         </div>
       </div>
 

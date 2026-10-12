@@ -13,8 +13,6 @@ export interface EditorContextValue {
   onRename: (title: string) => void;
   /** Propriétaire connecté : invitations et lien public. */
   canShare: boolean;
-  /** Groupe du dessin dans la bibliothèque (fil d'Ariane). */
-  groupName: string | null;
   tool: Tool;
   onToolChange: (t: Tool) => void;
   canUndo: boolean;
