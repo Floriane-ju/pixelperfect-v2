@@ -28,7 +28,7 @@ ANALYZE=1 pnpm run build  # rollup-plugin-visualizer → dist/stats.html
 
 ## Env
 - `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` obligatoires (cf. `src/lib/supabase.ts`).
-- Version applicative importée à l'exécution depuis `package.json` (cf. `src/routes/Gallery/Gallery.tsx`).
+- Version applicative injectée par Vite (`define: __APP_VERSION__` dans `vite.config.ts`, déclarée dans `src/vite-env.d.ts`).
 
 ## Architecture
 ```

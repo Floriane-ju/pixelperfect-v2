@@ -21,7 +21,6 @@ import { groupDrawings } from '@/lib/groupDrawings';
 import type { DrawingGroup } from '@/lib/groupDrawings';
 import { cx } from '@/lib/cx';
 import { SnakeCanvas } from '@/components/SnakeCanvas';
-import { version as appVersion } from '../../../package.json';
 import { useGalleryLibrary } from './useGalleryLibrary';
 import styles from './Gallery.module.scss';
 
@@ -152,7 +151,7 @@ export function Gallery() {
   return (
     <main className={styles.gallery}>
       <SnakeCanvas onModeChange={setSnakeActive} />
-      <div className={styles.version}>v{appVersion}</div>
+      <div className={styles.version}>v{__APP_VERSION__}</div>
       <div className={cx(styles.galleryBody, snakeActive && styles.galleryBodyDimmed)}>
       <a className="skip-link" href="#gallery-content">Aller au contenu</a>
       <header className={cx(styles.header, isScrolled && styles.headerCompact)}>

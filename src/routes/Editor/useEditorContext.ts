@@ -4,6 +4,6 @@ import type { EditorContextValue } from './EditorContext';
 
 export function useEditorContext(): EditorContextValue {
   const ctx = useContext(EditorContext);
-  if (!ctx) throw new Error('useEditorContext must be used within EditorContext.Provider');
+  if (!ctx) throw new Error('useEditorContext must be used within <EditorContext>');
   return ctx;
 }

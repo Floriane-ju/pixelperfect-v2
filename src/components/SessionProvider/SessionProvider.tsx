@@ -13,19 +13,11 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const [state, setState] = useState<SessionState>({ session: null, loading: true });
 
   useEffect(() => {
-    let settled = false;
-    // Un rejet laisserait `loading` à true indéfiniment (galerie bloquée sur « Chargement… »).
-    supabase.auth
-      .getSession()
-      .then(({ data }) => data.session, () => null)
-      .then((session) => {
-        // onAuthStateChange a pu répondre d'abord avec un état plus récent.
-        if (!settled) setState({ session, loading: false });
-      });
+    // onAuthStateChange émet INITIAL_SESSION à l'abonnement (session null si la lecture échoue) :
+    // pas besoin d'un getSession() en parallèle.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, s) => {
-      settled = true;
       setState({ session: s, loading: false });
     });
     return () => subscription.unsubscribe();
@@ -42,5 +34,5 @@ export function SessionProvider({ children }: SessionProviderProps) {
     return () => window.removeEventListener('online', flush);
   }, [userId]);
 
-  return <SessionContext.Provider value={state}>{children}</SessionContext.Provider>;
+  return <SessionContext value={state}>{children}</SessionContext>;
 }

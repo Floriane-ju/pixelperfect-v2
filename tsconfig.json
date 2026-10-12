@@ -21,9 +21,8 @@
     "noUncheckedSideEffectImports": true,
     "noUncheckedIndexedAccess": true,
 
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
 
     "types": ["vite/client", "vite-plugin-pwa/client"]

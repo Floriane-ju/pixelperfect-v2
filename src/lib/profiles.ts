@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { isRecord } from './drawingValidation';
 import type { Profile } from '@/types';
 
 export const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
@@ -11,10 +12,6 @@ export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function isEmail(value: string): boolean {
   return EMAIL_RE.test(value);
-}
-
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
 function parseProfile(row: unknown): Profile {

@@ -1,5 +1,5 @@
-import { forwardRef, useId } from 'react';
-import type { InputHTMLAttributes, ReactNode } from 'react';
+import { useId } from 'react';
+import type { InputHTMLAttributes, ReactNode, Ref } from 'react';
 import { cx } from '@/lib/cx';
 import styles from './Input.module.scss';
 
@@ -8,51 +8,46 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: ReactNode;
   fullWidth?: boolean;
   inputClassName?: string;
+  ref?: Ref<HTMLInputElement>;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  (
-    {
-      label,
-      error,
-      fullWidth = true,
-      id,
-      className,
-      inputClassName,
-      type = 'text',
-      ...rest
-    },
-    ref,
-  ) => {
-    const generatedId = useId();
-    const inputId = id ?? generatedId;
-    const errorId = error ? `${inputId}-error` : undefined;
+export function Input({
+  label,
+  error,
+  fullWidth = true,
+  id,
+  className,
+  inputClassName,
+  type = 'text',
+  ref,
+  ...rest
+}: InputProps) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+  const errorId = error ? `${inputId}-error` : undefined;
 
-    const wrapperClasses = cx(styles.field, fullWidth && styles.fullWidth, className);
-    const inputClasses = cx(styles.input, inputClassName);
+  const wrapperClasses = cx(styles.field, fullWidth && styles.fullWidth, className);
+  const inputClasses = cx(styles.input, inputClassName);
 
-    return (
-      <div className={wrapperClasses}>
-        <label className={styles.label} htmlFor={inputId}>
-          {label}
-        </label>
-        <input
-          ref={ref}
-          id={inputId}
-          type={type}
-          className={inputClasses}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={errorId}
-          {...rest}
-        />
-        {error ? (
-          <p id={errorId} className={styles.error} role="alert">
-            {error}
-          </p>
-        ) : null}
-      </div>
-    );
-  },
-);
-
-Input.displayName = 'Input';
+  return (
+    <div className={wrapperClasses}>
+      <label className={styles.label} htmlFor={inputId}>
+        {label}
+      </label>
+      <input
+        ref={ref}
+        id={inputId}
+        type={type}
+        className={inputClasses}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={errorId}
+        {...rest}
+      />
+      {error ? (
+        <p id={errorId} className={styles.error} role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
