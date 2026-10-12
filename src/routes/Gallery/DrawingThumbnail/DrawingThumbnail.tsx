@@ -1,5 +1,5 @@
-import { useEffect, useRef, type CSSProperties } from 'react';
-import type { DrawingData } from '@/types';
+import { memo, useEffect, useRef, type CSSProperties } from 'react';
+import type { DrawingRow } from '@/types';
 import { tintFromRamp } from '@/lib/color';
 import styles from './DrawingThumbnail.module.scss';
 
@@ -7,16 +7,31 @@ import styles from './DrawingThumbnail.module.scss';
 // On démarre à 400 : 300/350 sont trop pâles, le dessin ne ressortait pas du damier.
 const RAMP_STOPS = [400, 450, 500, 550, 600, 650, 700, 750, 800] as const;
 
-function readAccent2Ramp(): string[] {
-  const root = getComputedStyle(document.documentElement);
-  return RAMP_STOPS.map(stop => root.getPropertyValue(`--accent-2-${stop}`).trim()).filter(Boolean);
+// Tokens statiques : lus une fois pour toutes (getComputedStyle par vignette était coûteux).
+// On ne met en cache que si la rampe est trouvée, au cas où la feuille ne serait pas encore chargée.
+let cachedRamp: string[] = [];
+
+function getAccent2Ramp(): string[] {
+  if (cachedRamp.length === 0) {
+    const root = getComputedStyle(document.documentElement);
+    cachedRamp = RAMP_STOPS.map(stop => root.getPropertyValue(`--accent-2-${stop}`).trim()).filter(Boolean);
+  }
+  return cachedRamp;
 }
 
 export interface DrawingThumbnailProps {
-  data: DrawingData;
+  drawing: Pick<DrawingRow, 'id' | 'updated_at' | 'data'>;
 }
 
-export function DrawingThumbnail({ data }: DrawingThumbnailProps) {
+// Les rafraîchissements de galerie recréent les objets `data` : la vignette ne se redessine que si
+// le dessin a changé (autre id ou autre date de mise à jour).
+function isSameRevision(prev: DrawingThumbnailProps, next: DrawingThumbnailProps): boolean {
+  return prev.drawing.data === next.drawing.data
+    || (prev.drawing.id === next.drawing.id && prev.drawing.updated_at === next.drawing.updated_at);
+}
+
+export const DrawingThumbnail = memo(function DrawingThumbnail({ drawing }: DrawingThumbnailProps) {
+  const { data } = drawing;
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -28,7 +43,7 @@ export function DrawingThumbnail({ data }: DrawingThumbnailProps) {
 
     ctx.clearRect(0, 0, data.width, data.height);
 
-    const ramp = readAccent2Ramp();
+    const ramp = getAccent2Ramp();
     // Les dessins réutilisent peu de couleurs distinctes : on mémoïse le remap
     const tinted = new Map<string, string>();
 
@@ -70,4 +85,4 @@ export function DrawingThumbnail({ data }: DrawingThumbnailProps) {
       aria-hidden
     />
   );
-}
+}, isSameRevision);

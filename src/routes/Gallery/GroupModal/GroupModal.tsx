@@ -57,9 +57,12 @@ export function GroupModal({
     const end = () => { setIsDragging(false); setIsOverlayDragOver(false); };
     window.addEventListener('dragstart', start);
     window.addEventListener('dragend', end);
+    // `dragend` ne part pas toujours : la carte source est retirée du DOM au drop.
+    window.addEventListener('drop', end, true);
     return () => {
       window.removeEventListener('dragstart', start);
       window.removeEventListener('dragend', end);
+      window.removeEventListener('drop', end, true);
     };
   }, []);
 
@@ -75,6 +78,7 @@ export function GroupModal({
       onDragLeave={() => setIsOverlayDragOver(false)}
       onDrop={(e) => {
         e.preventDefault();
+        setIsDragging(false);
         setIsOverlayDragOver(false);
         const drawingId = e.dataTransfer.getData('text/plain');
         if (drawingId) onRemoveFromGroup?.(drawingId);

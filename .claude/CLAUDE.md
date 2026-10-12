@@ -4,7 +4,7 @@
 Application PWA de dessin pixel art, installable sur iPad, iPhone et Android. Deux espaces : **galerie** (gestion des dessins, groupes, collaborateurs) et **éditeur** (canvas multi-calques avec outils de dessin). **Connexion optionnelle** : connecté → persistance Supabase (+ file offline IndexedDB) ; anonyme → bibliothèque locale durable dans IndexedDB (base `pixelperfect-library`) avec export/import JSON. Le choix du backend passe par le dispatcher `lib/drawingStore.ts`.
 
 ## Stack
-- React 18 + TypeScript (strict)
+- React 19 + TypeScript (strict)
 - Vite 8 (Rolldown) + `vite-plugin-pwa` (Workbox, autoUpdate)
 - React Router v8 (paquet `react-router`, `react-router-dom` supprimé en v8)
 - SCSS modules + variables/mixins partagés (`src/styles/`, injectés via `additionalData`)

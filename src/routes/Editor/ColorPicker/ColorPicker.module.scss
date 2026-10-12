@@ -101,10 +101,10 @@
   font-size: $font-size-md;
   font-weight: $font-weight-semibold;
   color: $accent-1-600;
-  outline: none;
 
-  &:focus {
-    border-color: $accent-1-600;
+  &:focus-visible {
+    @include focus-ring;
+    outline-offset: -$outline-offset;
   }
 }
 
@@ -140,6 +140,6 @@
 
   &:hover {
     transform: scale(1.1);
-    z-index: 1;
+    z-index: $z-raised;
   }
 }

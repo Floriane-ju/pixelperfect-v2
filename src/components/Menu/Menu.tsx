@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Button, type ButtonSize, type ButtonVariant } from '@/components/Button';
 import { Icons, type IconName } from '@/components/Icons';
@@ -26,6 +27,10 @@ export interface MenuProps {
 
 /** Doit correspondre à `min-width` de `.menu` : largeur supposée avant la première mesure. */
 const MENU_FALLBACK_WIDTH = 220;
+
+function getMenuItems(menu: HTMLElement | null): HTMLButtonElement[] {
+  return menu ? Array.from(menu.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')) : [];
+}
 
 export function Menu({
   items,
@@ -56,6 +61,34 @@ export function Menu({
     onDismiss: close,
     fallbackWidth: MENU_FALLBACK_WIDTH,
   });
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  // Vrai une seule fois à l'ouverture (pas à chaque recalage de position) : sinon le focus
+  // reviendrait au premier élément à chaque scroll.
+  const ready = open && position !== null;
+  useEffect(() => {
+    if (ready) getMenuItems(menuRef.current)[0]?.focus();
+  }, [ready, menuRef]);
+
+  const handleMenuKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
+    const items = getMenuItems(menuRef.current);
+    const current = items.indexOf(document.activeElement as HTMLButtonElement);
+    let target: number;
+    switch (e.key) {
+      case 'ArrowDown': target = (current + 1) % items.length; break;
+      case 'ArrowUp': target = current <= 0 ? items.length - 1 : current - 1; break;
+      case 'Home': target = 0; break;
+      case 'End': target = items.length - 1; break;
+      // La fermeture reste à useAnchoredMenu (listener document, plus loin) : on ramène seulement
+      // le focus au déclencheur avant que les items ne se démontent.
+      case 'Escape': triggerRef.current?.focus(); return;
+      // Menu porté en fin de body : Tab sortirait de l'ordre de focus en le laissant ouvert.
+      case 'Tab': e.preventDefault(); triggerRef.current?.focus(); close(); return;
+      default: return;
+    }
+    e.preventDefault();
+    items[target]?.focus();
+  };
 
   return (
     <div
@@ -64,6 +97,7 @@ export function Menu({
       onClick={(e) => e.stopPropagation()}
     >
       <Button
+        ref={triggerRef}
         variant={triggerVariant}
         size={triggerSize}
         iconOnly
@@ -81,14 +115,19 @@ export function Menu({
           className={styles.menu}
           style={{ top: position.top, left: position.left }}
           onClick={(e) => e.stopPropagation()}
+          onKeyDown={handleMenuKeyDown}
         >
           {items.map((item, idx) => (
             <li key={item.label} role="none" className={styles.row}>
               <button
                 type="button"
                 role="menuitem"
+                tabIndex={-1}
                 className={cx(styles.item, item.variant === 'danger' && styles.itemDanger)}
                 onClick={() => {
+                  // Le menu va se démonter : le focus revient d'abord au déclencheur, pour qu'une
+                  // modale ouverte par l'action le mémorise comme élément à restaurer.
+                  triggerRef.current?.focus();
                   item.onClick();
                   close();
                 }}

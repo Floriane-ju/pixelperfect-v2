@@ -33,7 +33,10 @@ export function useOutsideDismiss({
       onDismiss();
     };
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onDismiss();
+      if (e.key !== 'Escape') return;
+      // Signale aux modales (listener window, plus tard dans la propagation) que la touche est prise.
+      e.preventDefault();
+      onDismiss();
     };
     document.addEventListener('pointerdown', handlePointerDown);
     if (closeOnEscape) document.addEventListener('keydown', handleKeyDown);

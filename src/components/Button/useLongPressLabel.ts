@@ -1,4 +1,4 @@
-import { useContext, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { SnackbarContext } from '@/components/Snackbar/SnackbarContext';
 
@@ -24,6 +24,10 @@ export function useLongPressLabel(label: string | undefined, enabled: boolean): 
   const firedRef = useRef(false);
   const startRef = useRef<{ x: number; y: number } | null>(null);
 
+  useEffect(() => () => {
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+  }, []);
+
   const consumeFired = () => {
     const v = firedRef.current;
     firedRef.current = false;
@@ -40,6 +44,13 @@ export function useLongPressLabel(label: string | undefined, enabled: boolean): 
       timerRef.current = null;
     }
     startRef.current = null;
+  };
+
+  // Un relâchement hors du bouton n'émet pas de clic : le drapeau ne doit pas survivre à ce geste.
+  // (Pas au pointerleave : sur tactile il part avant le clic du relâchement normal.)
+  const releasedOutside = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
   };
 
   return {
@@ -61,8 +72,14 @@ export function useLongPressLabel(label: string | undefined, enabled: boolean): 
         const dy = e.clientY - startRef.current.y;
         if (dx * dx + dy * dy > MOVE_TOLERANCE_SQ) clear();
       },
-      onPointerUp: () => clear(),
-      onPointerCancel: () => clear(),
+      onPointerUp: e => {
+        clear();
+        if (releasedOutside(e)) firedRef.current = false;
+      },
+      onPointerCancel: () => {
+        clear();
+        firedRef.current = false;
+      },
       onPointerLeave: () => clear(),
     },
     consumeFired,

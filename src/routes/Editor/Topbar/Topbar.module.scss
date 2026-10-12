@@ -95,7 +95,14 @@
   font-family: $font-family-base;
   font-size: $font-size-xs;
   line-height: 1.4;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: $space-s;
+}
+
+.refErrorContent {
+  flex: 1;
+  min-width: 0;
 }
 
 

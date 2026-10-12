@@ -1,3 +1,5 @@
+import { isRecord, parseDrawingData } from './drawingValidation';
+import { SaveRejectedError } from './saveErrors';
 import type { DrawingData } from '@/types';
 import { parseDrawingData } from './drawingValidation';
 
@@ -20,8 +22,18 @@ function openDb(): Promise<IDBDatabase> {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
     };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const db = req.result;
+      // iOS ferme la connexion en arrière-plan : sans reset, chaque transaction lèverait
+      // InvalidStateError jusqu'au rechargement.
+      db.onclose = () => { dbPromise = null; };
+      db.onversionchange = () => { db.close(); dbPromise = null; };
+      resolve(db);
+    };
+    req.onerror = () => {
+      dbPromise = null;
+      reject(req.error);
+    };
   });
   return dbPromise;
 }
@@ -56,15 +68,45 @@ function migrateLegacy(id: string): DrawingData | null {
   }
 }
 
-export async function enqueue(id: string, data: DrawingData): Promise<void> {
+/** Entrée de file : `savedAt` (ms, horloge locale) est absent pour les entrées héritées. */
+export interface PendingEntry {
+  data: DrawingData;
+  rev: number;
+  savedAt: number | null;
+}
+
+/**
+ * Dernière révision mise en file par cet onglet, par dessin : un envoi plus ancien qui se termine
+ * après ne doit pas effacer l'entrée plus récente (sans relire ni comparer le dessin entier).
+ */
+const lastRev = new Map<string, number>();
+let revSeq = 0;
+/** Dessins ouverts dans l'éditeur : leur file est gérée par useSave, flushAll les ignore. */
+const heldByEditor = new Set<string>();
+
+export function holdForEditor(id: string): () => void {
+  heldByEditor.add(id);
+  return () => { heldByEditor.delete(id); };
+}
+
+/** Met le dessin en file et renvoie sa révision (réservée dès l'appel, avant l'écriture). */
+export async function enqueue(id: string, data: DrawingData): Promise<number> {
+  const savedAt = Date.now();
+  const rev = savedAt * 1000 + (revSeq++ % 1000);
+  lastRev.set(id, rev);
   try {
     await run('readwrite', (store) => store.put(data, id));
   } catch {
     /* IDB unavailable */
   }
+  return rev;
 }
 
-export async function dequeue(id: string): Promise<void> {
+/** Retire l'entrée ; avec `rev`, seulement si aucune révision plus récente n'a été mise en file depuis. */
+export async function dequeue(id: string, rev?: number): Promise<void> {
+  const latest = lastRev.get(id);
+  if (rev !== undefined && latest !== undefined && latest !== rev) return;
+  lastRev.delete(id);
   try {
     await run('readwrite', (store) => store.delete(id));
   } catch {
@@ -77,7 +119,15 @@ export async function dequeue(id: string): Promise<void> {
   }
 }
 
-export async function getPending(id: string): Promise<DrawingData | null> {
+function parseEntry(raw: unknown): PendingEntry {
+  if (isRecord(raw) && typeof raw.rev === 'number' && typeof raw.savedAt === 'number' && 'data' in raw) {
+    return { data: parseDrawingData(raw.data), rev: raw.rev, savedAt: raw.savedAt };
+  }
+  // Format antérieur : DrawingData brut, sans date.
+  return { data: parseDrawingData(raw), rev: 0, savedAt: null };
+}
+
+export async function getPendingEntry(id: string): Promise<PendingEntry | null> {
   try {
     const existing = await run<DrawingData | undefined>(
       'readonly',
@@ -98,7 +148,10 @@ export async function getPending(id: string): Promise<DrawingData | null> {
       await enqueue(id, legacy);
       return legacy;
     }
-    return null;
+    const legacy = migrateLegacy(id);
+    if (!legacy) return null;
+    const rev = await enqueue(id, legacy);
+    return { data: legacy, rev, savedAt: null };
   } catch {
     // IDB read failed: try legacy migration
     const legacy = migrateLegacy(id);

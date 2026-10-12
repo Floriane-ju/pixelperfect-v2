@@ -61,9 +61,10 @@ async function buildLayersPngBlob(
   sctx.putImageData(img, 0, 0);
 
   const longEdge = Math.max(width, height);
-  const scale = TARGET_LONG_EDGE / longEdge;
-  const outW = Math.max(1, Math.round(width * scale));
-  const outH = Math.max(1, Math.round(height * scale));
+  // Facteur entier : sinon les pixels exportés n'ont pas tous la même largeur (19 ou 20 px).
+  const scale = Math.max(1, Math.floor(TARGET_LONG_EDGE / longEdge));
+  const outW = width * scale;
+  const outH = height * scale;
 
   const out = document.createElement('canvas');
   out.width = outW;

@@ -36,8 +36,18 @@ function openDb(): Promise<IDBDatabase> {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
     };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const db = req.result;
+      // iOS ferme la connexion en arrière-plan : sans reset, chaque transaction lèverait
+      // InvalidStateError jusqu'au rechargement.
+      db.onclose = () => { dbPromise = null; };
+      db.onversionchange = () => { db.close(); dbPromise = null; };
+      resolve(db);
+    };
+    req.onerror = () => {
+      dbPromise = null;
+      reject(req.error);
+    };
   });
   return dbPromise;
 }
@@ -86,20 +96,24 @@ function modify(id: string, mutate: (d: LocalDrawing) => void): Promise<void> {
         const tx = db.transaction(STORE, 'readwrite');
         const store = tx.objectStore(STORE);
         const req = store.get(id);
+        // Id inconnu (supprimé ailleurs) ou entrée corrompue : échec explicite, sinon l'éditeur
+        // afficherait « enregistré » alors que rien n'est écrit.
+        let missing = false;
         req.onsuccess = () => {
           const raw = req.result;
-          if (raw === undefined) return; // id inconnu : la transaction se termine sans écriture
+          if (raw === undefined) { missing = true; return; }
           let drawing: LocalDrawing;
           try {
             drawing = parseLocalDrawing(raw);
           } catch {
+            missing = true;
             return;
           }
           mutate(drawing);
           drawing.updated_at = nowIso();
           store.put(drawing);
         };
-        tx.oncomplete = () => resolve();
+        tx.oncomplete = () => (missing ? reject(new Error('Dessin introuvable')) : resolve());
         tx.onerror = () => reject(tx.error);
         tx.onabort = () => reject(tx.error);
       }),
@@ -194,6 +208,9 @@ export async function createDrawing(
     group: null,
   };
   await write((store) => store.put(drawing));
+  // Sans stockage persistant, Safari efface IndexedDB après ~7 jours d'inactivité (hors PWA
+  // installée). Demandé ici, sur geste utilisateur : Firefox affiche une invite de permission.
+  void navigator.storage?.persist?.().catch(() => undefined);
   return toRow(drawing);
 }
 

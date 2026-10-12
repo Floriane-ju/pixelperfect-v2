@@ -35,7 +35,6 @@ dev-dist/
 # Audits
 audits/
 
-# Supabase migrations (local only)
-supabase/migrations/
+# Supabase : les migrations et le schéma sont versionnés (l'autorisation doit être auditable).
 # Scratch du CLI Supabase (projet lié, URL du pooler…)
 supabase/.temp/
