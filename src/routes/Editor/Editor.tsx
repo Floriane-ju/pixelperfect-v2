@@ -6,6 +6,8 @@ import { DEFAULT_DRAWING_SETTINGS, MAX_LAYERS } from '@/lib/drawingValidation';
 import type { DrawingData, DrawingSettings, HexColor } from '@/types';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useSession } from '@/components/SessionProvider';
+import { useSnackbar } from '@/components/Snackbar';
+import { renameDrawing } from '@/lib/drawingStore';
 import { cx } from '@/lib/cx';
 import { ColorPicker } from './ColorPicker/ColorPicker';
 import { ColorPanel } from './ColorPanel';
@@ -42,6 +44,7 @@ export function Editor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { session } = useSession();
+  const snackbar = useSnackbar();
 
   const { drawing, setDrawing, status, setStatus, activeLayerId, setActiveLayerId } = useEditorDrawing(id);
   const [tool, setTool] = useState<Tool>('pencil');
@@ -204,9 +207,19 @@ export function Editor() {
   // 'error' une fois le dessin chargé = échec de sauvegarde : badge, pas d'écran d'erreur.
   if (!drawing) return <EditorError />;
 
+  const handleRename = (title: string) => {
+    const previous = drawing.title;
+    setDrawing(prev => prev ? { ...prev, title } : prev);
+    renameDrawing(drawing.id, title).catch(() => {
+      setDrawing(prev => prev ? { ...prev, title: previous } : prev);
+      snackbar.show('Échec du renommage');
+    });
+  };
+
   const editorCtx: EditorContextValue = {
     drawingId: drawing.id,
     title: drawing.title,
+    onRename: handleRename,
     canShare: drawing.owner_id !== LOCAL_OWNER && drawing.owner_id === session?.user.id,
     groupName: drawing.group,
     tool,

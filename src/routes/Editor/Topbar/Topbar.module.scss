@@ -1,3 +1,5 @@
+@use '../../Gallery/card' as card;
+
 .topbar {
   position: relative;
   z-index: $z-dropdown;
@@ -66,6 +68,21 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.titleText .titleButton {
+  max-width: 100%;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  font: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.renameInput {
+  @include card.rename-input;
+  font-size: $font-size-xl;
 }
 
 .sizeChip {

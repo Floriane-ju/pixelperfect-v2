@@ -9,6 +9,8 @@ type RefImageInfo = Omit<RefImageState, 'src'>;
 export interface EditorContextValue {
   drawingId: string;
   title: string;
+  /** Renomme le dessin (optimiste, rétabli si l'enregistrement échoue). */
+  onRename: (title: string) => void;
   /** Propriétaire connecté : invitations et lien public. */
   canShare: boolean;
   /** Groupe du dessin dans la bibliothèque (fil d'Ariane). */

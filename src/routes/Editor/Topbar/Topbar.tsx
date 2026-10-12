@@ -7,6 +7,7 @@ import { ShareLinkDialog } from '@/components/ShareLinkDialog';
 import { InviteCollaboratorModal } from '@/routes/Gallery/InviteCollaboratorModal/InviteCollaboratorModal';
 import { LayerPanel } from '@/routes/Editor/LayerPanel/LayerPanel';
 import { useOutsideDismiss } from '@/hooks/useOutsideDismiss';
+import { useInlineRename } from '@/hooks/useInlineRename';
 import { useEditorContext } from '../useEditorContext';
 import { buildLayersSvg } from '../exportSvg';
 import { copyLayersPng } from '../exportPng';
@@ -21,8 +22,9 @@ export function Topbar() {
     drawingId, title, canShare, groupName, canUndo, canRedo, onUndo, onRedo,
     activeLayerId, animationMode, layers, canvasWidth, canvasHeight, onCanvasResize, openPanel, onPanelToggle, onPanelClose,
     onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete, onLayerReorder,
-    onBack, refImage, getCommittedLayers,
+    onBack, onRename, refImage, getCommittedLayers,
   } = useEditorContext();
+  const rename = useInlineRename({ currentName: title, onRename });
 
   const topbarRef = useRef<HTMLElement>(null);
   const [copied, setCopied] = useState(false);
@@ -74,7 +76,21 @@ export function Topbar() {
             {groupName ? ` / ${groupName}` : null}
           </span>
           <div className={styles.titleRow}>
-            <h1 className={styles.titleText}>{title}</h1>
+            {rename.isRenaming ? (
+              <input
+                autoFocus
+                className={styles.renameInput}
+                aria-label="Nom du dessin"
+                maxLength={80}
+                {...rename.inputProps}
+              />
+            ) : (
+              <h1 className={styles.titleText}>
+                <Button variant="ghost" className={styles.titleButton} title="Renommer le dessin" onClick={rename.start}>
+                  {title}
+                </Button>
+              </h1>
+            )}
             <Button
               variant="ghost"
               size="sm"
