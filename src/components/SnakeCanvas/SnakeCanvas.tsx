@@ -55,8 +55,8 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
     const minY = BORDER_INSET;
     const maxX = Math.max(minX, colsRef.current - BORDER_INSET - 1);
     const maxY = Math.max(minY, rowsRef.current - BORDER_INSET - 1);
-    let x = minX;
-    let y = minY;
+    let x: number;
+    let y: number;
     let attempts = 0;
     do {
       x = minX + Math.floor(Math.random() * (maxX - minX + 1));

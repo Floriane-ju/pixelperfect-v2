@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { LOCAL_OWNER } from '@/lib/localLibrary';
@@ -85,7 +85,8 @@ export function Editor() {
     latestDataRef,
   });
   const selectionRef = useRef(selection);
-  selectionRef.current = selection;
+  // Lu par les gestionnaires d'événements et les effets : synchronisé avant eux, pas pendant le rendu.
+  useLayoutEffect(() => { selectionRef.current = selection; });
 
   useEffect(() => {
     if (tool !== 'select' && selectionRef.current.hasFloating) {

@@ -45,14 +45,23 @@ export function useGalleryLibrary({
   /** Génération courante : identité, relecture ou mutation optimiste. */
   const fetchGenRef = useRef(0);
 
+  // Nouvelle identité (login/logout) ou rechargement demandé : liste vidée dès ce rendu.
+  const loadKey = sessionLoading ? null : `${isAuth}:${reloadKey}`;
+  const [prevLoadKey, setPrevLoadKey] = useState(loadKey);
+  if (loadKey !== prevLoadKey) {
+    setPrevLoadKey(loadKey);
+    if (loadKey !== null) {
+      setDrawings([]);
+      setStatus('loading');
+    }
+  }
+
   // Recharge la bibliothèque à chaque changement d'auth (login/logout) une fois la session résolue.
   useEffect(() => {
     if (sessionLoading) return;
     // Une réponse de l'identité précédente (fetch lent) ne doit pas écraser la nouvelle.
     let cancelled = false;
     fetchGenRef.current += 1;
-    setDrawings([]);
-    setStatus('loading');
     fetchDrawings()
       .then((rows) => {
         if (cancelled) return;

@@ -47,7 +47,8 @@ export function Login() {
     return () => window.clearInterval(id);
   }, [lockUntil]);
 
-  const locked = lockUntil !== null && Date.now() < lockUntil;
+  // Le minuteur remet lockUntil à null à l'échéance.
+  const locked = lockUntil !== null;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

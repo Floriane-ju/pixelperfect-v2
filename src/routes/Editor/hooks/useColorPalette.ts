@@ -30,30 +30,13 @@ export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory
 
   useEffect(() => { openPanelRef.current = openPanel; }, [openPanel]);
 
-  useEffect(() => {
-    if (editColorMode !== null) return;
-    if (!drawing) { setDrawingColors([]); return; }
-
-    const colorCounts = new Map<HexColor, number>();
-    for (const layer of drawing.data.layers) {
-      for (const c of Object.values(layer.pixels)) {
-        colorCounts.set(c, (colorCounts.get(c) ?? 0) + 1);
-      }
-    }
-
-    setDrawingColors(prev => {
-      const currentColors = new Set(colorCounts.keys());
-      if (prev.length === 0) {
-        if (currentColors.size === 0) return prev;
-        return Array.from(currentColors).sort((a, b) => (colorCounts.get(b) ?? 0) - (colorCounts.get(a) ?? 0));
-      }
-      const prevSet = new Set(prev);
-      const newColors = Array.from(currentColors).filter(c => !prevSet.has(c));
-      const hasRemovals = prev.some(c => !currentColors.has(c));
-      if (newColors.length === 0 && !hasRemovals) return prev;
-      return [...newColors, ...prev.filter(c => currentColors.has(c))];
-    });
-  }, [drawing, editColorMode]);
+  // Palette du dessin recalculée pendant le rendu quand le dessin change (figée en édition de couleur,
+  // sinon la couleur éditée sauterait de place à chaque mouvement du sélecteur).
+  const [paletteSource, setPaletteSource] = useState<DrawingRow | null>(null);
+  if (editColorMode === null && drawing !== paletteSource) {
+    setPaletteSource(drawing);
+    setDrawingColors(prev => nextDrawingColors(prev, drawing));
+  }
 
   const handleColorChange = useCallback((newColor: HexColor) => {
     setColor(newColor);
@@ -162,4 +145,25 @@ export function useColorPalette({ drawing, setDrawing, scheduleSave, pushHistory
     handlePanelToggle,
     handleEditDrawingColor,
   };
+}
+
+/** Couleurs du dessin : nouvelles en tête, ordre existant conservé, disparues retirées. */
+function nextDrawingColors(prev: HexColor[], drawing: DrawingRow | null): HexColor[] {
+  if (!drawing) return prev.length === 0 ? prev : [];
+  const colorCounts = new Map<HexColor, number>();
+  for (const layer of drawing.data.layers) {
+    for (const c of Object.values(layer.pixels)) {
+      colorCounts.set(c, (colorCounts.get(c) ?? 0) + 1);
+    }
+  }
+  const currentColors = new Set(colorCounts.keys());
+  if (prev.length === 0) {
+    if (currentColors.size === 0) return prev;
+    return Array.from(currentColors).sort((a, b) => (colorCounts.get(b) ?? 0) - (colorCounts.get(a) ?? 0));
+  }
+  const prevSet = new Set(prev);
+  const newColors = Array.from(currentColors).filter(c => !prevSet.has(c));
+  const hasRemovals = prev.some(c => !currentColors.has(c));
+  if (newColors.length === 0 && !hasRemovals) return prev;
+  return [...newColors, ...prev.filter(c => currentColors.has(c))];
 }

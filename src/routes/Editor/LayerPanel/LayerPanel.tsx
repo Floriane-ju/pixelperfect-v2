@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, PointerEvent } from 'react';
 import { Button } from '@/components/Button';
 import { Icons } from '@/components/Icons';
@@ -46,7 +46,7 @@ export function LayerPanel({
   const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
   const [drag, setDrag] = useState<DragState | null>(null);
   const dragRef = useRef<DragState | null>(null);
-  dragRef.current = drag;
+  useLayoutEffect(() => { dragRef.current = drag; });
   const [announcement, setAnnouncement] = useState<string>('');
 
   const setItemRef = useCallback((id: string) => (el: HTMLLIElement | null) => {

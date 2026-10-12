@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent } from 'react';
 import type { RefObject } from 'react';
 
 export interface UseOutsideDismissParams {
@@ -20,29 +20,29 @@ export function useOutsideDismiss({
   onDismiss,
   closeOnEscape = false,
 }: UseOutsideDismissParams): void {
-  // Les refs sont recréées à chaque render : on les lit au moment de l'événement
-  // pour garder l'effet stable.
-  const refsRef = useRef(refs);
-  refsRef.current = refs;
+  // Lus au moment de l'événement : refs et onDismiss recréés à chaque render ne relancent pas l'effet.
+  const handlePointerDown = useEffectEvent((e: PointerEvent) => {
+    const target = e.target as Node;
+    if (refs.some((ref) => ref.current?.contains(target))) return;
+    onDismiss();
+  });
+  const handleKeyDown = useEffectEvent((e: KeyboardEvent) => {
+    if (e.key !== 'Escape') return;
+    // Signale aux modales (listener window, plus tard dans la propagation) que la touche est prise.
+    e.preventDefault();
+    onDismiss();
+  });
 
   useEffect(() => {
     if (!active) return;
-    const handlePointerDown = (e: PointerEvent) => {
-      const target = e.target as Node;
-      if (refsRef.current.some((ref) => ref.current?.contains(target))) return;
-      onDismiss();
-    };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      // Signale aux modales (listener window, plus tard dans la propagation) que la touche est prise.
-      e.preventDefault();
-      onDismiss();
-    };
-    document.addEventListener('pointerdown', handlePointerDown);
-    if (closeOnEscape) document.addEventListener('keydown', handleKeyDown);
+    // Enveloppes locales : l'identité d'une fonction useEffectEvent n'est pas garantie stable.
+    const onPointerDown = (e: PointerEvent) => handlePointerDown(e);
+    const onKeyDown = (e: KeyboardEvent) => handleKeyDown(e);
+    document.addEventListener('pointerdown', onPointerDown);
+    if (closeOnEscape) document.addEventListener('keydown', onKeyDown);
     return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-      if (closeOnEscape) document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('pointerdown', onPointerDown);
+      if (closeOnEscape) document.removeEventListener('keydown', onKeyDown);
     };
-  }, [active, onDismiss, closeOnEscape]);
+  }, [active, closeOnEscape]);
 }

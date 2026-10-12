@@ -50,7 +50,7 @@ export function InviteCollaboratorModal({
   const [handle, setHandle] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [message, setMessage] = useState('');
-  const [suggestions, setSuggestions] = useState<UserSuggestion[]>([]);
+  const [fetchedSuggestions, setSuggestions] = useState<UserSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -60,13 +60,14 @@ export function InviteCollaboratorModal({
   const isValid = isValidHandle(normalized);
   const disabled = !isValid || status === 'pending';
 
+  const query = normalized.toLowerCase();
+  const canSuggest = !query.includes('@') && query.length >= SUGGEST_MIN_LEN && USERNAME_PREFIX_RE.test(query);
+  // Saisie redevenue invalide (email, trop courte) : les dernières suggestions sont masquées, pas effacées.
+  const suggestions = canSuggest ? fetchedSuggestions : [];
+
   useEffect(() => {
-    const lower = normalized.toLowerCase();
-    if (lower.includes('@') || lower.length < SUGGEST_MIN_LEN || !USERNAME_PREFIX_RE.test(lower)) {
-      setSuggestions([]);
-      setActiveIndex(-1);
-      return;
-    }
+    if (!canSuggest) return;
+    const lower = query;
     let cancelled = false;
     const timer = setTimeout(() => {
       searchUsersByUsernamePrefix(lower)
@@ -82,7 +83,7 @@ export function InviteCollaboratorModal({
         });
     }, SUGGEST_DEBOUNCE_MS);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [normalized]);
+  }, [query, canSuggest]);
 
   const submit = async (handleOverride?: string) => {
     const value = handleOverride ?? normalized;
@@ -182,7 +183,7 @@ export function InviteCollaboratorModal({
           value={handle}
           aria-autocomplete="list"
           aria-controls={listboxId}
-          aria-activedescendant={activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined}
+          aria-activedescendant={showList && activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined}
           onChange={(e) => {
             setHandle(e.target.value);
             setStatus('idle');

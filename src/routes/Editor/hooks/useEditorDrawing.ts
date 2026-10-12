@@ -29,11 +29,17 @@ export function useEditorDrawing(id: string | undefined): UseEditorDrawingReturn
     ? selectedLayerId
     : (layers[layers.length - 1]?.id ?? '');
 
+  // Changement de dessin : on repart d'un état de chargement dès ce rendu (pas d'effet en cascade).
+  const [loadedId, setLoadedId] = useState(id);
+  if (id !== loadedId) {
+    setLoadedId(id);
+    setDrawing(null);
+    setStatus('loading');
+  }
+
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    setDrawing(null);
-    setStatus('loading');
     fetchDrawing(id)
       .then(async row => {
         if (row.owner_id === LOCAL_OWNER) return row;

@@ -16,21 +16,19 @@ export function useModalZIndex(): {
   initialOffset: { x: number; y: number };
 } {
   const [zIndex, setZ] = useState(next);
-  const initialN = useRef<number | null>(null);
-  if (initialN.current === null) {
-    initialN.current = (zIndex - Z_MODAL_BASE - 1) % CASCADE_SLOTS;
-  }
+  const zIndexRef = useRef(zIndex);
+  // Décalage de cascade figé à l'ouverture.
+  const [cascade] = useState(() => (zIndex - Z_MODAL_BASE - 1) % CASCADE_SLOTS);
   const raise = useCallback(() => {
-    setZ((prev) => {
-      const top = Z_MODAL_BASE + counter;
-      if (prev === top) return prev;
-      return next();
-    });
+    // next() hors de l'updater : il doit rester pur (rejoué en StrictMode).
+    if (zIndexRef.current === Z_MODAL_BASE + counter) return;
+    const z = next();
+    zIndexRef.current = z;
+    setZ(z);
   }, []);
-  const n = initialN.current;
   return {
     zIndex,
     raise,
-    initialOffset: { x: n * CASCADE_STEP, y: n * CASCADE_STEP },
+    initialOffset: { x: cascade * CASCADE_STEP, y: cascade * CASCADE_STEP },
   };
 }
