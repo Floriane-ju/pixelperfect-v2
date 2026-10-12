@@ -1,14 +1,17 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import styles from './SnakeCanvas.module.scss';
 import { Button } from '@/components/Button';
+import { cx } from '@/lib/cx';
 import { STEP, drawBorder, drawCell, drawFood } from './snakeDraw';
 
 const TICK_MS = 150;
 const INITIAL_LENGTH = 5;
-const COLOR_AUTO = '#FFF5DE';
-const COLOR_USER = '#6752DE';
-const COLOR_FOOD_AUTO = '#FFF5DE';
-const COLOR_FOOD_USER = '#6752DE';
+// Palette D07 (cf. _variables.scss) : en veille, le serpent se fond dans la trame du papier ;
+// en jeu, il prend le rouge d'action et la nourriture l'encre.
+const COLOR_AUTO = '#D9CFBC';
+const COLOR_USER = '#D12E15';
+const COLOR_FOOD_AUTO = '#D9CFBC';
+const COLOR_FOOD_USER = '#111111';
 const BORDER_INSET = 1;
 
 type Dir = 'up' | 'down' | 'left' | 'right';
@@ -343,10 +346,10 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
       {showHint && !gameOver && (
         <div className={styles.keyHint} aria-hidden="true">
           <div className={styles.keyHintGrid}>
-            <div className={`${styles.key} ${styles.keyZ}`}>Z</div>
-            <div className={`${styles.key} ${styles.keyQ}`}>Q</div>
-            <div className={`${styles.key} ${styles.keyS}`}>S</div>
-            <div className={`${styles.key} ${styles.keyD}`}>D</div>
+            <div className={cx(styles.key, styles.keyZ)}>Z</div>
+            <div className={cx(styles.key, styles.keyQ)}>Q</div>
+            <div className={cx(styles.key, styles.keyS)}>S</div>
+            <div className={cx(styles.key, styles.keyD)}>D</div>
           </div>
         </div>
       )}
@@ -355,7 +358,7 @@ export function SnakeCanvas({ onModeChange }: SnakeCanvasProps) {
           <h2 id="snake-gameover-title" className={styles.title}>Game Over</h2>
           <div className={styles.actions}>
             <Button variant="primary" size="lg" autoFocus onClick={handleReplay}>Rejouer</Button>
-            <Button variant="ghost" size="lg" onClick={handleBackToGallery}>Revenir à la galerie</Button>
+            <Button variant="secondary" size="lg" onClick={handleBackToGallery}>Revenir à la galerie</Button>
           </div>
         </div>
       ) : null}

@@ -3,6 +3,7 @@ import type { ReactNode, RefObject } from 'react';
 import { useModalA11y } from '@/hooks/useModalA11y';
 import { useModalZIndex } from '@/lib/modalStack';
 import { cx } from '@/lib/cx';
+import { Icons } from '@/components/Icons';
 import styles from './Dialog.module.scss';
 
 export type DialogSize = 'sm' | 'md';
@@ -21,8 +22,8 @@ export interface DialogProps {
 }
 
 /**
- * Dialogue centré modal : voile sombre, fermeture au clic extérieur, piège de focus et
- * empilement. Pour une modale déplaçable avec en-tête décoré, voir `components/Modal`.
+ * Dialogue centré modal : voile tramé, barre de titre encre (si `title`), fermeture au clic
+ * extérieur, piège de focus et empilement. Pour une modale déplaçable avec en-tête décoré, voir `components/Modal`.
  */
 export function Dialog({
   title,
@@ -52,11 +53,16 @@ export function Dialog({
         aria-labelledby={title ? titleId : ariaLabelledBy}
       >
         {title ? (
-          <h2 id={titleId} className={styles.heading}>
-            {title}
-          </h2>
+          <header className={styles.titlebar}>
+            <h2 id={titleId} className={styles.heading}>
+              {title}
+            </h2>
+            <button type="button" className={styles.close} aria-label="Fermer" onClick={onClose}>
+              <Icons icon="close" size={16} />
+            </button>
+          </header>
         ) : null}
-        {children}
+        {children ? <div className={styles.body}>{children}</div> : null}
         {actions ? <div className={styles.actions}>{actions}</div> : null}
       </div>
     </div>

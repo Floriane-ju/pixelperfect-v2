@@ -1,55 +1,41 @@
 import type { ReactNode } from 'react';
 import type { UseDraggableModalReturn } from '@/hooks/useDraggableModal';
-import { Button } from '@/components/Button';
-import { cx } from '@/lib/cx';
+import { Icons } from '@/components/Icons';
 import styles from './ModalHeader.module.scss';
-
-export type ModalHeaderTone = 'accent-1' | 'accent-2';
 
 export interface ModalHeaderProps {
   title: ReactNode;
   titleId: string;
   onClose: () => void;
-  tone?: ModalHeaderTone;
   /** Actions optionnelles affichées à gauche du bouton de fermeture. */
   actions?: ReactNode;
   /** Handlers de glissement fournis par `useDraggableModal`. */
   dragHandlers: UseDraggableModalReturn['dragHandlers'];
 }
 
-/** En-tête d'une modale flottante : poignée de glissement, titre décoré et bouton de fermeture. */
+/** Barre de titre encre d'une modale flottante : poignée de glissement, titre et fermeture. */
 export function ModalHeader({
   title,
   titleId,
   onClose,
-  tone = 'accent-1',
   actions,
   dragHandlers,
 }: ModalHeaderProps) {
   return (
     <header className={styles.header} {...dragHandlers}>
-      <div className="deco thin" aria-hidden="true">
-        <div />
-        <div />
-        <div />
-      </div>
-      <h2 id={titleId} className={cx(styles.title, styles[`tone-${tone}`])}>
+      <h2 id={titleId} className={styles.title}>
         {title}
       </h2>
-      <div className="deco" aria-hidden="true">
-        <div />
-        <div />
-        <div />
-      </div>
-      {actions}
-      <Button
-        variant="primary"
-        iconOnly
-        iconLeft="close"
+      {actions ? <div className={styles.actions}>{actions}</div> : null}
+      <button
+        type="button"
+        className={styles.close}
         aria-label="Fermer"
         onClick={(e) => { e.stopPropagation(); onClose(); }}
         onPointerDown={(e) => e.stopPropagation()}
-      />
+      >
+        <Icons icon="close" size={16} />
+      </button>
     </header>
   );
 }

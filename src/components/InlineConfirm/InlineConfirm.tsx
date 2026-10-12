@@ -38,11 +38,11 @@ export function InlineConfirm({
     >
       <span className={styles.message}>{message}</span>
       <div className={styles.actions}>
+        <Button variant="secondary" size="sm" disabled={busy} onClick={onCancel}>
+          {cancelLabel}
+        </Button>
         <Button variant="danger" size="sm" disabled={busy} onClick={onConfirm}>
           {confirmLabel}
-        </Button>
-        <Button variant="ghost" size="sm" disabled={busy} onClick={onCancel}>
-          {cancelLabel}
         </Button>
       </div>
     </div>

@@ -1,6 +1,6 @@
 .text {
-  font-size: $font-size-sm;
-  color: $color-text;
-  line-height: $line-height-relaxed;
   margin: 0;
+  font-size: $font-size-base;
+  line-height: $line-height-sm;
+  color: $color-text;
 }

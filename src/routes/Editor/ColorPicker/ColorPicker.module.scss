@@ -1,16 +1,15 @@
 .picker {
-  width: $picker-width;
-  background: $color-surface;
-  border: $border-m-accent-2;
-  padding: $space-sm;
+  @include layer-surface;
   display: flex;
   flex-direction: column;
-  gap: $space-sm;
-  box-shadow: $drop-shadow-interactive;
+  gap: $space-m;
+  width: $picker-width;
+  max-width: calc(100vw - #{$space-2xl});
+  padding: $space-m;
   @include no-select;
 }
 
-// SV gradient square
+// Carré saturation / valeur
 .svSquare {
   position: relative;
   width: 100%;
@@ -18,43 +17,43 @@
   overflow: hidden;
   touch-action: none;
   cursor: crosshair;
-  border: $outline-width solid $color-black;
+  border: $border;
   background: hsl(var(--hue-deg), 100%, 50%);
 }
 
 .svWhite {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, $color-white, transparent);
+  background: linear-gradient(to right, $white, transparent);
   pointer-events: none;
 }
 
 .svBlack {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, transparent, $color-black);
+  background: linear-gradient(to bottom, transparent, $black);
   pointer-events: none;
 }
 
+// Curseur carré : contour blanc + trait encre, lisible sur toute teinte.
 .cursor {
   position: absolute;
   width: $size-cursor-sv;
   height: $size-cursor-sv;
-  border-radius: 50%;
-  border: $outline-width solid $color-white;
-  box-shadow: 0 0 0 $outline-width-thin rgba($color-black, 0.5);
+  border: $outline-width solid $white;
+  box-shadow: 0 0 0 $outline-width-thin $ink;
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
-// Hue slider
+// Rail de teinte
 .hueSlider {
   position: relative;
   width: 100%;
-  height: $space-sm;
+  height: $space-m;
   touch-action: none;
   cursor: pointer;
-  border: $outline-width solid $color-black;
+  border: $border;
   background: linear-gradient(
     to right,
     hsl(0, 100%, 50%),
@@ -69,15 +68,15 @@
 
 .hueThumb {
   position: absolute;
-  width: $space-m;
-  height: $space-m;
-  border: $outline-width solid $color-black;
   top: 50%;
+  width: $space-sm;
+  height: $space-l;
+  border: $border;
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
-// Hex row
+// Aperçu + hexadécimal
 .hexRow {
   display: flex;
   gap: $space-s;
@@ -85,61 +84,68 @@
 }
 
 .preview {
-  width: $space-3xl;
-  height: $space-3xl;
   flex-shrink: 0;
-  border: $outline-width solid $color-black;
+  width: $control-md;
+  height: $control-md;
+  border: $border;
 }
 
 .hexInput {
   flex: 1;
-  height: $space-3xl;
-  padding: 0 $space-s;
-  background: $color-surface;
-  border: $outline-width solid $color-black;
-  font-family: $font-family-base;
+  min-width: 0;
+  height: $control-md;
+  padding: 0 $space-m;
+  background: $color-field;
+  border: $border;
+  color: $color-text;
+  font-family: $font-family-mono;
   font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  color: $accent-1-600;
+  text-transform: uppercase;
+
+  &:focus {
+    outline: none;
+    border-color: $color-focus;
+  }
 
   &:focus-visible {
     @include focus-ring;
-    outline-offset: -$outline-offset;
   }
 }
 
-// Swatches
+// Pastilles
 .section {
   display: flex;
   flex-direction: column;
-  gap: $space-xs;
+  gap: $space-s;
 }
 
 .sectionLabel {
-  font-family: $font-family-base;
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  color: $accent-1-600;
+  @include text-meta;
+  color: $color-text-muted;
 }
 
 .swatches {
   display: flex;
   flex-wrap: wrap;
-  gap: $swatch-gap;
+  gap: $space-xs;
   width: 100%;
 }
 
 .swatch {
-  width: $space-3xl;
-  height: $space-3xl;
+  width: $space-2xl;
+  height: $space-2xl;
   padding: 0;
-  border: $outline-width solid $color-black;
-  background-clip: padding-box;
+  border: $border;
   cursor: pointer;
   transition: transform $transition-fast;
 
   &:hover {
-    transform: scale(1.1);
+    position: relative;
     z-index: $z-raised;
+    transform: translate($lift-hover, $lift-hover);
+  }
+
+  &:focus-visible {
+    @include focus-ring($outline-width);
   }
 }

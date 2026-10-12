@@ -1,0 +1,152 @@
+// Gabarit commun des vignettes de la galerie (DrawingCard, GroupCard) — direction 07 :
+// ligne de tête (numéro, méta, actions), aperçu 5:4 relevé, nom dessous.
+@use '../../styles/variables' as *;
+@use '../../styles/mixins' as *;
+
+/** Coin de coupe : 3 pixels de 4 en équerre. `$x`/`$y` : ±1 selon le coin. */
+@mixin corner-cut($x, $y) {
+  content: '';
+  position: absolute;
+  width: $pixel-corner;
+  height: $pixel-corner;
+  background: $color-primary;
+  box-shadow:
+    ($x * $pixel-corner) 0 0 $color-primary,
+    ($x * 2 * $pixel-corner) 0 0 $color-primary,
+    0 ($y * $pixel-corner) 0 $color-primary,
+    0 ($y * 2 * $pixel-corner) 0 $color-primary;
+  pointer-events: none;
+}
+
+@mixin card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: $space-m;
+  min-width: 0;
+  @include no-select;
+}
+
+@mixin head {
+  display: flex;
+  align-items: center;
+  gap: $space-m;
+  min-height: $control-md;
+  border-top: $border-thin;
+
+  // Bouton d'options ouvert : inversé en encre.
+  [aria-expanded='true'] {
+    background: $color-ink-bg;
+    color: $color-ink-text;
+  }
+
+  > :last-child {
+    margin-right: -$space-s;
+  }
+}
+
+@mixin num {
+  font-family: $font-family-display;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-2xl;
+  line-height: $line-height-lg;
+  transition: color $transition-fast;
+}
+
+@mixin meta {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-family: $font-family-mono;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  text-align: right;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/** Numéro rouge au survol de la vignette ou quand son menu est ouvert. */
+@mixin num-active($num-selector) {
+  &:hover #{$num-selector},
+  &:has([aria-expanded='true']) #{$num-selector},
+  &:focus-within #{$num-selector} {
+    color: $color-primary;
+  }
+}
+
+@mixin preview {
+  position: relative;
+  aspect-ratio: $card-ratio;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-m;
+  border: $border;
+  background: $color-surface;
+  cursor: pointer;
+  @include raised-interactive;
+
+  &::before {
+    @include corner-cut(1, 1);
+    top: $space-s;
+    left: $space-s;
+  }
+
+  &::after {
+    @include corner-cut(-1, -1);
+    bottom: $space-s;
+    right: $space-s;
+  }
+
+  &:hover {
+    @include checker;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+    box-shadow: $shadow-none;
+  }
+}
+
+/** Cible d'un glisser : bord pointillé rouge, sans ombre. */
+@mixin preview-drop-target {
+  border-style: dashed;
+  border-color: $color-primary;
+  box-shadow: $shadow-none;
+}
+
+@mixin name {
+  overflow: hidden;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-lg;
+  line-height: $line-height-sm;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@mixin rename-row {
+  display: flex;
+  align-items: center;
+  gap: $space-s;
+}
+
+@mixin rename-input {
+  flex: 1;
+  min-width: 0;
+  height: $control-sm;
+  padding: 0 $space-s;
+  border: $outline-width solid $color-focus;
+  background: $color-field;
+  color: $color-text;
+  font-family: $font-family-base;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-md;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}

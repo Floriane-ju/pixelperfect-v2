@@ -3,13 +3,15 @@
 }
 
 .title {
-  @include floating-panel-title($accent-1-600);
+  @include floating-panel-title;
 }
 
-.tone-accent-1 {
-  color: $accent-1-600;
+.actions {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
 }
 
-.tone-accent-2 {
-  color: $accent-2-600;
+.close {
+  @include ink-button;
 }

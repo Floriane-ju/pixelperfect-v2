@@ -1,8 +1,9 @@
-import { useRef } from 'react';
+import { useId, useRef } from 'react';
 import { useModalA11y } from '@/hooks/useModalA11y';
 import { cx } from '@/lib/cx';
 import { Button } from '@/components/Button';
 import { Slider } from '@/components/Slider';
+import { Switch } from '@/components/Switch';
 import styles from './SettingsPanel.module.scss';
 
 export type EditorBgColor = 'white' | 'gray' | 'black';
@@ -35,6 +36,7 @@ export function SettingsPanel({
   const panelRef = useRef<HTMLDivElement>(null);
   useModalA11y({ modalRef: panelRef, onClose, closeOnEscape: true });
 
+  const gridLabelId = useId();
   const gridPercent = Math.round(gridOpacity * 100);
 
   return (
@@ -44,19 +46,11 @@ export function SettingsPanel({
       role="dialog"
       aria-label="Paramètres d'affichage"
     >
+      <h2 className={styles.title}>Affichage</h2>
       <section className={styles.section}>
         <div className={styles.row}>
-          <span className={styles.label}>Afficher la grille</span>
-          <Button
-            variant={showGrid ? 'selected' : 'selectable'}
-            size="sm"
-            iconOnly
-            iconLeft="grid"
-            title="Afficher la grille"
-            aria-label="Afficher la grille"
-            aria-pressed={showGrid}
-            onClick={onShowGridToggle}
-          />
+          <span className={styles.label} id={gridLabelId}>Afficher la grille</span>
+          <Switch checked={showGrid} onChange={onShowGridToggle} aria-labelledby={gridLabelId} />
         </div>
         <Slider
           label="Grille de pixels"
@@ -81,10 +75,10 @@ export function SettingsPanel({
               size="sm"
               role="radio"
               aria-checked={bgColor === opt.value}
-              aria-label={opt.label}
               onClick={() => onBgColorChange(opt.value)}
             >
               <span className={cx(styles.swatch, styles[`swatch-${opt.value}`])} aria-hidden="true" />
+              {opt.label}
             </Button>
           ))}
         </div>

@@ -1,132 +1,104 @@
 .editor {
   display: flex;
-  flex-direction: column;
-  height: 100dvh;
   width: 100%;
+  height: 100dvh;
   overflow: hidden;
+  @include paper-dots;
+
+  @include phone-only {
+    flex-direction: column;
+  }
 }
 
-.body {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  gap:$space-sm;
-  padding:0 $space-sm $space-sm $space-sm;
-}
-
-.canvasArea {
+.workspace {
   position: relative;
   flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+// Zone de dessin : papier tramé ; le fond choisi (blanc/gris/noir) colore la toile seule.
+.canvasArea {
+  --canvas-bg: #{$white};
+  position: relative;
+  flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   touch-action: none;
-  min-width: 0;
-  background:$neutral-0;
-  box-shadow: $drop-shadow-panel;
-  border:$border-m-accent-2;
 
-  &[data-bg='white']  { background: $neutral-0; }
-  &[data-bg='gray']   { background: $neutral-500; }
-  &[data-bg='black']  { background: $neutral-1000; }
+  &[data-bg='gray'] { --canvas-bg: #{$gray}; }
+  &[data-bg='black'] { --canvas-bg: #{$black}; }
 }
 
-.leftSidebar {
+// Coins de coupe : 3 pixels rouges de 4 px à chaque angle de la zone de dessin.
+.corner {
   position: absolute;
-  left: $space-sm;
-  top: $space-sm;
-  bottom: $space-sm;
-  z-index: $z-dropdown;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: $space-sm;
-  flex-shrink: 0;
+  z-index: $z-raised;
+  width: $pixel-corner;
+  height: $pixel-corner;
+  background: $color-primary;
+  pointer-events: none;
 }
 
-.leftSidebarTools {
-  display: flex;
-  flex-direction: column;
-  gap: $space-xs;
-  flex-shrink: 0;
+$corner-arm: $pixel-corner * 2;
+
+.cornerTl {
+  top: $editor-corner-inset;
+  left: $editor-corner-inset;
+  box-shadow: $pixel-corner 0 0 $color-primary, $corner-arm 0 0 $color-primary,
+    0 $pixel-corner 0 $color-primary, 0 $corner-arm 0 $color-primary;
 }
 
-.settingsContainer {
-  position: relative;
-  flex-shrink: 0;
+.cornerTr {
+  top: $editor-corner-inset;
+  right: $editor-corner-inset;
+  box-shadow: (-$pixel-corner) 0 0 $color-primary, (-$corner-arm) 0 0 $color-primary,
+    0 $pixel-corner 0 $color-primary, 0 $corner-arm 0 $color-primary;
 }
 
-.settingsPanelAnchor {
-  position: absolute;
-  bottom: 0;
-  left: calc(100% + $space-s);
-  z-index: $z-dropdown;
+.cornerBl {
+  bottom: $editor-corner-inset;
+  left: $editor-corner-inset;
+  box-shadow: $pixel-corner 0 0 $color-primary, $corner-arm 0 0 $color-primary,
+    0 (-$pixel-corner) 0 $color-primary, 0 (-$corner-arm) 0 $color-primary;
 }
 
-.rightSidebar {
-  position: absolute;
-  right: $space-sm;
-  top: $space-sm;
-  bottom: $space-sm;
-  z-index: $z-dropdown;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: $space-l;
-  flex-shrink: 0;
-  align-items: flex-start;
+.cornerBr {
+  bottom: $editor-corner-inset;
+  right: $editor-corner-inset;
+  box-shadow: (-$pixel-corner) 0 0 $color-primary, (-$corner-arm) 0 0 $color-primary,
+    0 (-$pixel-corner) 0 $color-primary, 0 (-$corner-arm) 0 $color-primary;
 }
 
-.colorWheelContainer {
-  position: relative;
-  flex-shrink: 0;
-}
-
+// Sélecteur de couleur ancré au rail droit.
 .colorPanel {
   position: absolute;
   top: 0;
-  right: calc(100% + $space-s);
-  z-index: $z-dropdown;
+  right: calc(100% + #{$space-l});
+  z-index: $z-popover;
+
+  @include phone-only {
+    top: auto;
+    right: auto;
+    bottom: calc(100% + #{$space-s});
+    left: 0;
+  }
 }
 
-.colorDivider {
-  width: $btn-height;
-  height: $space-xxs;
-  background: $accent-1-600;
-  flex-shrink: 0;
-}
-
-.recentColors {
-  display: flex;
-  flex-direction: column;
-  width: $btn-height;
-  flex-shrink: 0;
-  gap:$space-xs;
-}
-
-.drawingColors {
-  display: flex;
-  flex-direction: column;
-  width: $btn-height;
-  flex: 0 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  gap:$space-xs;
-}
-// ── Edit color panel (fixed, positioned at swatch level) ─────────────────────
-
+// Édition d'une couleur du dessin : sélecteur à hauteur de la pastille.
 .editColorPanel {
   position: fixed;
-  right: calc(#{$toolbar-width} + #{$space-s});
-  z-index: $z-dropdown;
+  right: calc(#{$dock-width} + #{$space-l});
+  z-index: $z-popover;
   transform: translateY(-50%);
 }
 
-// ── Context menu ─────────────────────────────────────────────────────────────
-
-// ── Utility ───────────────────────────────────────────────────────────────────
+// ── États (chargement / erreur) ──
 
 .centered {
   flex: 1;
@@ -134,27 +106,47 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: $space-m;
+  gap: $space-l;
+  padding: $space-l;
+  text-align: center;
 }
 
-.muted {
-  color: $color-text-muted;
-  font-size: $font-size-sm;
-  font-family: $font-family-mono;
+.loadingLabel {
+  @include text-title;
+}
+
+.loadingBar {
+  display: flex;
+  gap: $space-xs;
+}
+
+.loadingPixel {
+  width: $pixel-mark;
+  height: $pixel-mark;
+  background: $color-bg-dot;
+  animation: loading-pixel calc(#{$duration-hold} * 2) steps(1) infinite;
+
+  @for $i from 1 through 6 {
+    &:nth-child(#{$i}) {
+      animation-delay: calc(#{$duration-hold} * #{$i} / 6);
+    }
+  }
+}
+
+@keyframes loading-pixel {
+  0%, 50% { background: $color-primary; }
+  51%, 100% { background: $color-bg-dot; }
 }
 
 .danger {
-  color: $color-danger;
-  font-size: $font-size-sm;
-}
+  display: flex;
+  align-items: center;
+  gap: $space-s;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-lg;
+  line-height: $line-height-sm;
 
-.savingBadge {
-  position: fixed;
-  bottom: $space-m;
-  right: $space-m;
-  background: $color-surface-2;
-  padding: $space-xs $space-sm;
-  font-size: $font-size-xs;
-  color: $color-text-muted;
-  pointer-events: none;
+  &::before {
+    @include pixel-mark;
+  }
 }

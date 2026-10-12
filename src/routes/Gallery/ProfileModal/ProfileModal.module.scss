@@ -1,35 +1,45 @@
 .row {
   display: flex;
   flex-direction: column;
-  gap: $space-xxs;
+  gap: $space-s;
 }
 
 .fieldLabel {
-  font-size: $font-size-sm;
-  color: $accent-1-600;
-  opacity: $opacity-overlay;
+  @include text-meta;
+  color: $color-text-muted;
 }
 
 .fieldValue {
   font-size: $font-size-md;
-  color: $accent-1-600;
+  line-height: $line-height-sm;
   word-break: break-all;
 }
 
 .info {
   margin: 0;
   font-size: $font-size-sm;
-  color: $accent-1-600;
+  line-height: $line-height-sm;
+  color: $color-text-muted;
 }
 
 .error {
+  display: flex;
+  align-items: center;
+  gap: $space-s;
   margin: 0;
   font-size: $font-size-sm;
+  line-height: $line-height-sm;
   color: $color-danger;
+
+  &::before {
+    @include pixel-mark;
+  }
 }
 
 .actions {
   display: flex;
-  gap: $space-s;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
+  gap: $space-l;
 }

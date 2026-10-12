@@ -8,6 +8,8 @@ type RefImageInfo = Omit<RefImageState, 'src'>;
 
 export interface EditorContextValue {
   title: string;
+  /** Groupe du dessin dans la bibliothèque (fil d'Ariane). */
+  groupName: string | null;
   tool: Tool;
   onToolChange: (t: Tool) => void;
   canUndo: boolean;

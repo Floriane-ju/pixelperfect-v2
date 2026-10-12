@@ -2,6 +2,11 @@
   @include editor-popover;
 }
 
+.title {
+  @include text-title($font-size-sm);
+  margin: 0;
+}
+
 .section {
   @include popover-section;
 }
@@ -15,25 +20,31 @@
 }
 
 .options {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: $space-s;
+
+  > * {
+    padding: 0 $space-s;
+  }
 }
 
 .swatch {
   display: block;
-  width: $space-m;
-  height: $space-m;
-  border: $border-s-accent-2;
+  flex-shrink: 0;
+  width: $space-sm;
+  height: $space-sm;
+  border: $outline-width-thin solid currentColor;
 }
 
 .swatch-white {
-  background: $neutral-0;
+  background: $white;
 }
 
 .swatch-gray {
-  background: $neutral-500;
+  background: $gray;
 }
 
 .swatch-black {
-  background: $neutral-1000;
+  background: $black;
 }

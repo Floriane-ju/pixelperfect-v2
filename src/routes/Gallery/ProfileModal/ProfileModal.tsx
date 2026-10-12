@@ -88,7 +88,7 @@ export function ProfileModal({ onClose, onUpdated }: ProfileModalProps) {
       <div className={styles.actions}>
         <Button
           variant="primary"
-          size="sm"
+          size="lg"
           onClick={() => void handleSubmit()}
           disabled={disabled}
         >

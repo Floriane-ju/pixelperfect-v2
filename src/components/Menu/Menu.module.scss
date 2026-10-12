@@ -6,18 +6,15 @@
 }
 
 .menu {
+  @include layer-surface;
   position: fixed;
   z-index: $z-popover;
   display: flex;
   flex-direction: column;
   min-width: $menu-min-width;
   margin: 0;
-  padding: $space-xxs;
+  padding: $space-s 0;
   list-style: none;
-  background: $accent-1-450;
-  border: $border-m-accent-2;
-  box-shadow:
-    $inner-shadow-interactive-1;
 }
 
 .row {
@@ -29,33 +26,38 @@
 .item {
   display: flex;
   align-items: center;
-  gap: $space-l;
+  gap: $space-m;
   width: 100%;
-  padding: $space-l $space-sm $space-l $space-l;
+  min-height: $control-md;
+  padding: 0 $space-m;
+  border: 0;
   background: transparent;
-  border: none;
-  color: $accent-2-600;
+  color: $color-text;
   font-family: $font-family-base;
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  padding:$space-l;
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
   text-align: left;
   cursor: pointer;
+  transition: background-color $transition-fast, color $transition-fast;
   @include no-select;
 
-  &:hover {
-    background: $accent-1-500;
+  &:hover,
+  &:focus-visible {
+    background: $color-ink-bg;
+    color: $color-ink-text;
+  }
+
+  &:active {
+    background: $color-ink-pressed;
   }
 
   &:focus-visible {
-    @include focus-ring;
-    outline-offset: -$outline-offset;
+    @include focus-ring(-$space-s + $outline-width);
   }
 }
 
 .icon {
   flex-shrink: 0;
-  color: $accent-2-600;
 }
 
 .label {
@@ -64,20 +66,19 @@
 }
 
 .itemDanger {
-  color: $color-danger-light;
+  color: $color-danger;
+  font-weight: $font-weight-semibold;
 
-  .icon {
-    color: $color-danger-light;
-  }
-
-  &:hover {
-    background: $accent-1-500;
+  &:hover,
+  &:focus-visible {
+    background: $color-danger;
+    color: $color-on-primary;
   }
 }
 
 .divider {
   display: block;
-  width: 100%;
   height: $outline-width-thin;
-  background: $accent-1-600;
+  margin: $space-s $space-m;
+  background: $color-border;
 }

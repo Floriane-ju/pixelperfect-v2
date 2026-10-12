@@ -9,9 +9,10 @@
   pointer-events: auto;
 }
 
+// Glisser une vignette hors du panneau : le voile devient la cible de retrait.
 .overlayDropTarget {
-  background: rgba($accent-1-500, $opacity-drop-target);
-  outline: $outline-width-thick dashed $accent-1-600;
+  @include scrim;
+  outline: $outline-width-thick dashed $color-primary;
   outline-offset: -$outline-offset-lg;
 }
 
@@ -23,14 +24,65 @@
   flex: 1;
   overflow-y: auto;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax($card-width, 1fr));
-  gap: $space-sm;
-  padding: $space-sm;
+  grid-template-columns: repeat(auto-fill, minmax($group-card-min-width, 1fr));
+  gap: $space-2xl $space-l;
+  padding: $space-l;
   align-content: flex-start;
 }
 
 .empty {
+  grid-column: 1 / -1;
+  margin: 0;
   color: $color-text-muted;
   font-size: $font-size-sm;
-  padding: $space-m;
+}
+
+.addTile {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: $space-m;
+  color: $color-text;
+  text-align: left;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.addArt {
+  aspect-ratio: $card-ratio;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: $border-dashed;
+  transition: background-color $transition-fast, border-color $transition-fast, color $transition-fast;
+
+  .addTile:hover & {
+    background: $color-surface-subtle;
+    border-color: $color-border;
+    color: $color-primary;
+  }
+}
+
+.addLabel {
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-md;
+  line-height: $line-height-sm;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-l;
+  padding: $space-m $space-l $space-l;
+  border-top: $border-thin;
+}
+
+.hint {
+  font-family: $font-family-mono;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
 }

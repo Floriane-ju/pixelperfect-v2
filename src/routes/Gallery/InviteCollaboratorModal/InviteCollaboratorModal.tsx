@@ -150,12 +150,12 @@ export function InviteCollaboratorModal({
       initialFocusRef={inputRef}
       actions={
         <>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose}>
             Fermer
           </Button>
           <Button
             variant="primary"
-            size="sm"
+            size="lg"
             onClick={() => void submit()}
             disabled={disabled}
           >

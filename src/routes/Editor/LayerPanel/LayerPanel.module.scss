@@ -1,13 +1,11 @@
 .panel {
+  @include layer-surface;
   position: absolute;
-  top: calc(100% + $space-s);
+  top: calc(100% + #{$space-m});
   right: 0;
-  z-index: $z-dropdown;
-  width: $layer-panel-width;
-  padding: $space-xxs;
-  background: $accent-1-500;
-  border: $border-m-accent-2;
-  box-shadow: $shadow-modal;
+  z-index: $z-popover;
+  width: $editor-layer-panel-width;
+  max-width: calc(100vw - #{$space-2xl});
   @include no-select;
 }
 
@@ -15,23 +13,29 @@
   display: flex;
   align-items: center;
   gap: $space-s;
-  padding: $space-sm $space-sm $space-sm $space-l;
-  border-bottom: $border-m-accent-2;
+  padding-left: $space-m;
+  border-bottom: $border;
 }
 
 .title {
+  @include text-title($font-size-sm);
   flex: 1;
   margin: 0;
-  font-family: $font-family-base;
-  font-weight: $font-weight-semibold;
-  font-size: $font-size-2xl;
-  color: $accent-1-600;
+}
+
+.count {
+  font-family: $font-family-mono;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
 }
 
 .list {
-  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
   margin: 0;
-  padding: 0;
+  padding: $space-s;
+  list-style: none;
   max-height: $layer-row-max-height;
   overflow-y: auto;
 }
@@ -41,30 +45,27 @@
   display: flex;
   align-items: center;
   gap: $space-s;
-  padding: $space-l $space-sm;
+  min-height: $control-md + $space-s;
+  padding: $space-xs $space-xs $space-xs 0;
   cursor: pointer;
   background: transparent;
   transition: background-color $transition-fast;
 
-  &:not(:last-child) {
-    border-bottom: $border-s-accent-2;
+  &:hover {
+    background: $color-surface-subtle;
   }
 
-  &:hover {
-    background: $accent-1-450;
+  &:focus-visible {
+    @include focus-ring(-$outline-width);
   }
 }
 
 .itemActive {
-  background: $color-row-selected-bg;
+  background: $color-surface-hover;
   box-shadow: $shadow-row-selected;
 
   &:hover {
-    background: $color-row-selected-bg;
-  }
-
-  .layerName {
-    color: $color-row-selected-text;
+    background: $color-surface-hover;
   }
 }
 
@@ -79,7 +80,7 @@
   left: 0;
   right: 0;
   height: $drop-indicator-height;
-  background: $accent-1-600;
+  background: $color-primary;
   pointer-events: none;
   z-index: $z-raised;
 }
@@ -96,9 +97,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: $btn-height;
-  height: $btn-height;
-  color: $accent-1-600;
+  width: $space-2xl;
+  height: $control-sm;
+  color: $color-text-muted;
   flex-shrink: 0;
   cursor: grab;
   touch-action: none;
@@ -112,9 +113,8 @@
   flex: 1;
   min-width: 0;
   font-family: $font-family-base;
-  font-weight: $font-weight-semibold;
-  font-size: $font-size-md;
-  color: $accent-1-600;
+  font-weight: $font-weight-medium;
+  font-size: $font-size-base;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

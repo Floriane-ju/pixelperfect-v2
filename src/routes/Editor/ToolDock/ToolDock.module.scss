@@ -1,0 +1,131 @@
+// Les popovers débordent du dock : on lève son défilement (ascenseur) propre au composant Dock.
+.dock.dock {
+  overflow: visible;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+
+  @include phone-only {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+.slot {
+  position: relative;
+  display: flex;
+  width: $control-md;
+  height: $control-md;
+  flex-shrink: 0;
+}
+
+// Badge de taille du pinceau, coin bas droit de l'outil.
+.badge {
+  position: absolute;
+  right: $space-xs;
+  bottom: $space-xs;
+  font-family: $font-family-display;
+  font-size: $editor-micro-font;
+  line-height: $editor-micro-font;
+  color: $color-ink-text;
+  pointer-events: none;
+}
+
+.slot:has([aria-pressed='true']) .badge {
+  color: $color-text;
+}
+
+// Pastille rouge : réglage actif (symétrie, grille).
+.dot {
+  position: absolute;
+  top: $space-xs;
+  right: $space-xs;
+  width: $editor-dot;
+  height: $editor-dot;
+  background: $color-primary;
+  pointer-events: none;
+}
+
+// Appui long : barre rouge qui se remplit en 6 pas.
+.holdBar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: $editor-dot;
+  background: $color-primary;
+  pointer-events: none;
+  animation: hold $duration-hold steps($editor-hold-steps) forwards;
+}
+
+@keyframes hold {
+  to {
+    width: 100%;
+  }
+}
+
+// ─── Popovers à droite du dock ───
+@mixin dock-anchor {
+  position: absolute;
+  left: calc(100% + #{$space-l});
+  z-index: $z-popover;
+
+  @include phone-only {
+    left: 0;
+    top: calc(100% + #{$space-s});
+    bottom: auto;
+  }
+}
+
+.anchorEnd {
+  @include dock-anchor;
+  bottom: 0;
+}
+
+.popover {
+  @include layer-surface;
+  @include dock-anchor;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  width: $popover-width;
+  max-width: calc(100vw - #{$space-2xl});
+}
+
+.popoverTitlebar {
+  @include ink-titlebar;
+}
+
+.popoverTitle {
+  @include floating-panel-title;
+  font-size: $font-size-sm;
+}
+
+.popoverClose {
+  @include ink-button;
+}
+
+.popoverBody {
+  padding: $space-m;
+}
+
+.popoverFooter {
+  display: flex;
+  align-items: center;
+  gap: $space-s;
+  padding: $space-s $space-m $space-m;
+  border-top: $border-thin;
+  font-family: $font-family-mono;
+  font-size: $font-size-2xs;
+  line-height: $line-height-xs;
+  color: $color-text-muted;
+}
+
+.footerMark {
+  flex-shrink: 0;
+  width: $space-l;
+  height: $editor-dot;
+  background: $color-primary;
+}

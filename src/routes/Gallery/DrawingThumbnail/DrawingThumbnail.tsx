@@ -1,23 +1,6 @@
 import { memo, useEffect, useRef, type CSSProperties } from 'react';
 import type { DrawingRow } from '@/types';
-import { tintFromRamp } from '@/lib/color';
 import styles from './DrawingThumbnail.module.scss';
-
-// Stops de --accent-2-* (cf. global.scss), du plus clair au plus sombre.
-// On démarre à 400 : 300/350 sont trop pâles, le dessin ne ressortait pas du damier.
-const RAMP_STOPS = [400, 450, 500, 550, 600, 650, 700, 750, 800] as const;
-
-// Tokens statiques : lus une fois pour toutes (getComputedStyle par vignette était coûteux).
-// On ne met en cache que si la rampe est trouvée, au cas où la feuille ne serait pas encore chargée.
-let cachedRamp: string[] = [];
-
-function getAccent2Ramp(): string[] {
-  if (cachedRamp.length === 0) {
-    const root = getComputedStyle(document.documentElement);
-    cachedRamp = RAMP_STOPS.map(stop => root.getPropertyValue(`--accent-2-${stop}`).trim()).filter(Boolean);
-  }
-  return cachedRamp;
-}
 
 export interface DrawingThumbnailProps {
   drawing: Pick<DrawingRow, 'id' | 'updated_at' | 'data'>;
@@ -43,10 +26,6 @@ export const DrawingThumbnail = memo(function DrawingThumbnail({ drawing }: Draw
 
     ctx.clearRect(0, 0, data.width, data.height);
 
-    const ramp = getAccent2Ramp();
-    // Les dessins réutilisent peu de couleurs distinctes : on mémoïse le remap
-    const tinted = new Map<string, string>();
-
     for (const layer of data.layers) {
       if (!layer.visible) continue;
 
@@ -57,13 +36,7 @@ export const DrawingThumbnail = memo(function DrawingThumbnail({ drawing }: Draw
         const x = parseInt(key.slice(0, comma), 10);
         const y = parseInt(key.slice(comma + 1), 10);
 
-        let fill = tinted.get(color);
-        if (fill === undefined) {
-          fill = tintFromRamp(color, ramp);
-          tinted.set(color, fill);
-        }
-
-        ctx.fillStyle = fill;
+        ctx.fillStyle = color;
         ctx.fillRect(x, y, 1, 1);
       }
     }

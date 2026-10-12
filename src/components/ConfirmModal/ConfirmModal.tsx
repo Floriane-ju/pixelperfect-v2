@@ -27,8 +27,8 @@ export function ConfirmModal({
       onClose={onCancel}
       actions={
         <>
-          <Button variant="ghost" size="sm" onClick={onCancel}>{cancelLabel}</Button>
-          <Button variant="primary" size="sm" onClick={onConfirm}>{confirmLabel}</Button>
+          <Button variant="ghost" onClick={onCancel}>{cancelLabel}</Button>
+          <Button variant="primary" onClick={onConfirm}>{confirmLabel}</Button>
         </>
       }
     >

@@ -25,9 +25,9 @@
 
 .pickerIndicatorFg {
   fill: none;
-  stroke: $color-white;
+  stroke: $white;
   stroke-width: $pipette-indicator-stroke;
-  stroke-linecap: round;
+  stroke-linecap: square;
   transform: rotate(-90deg);
   transform-origin: center;
   stroke-dasharray: 113.097;
@@ -42,7 +42,9 @@
 .stack {
   position: relative;
   overflow: hidden;
-  border: $outline-width solid $color-black;
+  border: $border;
+  background: var(--canvas-bg, #{$white});
+  box-shadow: $shadow-raised;
 }
 
 .checker {
@@ -125,4 +127,8 @@
 
 @keyframes marchingAnts {
   to { stroke-dashoffset: $selection-dash-cycle; }
+}
+
+:global([data-bg='black']) .gridPath {
+  stroke: $color-grid-on-dark;
 }

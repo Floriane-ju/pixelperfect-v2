@@ -1,90 +1,62 @@
+@use '../card' as card;
+
 .card {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-width: 0;
-  background: $accent-1-450;
-  cursor: pointer;
-  box-shadow: $drop-shadow-interactive,$inner-shadow-interactive-1;
-  transition: box-shadow $transition-fast;
-  border:$border-m-accent-2;
-  @include no-select;
-
-  &:hover {
-    box-shadow: $drop-shadow-interactive-hover,$inner-shadow-interactive-1-hover;
-  }
-
-  &:active:not(:has(header:active)) {
-    box-shadow: $drop-shadow-interactive-active,$inner-shadow-interactive-1-active;
-  }
-
-  &:focus-visible {
-    @include focus-ring;
-    outline-offset: 0;
-  }
+  @include card.card;
+  @include card.num-active('.num');
 
   &.dragging {
-    opacity: 0.4;
-    cursor: grabbing;
-  }
-
-  &.dropTarget {
-    box-shadow: $drop-shadow-interactive-hover, $inner-shadow-interactive-1-hover;
-    outline: $outline-width solid $accent-1-600;
-    outline-offset: -$outline-offset;
+    opacity: $opacity-drop-target;
   }
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $space-s;
-  padding: $space-s;
-  position: relative;
+.head {
+  @include card.head;
 }
 
-.titleGroup {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
+.num {
+  @include card.num;
 }
 
-.title {
-  font-size: $font-size-md;
-  color: $accent-2-700;
-  font-weight: $font-weight-regular;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.titleSize {
-  font-size: $font-size-xs;
-  color: $accent-2-600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.meta {
+  @include card.meta;
 }
 
 .preview {
-  padding: 0 $space-xs $space-xs;
+  @include card.preview;
+
+  &.dropTarget {
+    @include card.preview-drop-target;
+  }
 }
 
 .previewInner {
-  background: $color-white;
-  padding: $space-sm;
-  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 100%;
+  aspect-ratio: 1;
 }
 
-// Confirmation suppression : la mise en page vient de InlineConfirm
-.confirmRow {
-  padding: $space-sm;
-  flex: 1;
-  min-height: $card-confirm-min-height;
-  background: $accent-1-500;
+// Confirmation de suppression : l'aperçu se trame, bord et ombre rouges.
+.confirm {
+  aspect-ratio: $card-ratio;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-m;
+  border: $outline-width solid $color-danger;
+  box-shadow: $shadow-danger;
+  @include checker($color-surface, $color-surface-hover, $pattern-scrim-size);
+}
+
+.name {
+  @include card.name;
+}
+
+.renameRow {
+  @include card.rename-row;
+}
+
+.renameInput {
+  @include card.rename-input;
 }

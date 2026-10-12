@@ -5,37 +5,49 @@
 }
 
 .suggestions {
+  @include layer-surface;
   position: absolute;
-  top: 100%;
+  top: calc(100% + #{$space-xs});
   left: 0;
   right: 0;
-  margin: $space-xxs 0 0;
-  padding: $space-xxs;
-  list-style: none;
-  background: $accent-1-450;
-  border: $border-m-accent-2;
-  box-shadow: $inner-shadow-interactive-1;
   z-index: $z-popover;
   max-height: $menu-max-height;
+  margin: 0;
+  padding: $space-s 0;
   overflow-y: auto;
+  list-style: none;
 }
 
 .suggestion {
-  padding: $space-s $space-l;
-  font-family: $font-family-base;
-  font-size: $font-size-md;
-  color: $accent-1-600;
+  display: flex;
+  align-items: center;
+  min-height: $control-md;
+  padding: 0 $space-m;
+  font-size: $font-size-base;
   cursor: pointer;
   @include no-select;
+
+  &:hover {
+    background: $color-surface-hover;
+  }
 }
 
-.suggestionActive {
-  background: $accent-1-500;
-  color: $accent-1-600;
+.suggestionActive,
+.suggestionActive:hover {
+  background: $color-ink-bg;
+  color: $color-ink-text;
 }
 
 .error {
+  display: flex;
+  align-items: center;
+  gap: $space-s;
   margin: 0;
   font-size: $font-size-sm;
+  line-height: $line-height-sm;
   color: $color-danger;
+
+  &::before {
+    @include pixel-mark;
+  }
 }

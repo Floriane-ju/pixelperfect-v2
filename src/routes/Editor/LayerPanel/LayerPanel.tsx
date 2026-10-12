@@ -144,6 +144,7 @@ export function LayerPanel({
     <div className={styles.panel} role="group" aria-labelledby="layer-panel-title">
       <div className={styles.header}>
         <h2 className={styles.title} id="layer-panel-title">Calques</h2>
+        <span className={styles.count}>{layers.length}</span>
         <Button
           variant="ghost"
           size="md"
@@ -188,11 +189,11 @@ export function LayerPanel({
                 onPointerCancel={handleDragEnd}
                 onClick={e => e.stopPropagation()}
               >
-                <Icons icon="drag" />
+                <Icons icon="drag" size={16} />
               </span>
               <Button
                 variant="ghost"
-                size="md"
+                size="sm"
                 iconOnly
                 iconLeft={layer.visible ? 'eye' : 'eye-off'}
                 title={layer.visible ? 'Masquer' : 'Afficher'}
@@ -203,7 +204,7 @@ export function LayerPanel({
               <span className={styles.layerName}>{layer.name}</span>
               <Button
                 variant="ghost"
-                size="md"
+                size="sm"
                 iconOnly
                 iconLeft="duplicate"
                 title="Dupliquer"
@@ -213,7 +214,7 @@ export function LayerPanel({
               />
               <Button
                 variant="ghost"
-                size="md"
+                size="sm"
                 iconOnly
                 iconLeft="trash"
                 title="Supprimer"

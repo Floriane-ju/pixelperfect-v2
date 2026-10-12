@@ -1,6 +1,12 @@
 @use 'sass:map';
 @use 'variables' as *;
 
+@mixin phone-only {
+  @media (max-width: #{$bp-phone}) {
+    @content;
+  }
+}
+
 @mixin tablet-up {
   @media (min-width: #{$bp-tablet}) {
     @content;
@@ -13,9 +19,10 @@
   }
 }
 
-@mixin focus-ring {
-  outline: 2px solid $color-primary;
-  outline-offset: 2px;
+/** Focus clavier : contour rouge 2 px, décalé de 4 px. */
+@mixin focus-ring($offset: $outline-offset) {
+  outline: $outline-width solid $color-focus;
+  outline-offset: $offset;
 }
 
 @mixin no-select {
@@ -46,16 +53,155 @@
   border: 0;
 }
 
+// ─────────────────────────────────────────────
+// Typographie
+// ─────────────────────────────────────────────
+
+/** Méta en capitales : Space Mono 11 / 16, espacé. */
+@mixin text-meta {
+  font-family: $font-family-mono;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-caps;
+}
+
+/** Titre de fenêtre / section : Silkscreen 700. */
+@mixin text-title($size: $font-size-md) {
+  font-family: $font-family-display;
+  font-weight: $font-weight-bold;
+  font-size: $size;
+  line-height: $line-height-sm;
+}
+
+/** Point carré rouge (fin de titre, puce). À appliquer sur un pseudo-élément ou un span vide. */
+@mixin pixel-mark($size: $pixel-mark) {
+  content: '';
+  display: inline-block;
+  flex-shrink: 0;
+  width: $size;
+  height: $size;
+  background: $color-primary;
+}
+
+// ─────────────────────────────────────────────
+// Motifs
+// ─────────────────────────────────────────────
+
+/** Papier tramé : points tous les 16 px. */
+@mixin paper-dots {
+  background-color: $color-bg;
+  background-image: radial-gradient($color-bg-dot 1px, transparent 1px);
+  background-size: $pattern-dot-size $pattern-dot-size;
+}
+
+/** Damier 8 px (survol des vignettes, transparence). */
+@mixin checker($light: $color-checker-light, $dark: $color-checker-dark, $size: $pattern-checker-size) {
+  background-color: $light;
+  background-image: conic-gradient(#{$dark} 25%, transparent 0 50%, #{$dark} 0 75%, transparent 0);
+  background-size: $size $size;
+}
+
+/** Trame 4 px : voile des dialogues. */
+@mixin scrim {
+  background-image: conic-gradient(#{$color-scrim} 25%, transparent 0 50%, #{$color-scrim} 0 75%, transparent 0);
+  background-size: $pattern-scrim-size $pattern-scrim-size;
+}
+
+// ─────────────────────────────────────────────
+// Objets
+// ─────────────────────────────────────────────
+
+/**
+ * Objet relevé (ombre 4 px) qui monte au survol (−2 px, ombre 6) et s'enfonce à la pression
+ * (+4 px, ombre 0). Mouvement réduit : seules les couleurs changent.
+ */
+@mixin raised-interactive {
+  box-shadow: $shadow-raised;
+  transition: transform $transition-fast, box-shadow $transition-fast, background-color $transition-fast;
+
+  &:hover:not(:disabled) {
+    transform: translate($lift-hover, $lift-hover);
+    box-shadow: $shadow-hover;
+  }
+
+  &:active:not(:disabled) {
+    transform: translate($lift-press, $lift-press);
+    box-shadow: $shadow-none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:hover:not(:disabled),
+    &:active:not(:disabled) {
+      transform: none;
+    }
+  }
+}
+
+/** Surface posée (menus, popovers, dialogues) : papier, trait encre, ombre 8 px. */
+@mixin layer-surface {
+  background: $color-surface;
+  color: $color-text;
+  border: $border;
+  box-shadow: $shadow-layer;
+}
+
+/** Barre de titre encre d'une fenêtre (dialogue, modale, popover). */
+@mixin ink-titlebar {
+  display: flex;
+  align-items: center;
+  gap: $space-m;
+  min-height: $control-md;
+  padding-left: $space-m;
+  background: $color-ink-bg;
+  color: $color-ink-text;
+
+  &::before {
+    @include pixel-mark;
+  }
+}
+
+/** Bouton carré sur fond encre (dock, rails, barres de titre). */
+@mixin ink-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: $control-md;
+  height: $control-md;
+  color: $color-ink-text;
+  background: transparent;
+  transition: background-color $transition-fast;
+
+  &:hover:not(:disabled) {
+    background: $color-ink-hover;
+  }
+
+  &:active:not(:disabled) {
+    background: $color-ink-pressed;
+  }
+
+  &:focus-visible {
+    @include focus-ring(-$outline-width);
+  }
+}
+
+/** Séparateur court sur fond encre (dock). */
+@mixin ink-divider {
+  flex-shrink: 0;
+  width: $space-2xl;
+  height: $outline-width;
+  background: $color-ink-divider;
+}
+
 /** Popover ancré à un bouton de l'éditeur (SettingsPanel, MirrorPanel). */
 @mixin editor-popover {
+  @include layer-surface;
   display: flex;
   flex-direction: column;
   gap: $space-m;
   padding: $space-m;
-  background: $neutral-0;
-  border: $border-m-accent-2;
-  box-shadow: $drop-shadow-panel;
-  min-width: $menu-min-width;
+  width: $popover-width;
+  max-width: calc(100vw - #{$space-2xl});
 }
 
 @mixin popover-section {
@@ -68,30 +214,28 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $space-s;
+  gap: $space-m;
 }
 
 @mixin popover-label {
   font-family: $font-family-mono;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
   color: $color-text;
 }
 
 /** Panneau d'une modale flottante et déplaçable (Modal, GroupModal). */
 @mixin floating-panel($width) {
+  @include layer-surface;
   position: fixed;
   pointer-events: auto;
   top: 50%;
   left: 50%;
   display: flex;
   flex-direction: column;
-  background: $accent-1-500;
   width: calc(100vw - #{$space-m});
   max-height: calc(100dvh - #{$space-m});
   overflow: hidden;
-  box-shadow: $shadow-modal;
-  border: $border-m-accent-2;
 
   @include tablet-up {
     width: $width;
@@ -101,10 +245,7 @@
 
 /** En-tête servant de poignée de glissement d'une modale flottante. */
 @mixin floating-panel-header {
-  display: flex;
-  align-items: stretch;
-  gap: $space-sm;
-  padding: $space-s $space-s $space-sm $space-s;
+  @include ink-titlebar;
   flex-shrink: 0;
   cursor: grab;
   touch-action: none;
@@ -115,17 +256,14 @@
   }
 }
 
-@mixin floating-panel-title($color) {
-  font-family: $font-family-base;
-  font-size: $font-size-md;
-  flex-grow: 1;
-  font-weight: $font-weight-regular;
-  color: $color;
-  white-space: nowrap;
-  flex-shrink: 0;
-  line-height: 1;
+@mixin floating-panel-title {
+  @include text-title;
+  flex: 1;
+  min-width: 0;
   margin: 0;
-  align-self: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 @mixin safe-area-top {

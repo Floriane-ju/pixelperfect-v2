@@ -14,16 +14,3 @@ export function relativeLuminance(r: number, g: number, b: number): number {
   };
   return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
 }
-
-// Remappe une couleur sur une rampe ordonnée du plus clair au plus sombre :
-// pixel clair → premier stop, pixel sombre → dernier stop.
-// Rampe vide ou couleur illisible → couleur d'origine.
-export function tintFromRamp(color: string, ramp: readonly string[]): string {
-  if (ramp.length === 0) return color;
-
-  const [r, g, b] = hexToRgb(color);
-  const index = Math.round((1 - relativeLuminance(r, g, b)) * (ramp.length - 1));
-  if (!Number.isFinite(index)) return color;
-
-  return ramp[Math.min(Math.max(index, 0), ramp.length - 1)] ?? color;
-}

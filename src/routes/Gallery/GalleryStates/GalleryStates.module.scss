@@ -1,0 +1,154 @@
+@use '../card' as card;
+
+.title {
+  @include text-title;
+}
+
+// ─── Chargement ───
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: $space-l;
+  padding-top: $space-l;
+}
+
+.loadingTitle {
+  display: flex;
+  align-items: center;
+  gap: $space-m;
+}
+
+.progress {
+  display: flex;
+  gap: $space-xs;
+}
+
+// Barre de 6 pixels qui se remplit, par paliers.
+.progressPixel {
+  width: $pixel-mark;
+  height: $pixel-mark;
+  background: $color-bg-dot;
+  animation: fill-pixel $loading-cycle steps(1) infinite;
+
+  @for $i from 1 through 6 {
+    &:nth-child(#{$i}) {
+      animation-delay: calc(#{$loading-cycle} / 6 * #{$i - 1});
+    }
+  }
+}
+
+@keyframes fill-pixel {
+  0% { background: $color-primary; }
+  50% { background: $color-bg-dot; }
+}
+
+.skeletons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax($card-min-width, 1fr));
+  gap: $grid-gap-y $grid-gap-x;
+}
+
+.skeleton {
+  @include card.card;
+}
+
+.skeletonHead {
+  @include card.head;
+  justify-content: space-between;
+  padding-top: $space-s;
+}
+
+.skeletonNum {
+  width: $space-2xl;
+  height: $space-l;
+  background: $color-bg-dot;
+}
+
+.skeletonMeta {
+  width: $space-5xl;
+  height: $space-s;
+  background: $color-bg-dot;
+}
+
+.skeletonArt {
+  aspect-ratio: $card-ratio;
+  border: $outline-width solid $color-bg-dot;
+  @include checker($color-surface, $color-surface-hover);
+}
+
+.skeletonName {
+  width: $skeleton-name-width;
+  height: $space-m;
+  background: $color-bg-dot;
+}
+
+// ─── Vide / erreur ───
+.center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-l;
+  padding: $space-6xl $space-l;
+  text-align: center;
+}
+
+.message {
+  margin: 0;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-lg;
+  line-height: $line-height-sm;
+}
+
+.emptyCanvas {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: $empty-canvas-width;
+  aspect-ratio: $card-ratio;
+  border: $border-dashed;
+  background: $color-surface;
+
+  &::before {
+    @include card.corner-cut(1, 1);
+    top: $space-s;
+    left: $space-s;
+  }
+
+  &::after {
+    @include card.corner-cut(-1, -1);
+    bottom: $space-s;
+    right: $space-s;
+  }
+}
+
+.emptyPixel {
+  width: $space-m;
+  height: $space-m;
+  background: $color-text;
+}
+
+.bang {
+  display: grid;
+  grid-template-columns: repeat(5, $pixel-mark);
+  grid-auto-rows: $pixel-mark;
+}
+
+.bangOn {
+  background: $color-primary;
+}
+
+.errorText {
+  display: flex;
+  flex-direction: column;
+  gap: $space-s;
+}
+
+.detail {
+  margin: 0;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $color-text-muted;
+}

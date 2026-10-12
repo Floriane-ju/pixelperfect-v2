@@ -1,0 +1,46 @@
+.bar {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: $space-2xl;
+  min-height: $status-height;
+  padding: 0 $space-l;
+  @include safe-area-bottom;
+  border-top: $border;
+  background: $color-surface;
+  @include text-meta;
+}
+
+.tool {
+  font-weight: $font-weight-bold;
+}
+
+.meta {
+  color: $color-text-muted;
+
+  @include phone-only {
+    display: none;
+  }
+}
+
+.save {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-s;
+}
+
+.saveMark {
+  width: $pixel-mark;
+  height: $pixel-mark;
+  background: $color-text;
+}
+
+.saveError {
+  color: $color-danger;
+
+  .saveMark {
+    background: $color-danger;
+  }
+}

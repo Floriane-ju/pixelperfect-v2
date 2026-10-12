@@ -21,9 +21,12 @@ import { groupDrawings } from '@/lib/groupDrawings';
 import type { DrawingGroup } from '@/lib/groupDrawings';
 import { cx } from '@/lib/cx';
 import { SnakeCanvas } from '@/components/SnakeCanvas';
+import { GalleryDock } from './GalleryDock';
+import { GalleryEmpty, GalleryError, GalleryLoading } from './GalleryStates/GalleryStates';
 import { useGalleryLibrary } from './useGalleryLibrary';
 import styles from './Gallery.module.scss';
 
+const DECO_STRIP_KEYS = [0, 1, 2, 3, 4, 5]; // bande du pied, couleurs `$deco-strip`
 const MAX_IMPORT_BYTES = 20 * 1024 * 1024; // 20 Mo
 
 /** Défilement (px) à partir duquel le header passe en mode réduit. */
@@ -31,11 +34,11 @@ const SCROLL_COMPACT_THRESHOLD = 24;
 
 /**
  * Marge de défilement restante (px) exigée pour ré-agrandir le header : légèrement au-dessus
- * de la hauteur libérée par la réduction (~166 px : titre 2 lignes → 1 ligne + paddings).
+ * de la hauteur libérée par la réduction (~220 px : titre 2 lignes → 1 ligne, bloc méta masqué, paddings).
  * En dessous, ré-agrandir supprimerait le débordement, `scrollTop` retomberait à 0 et le
  * header oscillerait entre les deux tailles.
  */
-const SCROLL_EXPAND_MIN_OVERFLOW = 200;
+const SCROLL_EXPAND_MIN_OVERFLOW = 260;
 
 /** Distance (px) d'un glissement vers le bas rétablissant le header quand la liste est en haut. */
 const TOUCH_EXPAND_DISTANCE = 8;
@@ -48,15 +51,29 @@ export function Gallery() {
   // Une seule source de vérité pour l'identité : la session du contexte (pas d'appel getUser).
   const currentUserId = session ? session.user.id : LOCAL_OWNER;
   const {
-    drawings, setDrawings, status, errorMsg, reload, refetchSilent,
-    handleCollaboratorRemoved, handleRename, handleDelete, handleRemoveFromGroup, handleGroupPair,
-    handleUngroupAll, handleRenameGroup, handleDeleteGroup, handleMoveToGroup,
+    drawings,
+    setDrawings,
+    status,
+    errorMsg,
+    reload,
+    refetchSilent,
+    handleCollaboratorRemoved,
+    handleRename,
+    handleDelete,
+    handleRemoveFromGroup,
+    handleGroupPair,
+    handleUngroupAll,
+    handleRenameGroup,
+    handleDeleteGroup,
+    handleMoveToGroup,
   } = useGalleryLibrary({ isAuth, sessionLoading, currentUserId });
   const [showNewModal, setShowNewModal] = useState(false);
   /** Groupe dans lequel créer le prochain dessin (null = hors groupe). */
   const [newDrawingGroup, setNewDrawingGroup] = useState<string | null>(null);
   const [activeGroups, setActiveGroups] = useState<string[]>([]);
-  const [pendingGroup, setPendingGroup] = useState<{ sourceId: string; targetId: string } | null>(null);
+  const [pendingGroup, setPendingGroup] = useState<{ sourceId: string; targetId: string } | null>(
+    null
+  );
   const [isContentDragOver, setIsContentDragOver] = useState(false);
   const [inviteTarget, setInviteTarget] = useState<InviteTarget | null>(null);
   const [showProfile, setShowProfile] = useState(false);
@@ -107,7 +124,7 @@ export function Gallery() {
     // Le dessin existe déjà : un échec ici ne doit pas inviter à recréer (doublon).
     if (newDrawingGroup) {
       await moveToGroup(newDrawing.id, newDrawingGroup).catch(() =>
-        snackbar.show('Dessin créé hors du groupe'),
+        snackbar.show('Dessin créé hors du groupe')
       );
     }
     navigate(`/editor/${newDrawing.id}`);
@@ -123,7 +140,7 @@ export function Gallery() {
     setIsScrolled((prev) =>
       prev
         ? !(el.scrollTop === 0 && overflow > SCROLL_EXPAND_MIN_OVERFLOW)
-        : el.scrollTop > SCROLL_COMPACT_THRESHOLD,
+        : el.scrollTop > SCROLL_COMPACT_THRESHOLD
     );
   };
 
@@ -142,204 +159,242 @@ export function Gallery() {
   const ownsGroup = (g: DrawingGroup) => g.drawings.some((d) => d.owner_id === currentUserId);
   const hasContent = drawings.length > 0;
   const openGroups = useMemo(
-    () => activeGroups
-      .map((name) => groups.find((g) => g.name === name))
-      .filter((g): g is DrawingGroup => g !== undefined),
-    [activeGroups, groups],
+    () =>
+      activeGroups
+        .map((name) => groups.find((g) => g.name === name))
+        .filter((g): g is DrawingGroup => g !== undefined),
+    [activeGroups, groups]
   );
 
+  const openNewDrawing = () => {
+    setNewDrawingGroup(null);
+    setShowNewModal(true);
+  };
+  const countLabel = `${String(drawings.length).padStart(2, '0')} dessin${drawings.length > 1 ? 's' : ''}`;
+
   return (
-    <main className={styles.gallery}>
+    <div className={styles.page}>
       <SnakeCanvas onModeChange={setSnakeActive} />
-      <div className={styles.version}>v{__APP_VERSION__}</div>
       <div className={cx(styles.galleryBody, snakeActive && styles.galleryBodyDimmed)}>
-      <a className="skip-link" href="#gallery-content">Aller au contenu</a>
-      <header className={cx(styles.header, isScrolled && styles.headerCompact)}>
-        <div className={styles.titleGroup}>
-          <h1 className={cx(styles.title, isScrolled && styles.titleCompact)}>Pixel<br />Perfect</h1>
-        </div>
-        <div className={styles.headerActions}>
-          {isAuth ? (
-            <>
-              <Button variant="ghost" onClick={() => setShowProfile(true)}>
-                Profil
+        <a className="skip-link" href="#gallery-content">
+          Aller au contenu
+        </a>
+        <GalleryDock
+          isAuth={isAuth}
+          onImport={() => fileInputRef.current?.click()}
+          onExport={handleExport}
+          onLogin={() => navigate('/login')}
+          onProfile={() => setShowProfile(true)}
+          onSignOut={() => void signOut()}
+        />
+
+        <main className={styles.gallery}>
+          <header className={cx(styles.header, isScrolled && styles.headerCompact)}>
+            <h1 className={cx(styles.title, isScrolled && styles.titleCompact)}>
+              <span>Pixel</span>
+              <span className={styles.titleLast}>Perfect</span>
+            </h1>
+            <div className={styles.headerAside}>
+              <dl className={cx(styles.meta, isScrolled && styles.metaHidden)}>
+                <dt>Bibliothèque</dt>
+                <dd>{countLabel}</dd>
+                <dt>Stockage</dt>
+                <dd>{isAuth ? 'Compte' : 'Cet appareil'}</dd>
+                <dt>Export</dt>
+                <dd>PNG · SVG · JSON</dd>
+                <dt>Version</dt>
+                <dd>{__APP_VERSION__}</dd>
+              </dl>
+              <Button
+                variant="primary"
+                iconLeft="add"
+                aria-haspopup="dialog"
+                onClick={openNewDrawing}
+              >
+                Nouveau dessin
               </Button>
-              <Button variant="ghost" onClick={() => void signOut()}>
-                Déconnexion
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button variant="ghost" onClick={handleExport}>
-                Exporter
-              </Button>
-              <Button variant="ghost" onClick={() => fileInputRef.current?.click()}>
-                Importer
-              </Button>
-              <Button variant="ghost" onClick={() => navigate('/login')}>
-                Se connecter
-              </Button>
-            </>
+            </div>
+          </header>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            className={styles.hiddenInput}
+            onChange={(e) => void handleImportFile(e)}
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+
+          {showNewModal && (
+            <NewDrawingModal onClose={() => setShowNewModal(false)} onConfirm={handleCreate} />
           )}
-          <Button variant="primary" onClick={() => { setNewDrawingGroup(null); setShowNewModal(true); }}>
-            Nouveau dessin
-          </Button>
-        </div>
-      </header>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="application/json,.json"
-        className={styles.hiddenInput}
-        onChange={(e) => void handleImportFile(e)}
-        aria-hidden="true"
-        tabIndex={-1}
-      />
+          <div
+            id="gallery-content"
+            className={styles.scroller}
+            onScroll={handleContentScroll}
+            onWheel={(e) => {
+              if (e.deltaY < 0) expandIfAtTop(e.currentTarget);
+            }}
+            onTouchStart={(e) => {
+              touchStartY.current = e.touches[0]?.clientY ?? 0;
+            }}
+            onTouchMove={(e) => {
+              const y = e.touches[0]?.clientY;
+              if (y !== undefined && y - touchStartY.current > TOUCH_EXPAND_DISTANCE) {
+                expandIfAtTop(e.currentTarget);
+              }
+            }}
+          >
+            {status === 'loading' && <GalleryLoading />}
+            {status === 'error' && <GalleryError message={errorMsg} onRetry={reload} />}
+            {status === 'idle' && !hasContent && <GalleryEmpty onCreate={openNewDrawing} />}
 
-      {showNewModal && (
-        <NewDrawingModal
-          onClose={() => setShowNewModal(false)}
-          onConfirm={handleCreate}
-        />
-      )}
+            {hasContent && (
+              <section
+                aria-label="Mes dessins"
+                className={cx(styles.content, isContentDragOver && styles.contentDropTarget)}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsContentDragOver(true);
+                }}
+                onDragLeave={() => setIsContentDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsContentDragOver(false);
+                  const drawingId = e.dataTransfer.getData('text/plain');
+                  const drawing = drawings.find((d) => d.id === drawingId);
+                  if (drawing?.group) handleRemoveFromGroup(drawingId);
+                }}
+              >
+                {groups.map((g) => (
+                  <GroupCard
+                    key={g.name}
+                    name={g.name}
+                    drawings={g.drawings}
+                    onOpen={() =>
+                      setActiveGroups((arr) => (arr.includes(g.name) ? arr : [...arr, g.name]))
+                    }
+                    onDropDrawing={(drawingId) => handleMoveToGroup(drawingId, g.name)}
+                    onShare={
+                      isAuth && ownsGroup(g)
+                        ? () => setInviteTarget({ kind: 'group', name: g.name })
+                        : undefined
+                    }
+                    onRename={(newName) => renameGroupAndOpenModals(g.name, newName)}
+                    onUngroup={() => handleUngroupAll(g.name)}
+                    onDelete={ownsGroup(g) ? () => setGroupToDelete(g.name) : undefined}
+                    existingGroupNames={groups.map((x) => x.name)}
+                  />
+                ))}
+                {ungrouped.map((d, i) => {
+                  const isOwner = currentUserId !== null && d.owner_id === currentUserId;
+                  return (
+                    <DrawingCard
+                      key={d.id}
+                      drawing={d}
+                      index={i}
+                      isOwner={isOwner}
+                      onClick={() => navigate(`/editor/${d.id}`)}
+                      onRename={(title) => handleRename(d.id, title)}
+                      onDelete={isOwner ? () => handleDelete(d.id) : undefined}
+                      onInvite={
+                        isAuth && isOwner
+                          ? () => setInviteTarget({ kind: 'drawing', id: d.id, title: d.title })
+                          : undefined
+                      }
+                      onCollaboratorRemoved={() => handleCollaboratorRemoved(d.id)}
+                      onDropDrawing={(sourceId) => setPendingGroup({ sourceId, targetId: d.id })}
+                    />
+                  );
+                })}
+              </section>
+            )}
 
-      {status === 'loading' && (
-        <div className={styles.state} role="status" aria-live="polite">Chargement…</div>
-      )}
-      {status === 'error' && (
-        <div className={styles.stateError} role="alert">
-          {errorMsg}
-          <Button variant="ghost" size="sm" onClick={reload}>Réessayer</Button>
-        </div>
-      )}
-      {status === 'idle' && !hasContent && (
-        <div className={styles.state}>Aucun dessin pour le moment.</div>
-      )}
+            <footer className={styles.footer}>
+              <span>Planche 1 / 1 — PixelPerfect</span>
+              <span className={styles.strip} aria-hidden="true">
+                {DECO_STRIP_KEYS.map((k) => <span key={k} />)}
+              </span>
+            </footer>
+          </div>
+        </main>
+        {groupToDelete !== null && (
+          <ConfirmModal
+            message={`Supprimer définitivement vos dessins du groupe « ${groupToDelete} » ?`}
+            confirmLabel="Supprimer"
+            onCancel={() => setGroupToDelete(null)}
+            onConfirm={() => {
+              handleDeleteGroup(groupToDelete);
+              setGroupToDelete(null);
+            }}
+          />
+        )}
 
-      {hasContent && (
-        <div
-          id="gallery-content"
-          className={cx(styles.content, isContentDragOver && styles.contentDropTarget)}
-          onScroll={handleContentScroll}
-          onWheel={(e) => { if (e.deltaY < 0) expandIfAtTop(e.currentTarget); }}
-          onTouchStart={(e) => { touchStartY.current = e.touches[0]?.clientY ?? 0; }}
-          onTouchMove={(e) => {
-            const y = e.touches[0]?.clientY;
-            if (y !== undefined && y - touchStartY.current > TOUCH_EXPAND_DISTANCE) {
-              expandIfAtTop(e.currentTarget);
+        {pendingGroup && (
+          <NewGroupModal onClose={() => setPendingGroup(null)} onConfirm={handleCreateGroup} />
+        )}
+
+        {openGroups.map((g) => (
+          <GroupModal
+            key={g.name}
+            name={g.name}
+            drawings={g.drawings}
+            currentUserId={currentUserId}
+            onClose={() => setActiveGroups((arr) => arr.filter((n) => n !== g.name))}
+            onCardClick={(id) => navigate(`/editor/${id}`)}
+            onShare={
+              isAuth && ownsGroup(g)
+                ? () => setInviteTarget({ kind: 'group', name: g.name })
+                : undefined
             }
-          }}
-          onDragOver={(e) => { e.preventDefault(); setIsContentDragOver(true); }}
-          onDragLeave={() => setIsContentDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setIsContentDragOver(false);
-            const drawingId = e.dataTransfer.getData('text/plain');
-            const drawing = drawings.find((d) => d.id === drawingId);
-            if (drawing?.group) handleRemoveFromGroup(drawingId);
-          }}
-        >
-          {groups.map((g) => (
-            <GroupCard
-              key={g.name}
-              name={g.name}
-              drawings={g.drawings}
-              onOpen={() => setActiveGroups((arr) => (arr.includes(g.name) ? arr : [...arr, g.name]))}
-              onDropDrawing={(drawingId) => handleMoveToGroup(drawingId, g.name)}
-              onShare={isAuth && ownsGroup(g) ? () => setInviteTarget({ kind: 'group', name: g.name }) : undefined}
-              onRename={(newName) => renameGroupAndOpenModals(g.name, newName)}
-              onUngroup={() => handleUngroupAll(g.name)}
-              onDelete={ownsGroup(g) ? () => setGroupToDelete(g.name) : undefined}
-              existingGroupNames={groups.map((x) => x.name)}
-            />
-          ))}
-          {ungrouped.map((d) => {
-            const isOwner = currentUserId !== null && d.owner_id === currentUserId;
-            return (
-              <DrawingCard
-                key={d.id}
-                drawing={d}
-                isOwner={isOwner}
-                onClick={() => navigate(`/editor/${d.id}`)}
-                onRename={(title) => handleRename(d.id, title)}
-                onDelete={isOwner ? () => handleDelete(d.id) : undefined}
-                onInvite={isAuth && isOwner ? () => setInviteTarget({ kind: 'drawing', id: d.id, title: d.title }) : undefined}
-                onCollaboratorRemoved={() => handleCollaboratorRemoved(d.id)}
-                onDropDrawing={(sourceId) => setPendingGroup({ sourceId, targetId: d.id })}
-              />
-            );
-          })}
-        </div>
-      )}
-
-      {groupToDelete !== null && (
-        <ConfirmModal
-          message={`Supprimer définitivement vos dessins du groupe « ${groupToDelete} » ?`}
-          confirmLabel="Supprimer"
-          onCancel={() => setGroupToDelete(null)}
-          onConfirm={() => {
-            handleDeleteGroup(groupToDelete);
-            setGroupToDelete(null);
-          }}
-        />
-      )}
-
-      {pendingGroup && (
-        <NewGroupModal
-          onClose={() => setPendingGroup(null)}
-          onConfirm={handleCreateGroup}
-        />
-      )}
-
-      {openGroups.map((g) => (
-        <GroupModal
-          key={g.name}
-          name={g.name}
-          drawings={g.drawings}
-          currentUserId={currentUserId}
-          onClose={() => setActiveGroups((arr) => arr.filter((n) => n !== g.name))}
-          onCardClick={(id) => navigate(`/editor/${id}`)}
-          onShare={isAuth && ownsGroup(g) ? () => setInviteTarget({ kind: 'group', name: g.name }) : undefined}
-          onSharingChanged={refetchSilent}
-          onNewDrawing={() => { setNewDrawingGroup(g.name); setShowNewModal(true); }}
-          onRename={handleRename}
-          onDelete={handleDelete}
-          onRemoveFromGroup={handleRemoveFromGroup}
-          onInvite={isAuth ? (d) => setInviteTarget({ kind: 'drawing', id: d.id, title: d.title }) : undefined}
-          onCollaboratorRemoved={handleCollaboratorRemoved}
-        />
-      ))}
-
-      {inviteTarget && (
-        <InviteCollaboratorModal
-          target={inviteTarget}
-          onClose={() => setInviteTarget(null)}
-          onInvited={(_userId, handle) => {
-            if (inviteTarget.kind === 'group') {
-              // Le backfill serveur partage tous les dessins du groupe d'un coup : on relit.
-              refetchSilent();
-              snackbar.show(`Groupe partagé avec ${handle}`, { icon: 'collaborators' });
-              return;
+            onSharingChanged={refetchSilent}
+            onNewDrawing={() => {
+              setNewDrawingGroup(g.name);
+              setShowNewModal(true);
+            }}
+            onRename={handleRename}
+            onDelete={handleDelete}
+            onRemoveFromGroup={handleRemoveFromGroup}
+            onInvite={
+              isAuth
+                ? (d) => setInviteTarget({ kind: 'drawing', id: d.id, title: d.title })
+                : undefined
             }
-            const id = inviteTarget.id;
-            setDrawings((prev) =>
-              prev.map((d) =>
-                d.id === id ? { ...d, collaborator_count: d.collaborator_count + 1 } : d,
-              ),
-            );
-            snackbar.show(`${handle} a été invité`, { icon: 'collaborators' });
-          }}
-        />
-      )}
+            onCollaboratorRemoved={handleCollaboratorRemoved}
+          />
+        ))}
 
-      {showProfile && (
-        <ProfileModal
-          onClose={() => setShowProfile(false)}
-          onUpdated={(p) => snackbar.show(`Pseudo mis à jour : ${p.username}`)}
-        />
-      )}
+        {inviteTarget && (
+          <InviteCollaboratorModal
+            target={inviteTarget}
+            onClose={() => setInviteTarget(null)}
+            onInvited={(_userId, handle) => {
+              if (inviteTarget.kind === 'group') {
+                // Le backfill serveur partage tous les dessins du groupe d'un coup : on relit.
+                refetchSilent();
+                snackbar.show(`Groupe partagé avec ${handle}`, { icon: 'collaborators' });
+                return;
+              }
+              const id = inviteTarget.id;
+              setDrawings((prev) =>
+                prev.map((d) =>
+                  d.id === id ? { ...d, collaborator_count: d.collaborator_count + 1 } : d
+                )
+              );
+              snackbar.show(`${handle} a été invité`, { icon: 'collaborators' });
+            }}
+          />
+        )}
+
+        {showProfile && (
+          <ProfileModal
+            onClose={() => setShowProfile(false)}
+            onUpdated={(p) => snackbar.show(`Pseudo mis à jour : ${p.username}`)}
+          />
+        )}
       </div>
-    </main>
+    </div>
   );
 }

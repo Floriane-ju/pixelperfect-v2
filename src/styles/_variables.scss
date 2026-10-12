@@ -1,74 +1,80 @@
-// ─────────────────────────────────────────────
-// Palette de couleurs
-// Nomenclature : {groupe}-{teinte}
-// ─────────────────────────────────────────────
-
-// Neutral (gris)
-$neutral-0:    #FFFFFF;
-$neutral-400:  #AEAEAE;
-$neutral-500:  #8C8C8C;
-$neutral-700:  #4A4A4A;
-$neutral-1000: #000000;
-
-// Aliases pour compatibilité
-$color-white: $neutral-0;
-$color-black: $neutral-1000;
-
-// Accent 1 (orange)
-$accent-1-300: #FFF7E5;
-$accent-1-350: #FFF5DE;
-$accent-1-400: #FEF2D6;
-$accent-1-450: #FEEBCF;
-$accent-1-500: #FDE1B5;
-$accent-1-550: #FEC27F;
-$accent-1-600: #FEA348;
-$accent-1-650: #F79238;
-$accent-1-700: #F08028;
-$accent-1-750: #DC6E1C;
-$accent-1-800: #C85C10;
-
-// Accent 2 (violet)
-$accent-2-300: #E4DEFF;
-$accent-2-350: #CDC2FF;
-$accent-2-400: #A394F8;
-$accent-2-450: #8F7DF3;
-$accent-2-500: #7D69EC;
-$accent-2-550: #725DE5;
-$accent-2-600: #6752DE; 
-$accent-2-650: #5D48D5;
-$accent-2-700: #513CCB;
-$accent-2-750: #4C39B7;
-$accent-2-800: #47389E;
+@use 'sass:string';
 
 // ─────────────────────────────────────────────
-// Couleurs sémantiques (mappées à la palette)
+// Direction 07 — « papier, encre, un rouge »
+// Un seul accent : le rouge signale l'action, l'actif et le focus.
 // ─────────────────────────────────────────────
-$color-bg:         $accent-1-500;
-$color-surface:    $neutral-0;
-$color-surface-2:  $neutral-400;
-$color-border:     $neutral-1000;
-$color-text:       $neutral-1000;
-$color-text-muted: $neutral-500;
 
-$color-primary:       $neutral-1000;
-$color-primary-hover: $neutral-500;
-$color-danger:        #cc2233;
-$color-danger-light:  #FF5577;
-$color-success:       #007700;
-$color-warning:       #bb7700;
+// Palette brute
+$paper:          #EFE9DD; // fond de page
+$paper-dot:      #D9CFBC; // trame (points tous les 16 px), gabarits de chargement
+$paper-surface:  #FBF8F2; // vignettes, menus, dialogues
+$paper-hover:    #E4DDCF; // survol clair, puces, pressé
+$paper-subtle:   #F3EEE4; // damier, survol de ligne
+$ink:            #111111; // texte, traits, ombres, dock
+$ink-2:          #6B675E; // méta, secondaire (4,7:1 sur papier)
+$ink-hover:      #2A2A2A; // survol sur encre
+$ink-pressed:    #000000; // pressé sur encre
+$ink-muted:      #A8A397; // texte discret sur encre
+$ink-divider:    #3A3833; // séparateur sur encre
+$red:            #D12E15; // action, actif, focus (blanc dessus 5,1:1)
+$red-pressed:    #A8240F;
+$white:          #FFFFFF;
+$black:          #000000;
+$gray:           #8C8C8C; // fond de toile « gris »
 
-// Checkerboard transparence (DrawingCard preview)
-$color-checker-light: #e8e8e8;
-$color-checker-dark:  $neutral-400;
-
-// Pixel grid overlay
-$color-grid: $neutral-700;
+// Aliases
+$color-white: $white;
+$color-black: $black;
 
 // ─────────────────────────────────────────────
-// Espacements (échelle 4 px)
+// Couleurs sémantiques
+// ─────────────────────────────────────────────
+$color-bg:            $paper;
+$color-bg-dot:        $paper-dot;
+$color-surface:       $paper-surface;
+$color-surface-hover: $paper-hover;
+$color-surface-subtle: $paper-subtle;
+$color-field:         $white;
+$color-border:        $ink;
+$color-text:          $ink;
+$color-text-muted:    $ink-2;
+
+$color-primary:         $red;
+$color-primary-pressed: $red-pressed;
+$color-on-primary:      $white;
+$color-danger:          $red;
+$color-focus:           $red;
+
+// Surfaces encre (dock, rails, barres de titre, snackbar)
+$color-ink-bg:      $ink;
+$color-ink-text:    $paper;
+$color-ink-muted:   $ink-muted;
+$color-ink-hover:   $ink-hover;
+$color-ink-pressed: $ink-pressed;
+$color-ink-divider: $ink-divider;
+
+// Voiles et survols translucides
+$color-hover-tint:   rgba($ink, 0.08);
+$color-pressed-tint: rgba($ink, 0.16);
+$color-scrim:        rgba($ink, 0.55);
+$color-selection-tint: rgba($red, 0.08);
+
+// Damier de transparence (aperçus, toile)
+$color-checker-light: $white;
+$color-checker-dark:  $paper-subtle;
+
+// Grille de pixels
+$color-grid: rgba($ink, 0.4);
+
+// Bande de couleurs décorative (pied de galerie)
+$deco-strip: ($ink, $red, #F5C542, #3FA36B, #3B82F6, #5B3FD9);
+
+// ─────────────────────────────────────────────
+// Espacements (grille de 8, demi-pas 4)
 // ─────────────────────────────────────────────
 $space-0:   0;
-$space-xxs:  2px;
+$space-xxs: 2px;
 $space-xs:  4px;
 $space-s:   8px;
 $space-sm:  12px;
@@ -78,74 +84,117 @@ $space-xl:  28px;
 $space-2xl: 32px;
 $space-3xl: 40px;
 $space-4xl: 48px;
+$space-5xl: 56px;
+$space-6xl: 64px;
 
 // ─────────────────────────────────────────────
 // Typographie
 // ─────────────────────────────────────────────
-$font-family-base:    'Oxanium', sans-serif;
-$font-family-display: 'Press Start 2P', cursive;
-$font-family-mono:    'Oxanium', monospace;
+$font-family-base:    'Archivo', system-ui, sans-serif;
+$font-family-display: 'Silkscreen', monospace;
+$font-family-mono:    'Space Mono', ui-monospace, monospace;
 
+$font-size-3xs:     9px;
+$font-size-2xs:     10px;
 $font-size-xs:      11px;
-$font-size-sm:      12px;
+$font-size-sm:      13px;
+$font-size-base:    15px;
 $font-size-md:      16px;
 $font-size-lg:      18px;
 $font-size-xl:      22px;
-$font-size-2xl:     24px;
+$font-size-2xl:     32px;
+$font-size-3xl:     40px;
 $font-size-display: 56px;
-$font-size-display-compact: 28px;
+$font-size-display-compact: 32px;
+$font-size-logo-min: 48px;
+$font-size-logo-fluid: 7.2vw;
+$font-size-logo-max: 112px;
 
 $font-weight-regular:  400;
 $font-weight-medium:   500;
 $font-weight-semibold: 600;
 $font-weight-bold:     700;
 
+$line-height-tight:   0.9;
+$line-height-xs:      16px;
+$line-height-sm:      24px;
+$line-height-md:      32px;
+$line-height-lg:      40px;
+$line-height-relaxed: 1.5;
+
+$letter-spacing-caps:  0.06em;
+$letter-spacing-logo: -0.02em;
+
 // ─────────────────────────────────────────────
-// Outline
+// Traits et focus
 // ─────────────────────────────────────────────
 $outline-width:       2px;
 $outline-width-thin:  1px;
-$outline-width-thick: 3px;
-$outline-offset:      2px;
+$outline-width-thick: 4px;
+$outline-offset:      4px;
 $outline-offset-lg:   6px;
 
-// ─────────────────────────────────────────────
-// Typographie fine
-// ─────────────────────────────────────────────
-$letter-spacing-caps: 1px;
+$border:        $outline-width solid $color-border;
+$border-thin:   $outline-width-thin solid $color-border;
+$border-dashed: $outline-width dashed $color-text-muted;
 
 // ─────────────────────────────────────────────
-// Opacity
+// Élévation (ombres dures, sans flou)
 // ─────────────────────────────────────────────
-$opacity-overlay:     0.6;
+$shadow-offset-raised: 4px;
+$shadow-offset-hover:  6px;
+$shadow-offset-layer:  8px;
+$lift-hover:  -2px; // l'objet monte vers la lumière
+$lift-press:   4px; // l'objet s'enfonce dans son ombre
+
+$shadow-raised: $shadow-offset-raised $shadow-offset-raised 0 0 $ink;
+$shadow-hover:  $shadow-offset-hover $shadow-offset-hover 0 0 $ink;
+$shadow-none:   0 0 0 0 $ink;
+$shadow-layer:  $shadow-offset-layer $shadow-offset-layer 0 0 $ink;
+$shadow-danger: $shadow-offset-raised $shadow-offset-raised 0 0 $red;
+$shadow-toast:  $shadow-offset-raised $shadow-offset-raised 0 0 $red;
+$shadow-row-selected: inset 0 0 0 $outline-width $ink;
+$shadow-swatch-selected: inset 0 0 0 $outline-width $white, inset 0 0 0 $outline-width-thick $ink;
+
+// ─────────────────────────────────────────────
+// Motifs pixel
+// ─────────────────────────────────────────────
+$pattern-dot-size:    16px;
+$pattern-checker-size: 8px;
+$pattern-scrim-size:  4px;
+$pixel-mark:          8px;  // point carré (fin de titre, puce)
+$pixel-corner:        4px;  // coins de coupe (3 pixels de 4)
+
+// ─────────────────────────────────────────────
+// Opacité
+// ─────────────────────────────────────────────
+$opacity-disabled:    0.4;
+$opacity-overlay:     0.55;
 $opacity-drop-target: 0.4;
 $opacity-bg-tint:     0.1;
 $opacity-bg-subtle:   0.08;
 
 // ─────────────────────────────────────────────
-// Interlignes
-// ─────────────────────────────────────────────
-$line-height-relaxed: 1.5;
-
-// ─────────────────────────────────────────────
-// Touch target
+// Cibles tactiles et contrôles
 // ─────────────────────────────────────────────
 $touch-target: 44px;
+$control-sm:   40px;
+$control-md:   48px;
+$control-lg:   56px;
 
-// ─────────────────────────────────────────────
-// Composants
-// ─────────────────────────────────────────────
-$size-slider-thumb: 18px;
+$size-slider-thumb:      24px;
+$size-slider-thumb-w:    12px;
+$size-slider-track:      4px;
 $size-slider-max-height: 300px;
-$size-cursor-sv:    14px;
-$size-swatch:       28px;
+$size-cursor-sv:         14px;
+$size-swatch:            24px;
 
 // Switch (toggle)
-$switch-width:  $space-3xl; // 40
-$switch-height: $space-l;   // 24
-$switch-thumb:  $space-m;   // 16
-$switch-pad:    $space-xxs; // 2
-$switch-travel: calc(#{$switch-width} - #{$switch-thumb} - 2 * #{$switch-pad});
+$switch-width:  $control-md; // 48
+$switch-height: $space-l;    // 24
+$switch-thumb:  $space-m;    // 16
+$switch-pad:    $space-xxs;  // 2
+$switch-travel: calc(#{$switch-width} - #{$switch-thumb} - 2 * #{$switch-pad} - 2 * #{$outline-width});
 
 // Pipette long-press
 $pipette-hold-duration:      500ms;
@@ -153,93 +202,37 @@ $pipette-indicator-delay:    200ms;
 $pipette-indicator-duration: 300ms; // hold - delay
 $pipette-indicator-size:     40px;
 $pipette-indicator-stroke:   3px;
-$pipette-indicator-track:    rgba($color-black, 0.35);
+$pipette-indicator-track:    rgba($ink, 0.35);
 
-// Selection (rectangular)
-$selection-fill:           $accent-1-500;
-$selection-fill-opacity:   0.15;
-$selection-stroke:         $color-black;
+// Sélection rectangulaire (fourmis)
+$selection-fill:           $red;
+$selection-fill-opacity:   0.08;
+$selection-stroke:         $ink;
 $selection-stroke-width:   1;
-$selection-dasharray:      4 3;
-$selection-dash-cycle:     -7;
+$selection-dasharray:      4 4;
+$selection-dash-cycle:     -8;
 $selection-anim-duration:  600ms;
 
 // Menus et popovers
 $menu-min-width-sm: 160px;
-$menu-min-width:    220px;
+$menu-min-width:    208px;
 $menu-min-width-lg: 240px;
 $menu-max-height:   240px;
 
 // Dialogues centrés (Dialog) et modales flottantes (Modal)
-$dialog-width-sm:      320px;
-$dialog-width-md:      360px;
+$dialog-width-sm:      400px;
+$dialog-width-md:      480px;
 $modal-panel-width:    480px;
-$modal-panel-width-lg: 620px;
+$modal-panel-width-lg: 720px;
 
 // Sélecteur de couleur
-$picker-width:     316px;
+$picker-width:     304px;
 $picker-sv-height: 216px;
-$swatch-gap:       6px;
+$swatch-gap:       $space-xxs;
 
-// ─────────────────────────────────────────────
-// Motif damier
-// ─────────────────────────────────────────────
-$checker-size-sm: 6px;
+// Damier
+$checker-size-sm: $pattern-checker-size;
 $checker-size-lg: 24px;
-
-// ─────────────────────────────────────────────
-// Ombres
-// ─────────────────────────────────────────────
-
-//Shadows modales
-$shadow-modal:8px 8px 0 0 #{$accent-2-600}, inset 2px 2px 0 0 #{$accent-1-400};
-
-//Shadows selectables
-$shadow-selectable:2px 2px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-400};
-$shadow-selectable-hover: 4px 4px 0 0 #{$accent-1-600}, inset 2px 2px 0 0 #{$accent-1-300};
-$shadow-selectable-active: inset -2px -2px 0 0 #{$accent-1-400}, inset 2px 2px 0 0 #{$accent-1-600};
-
-$shadow-selected:inset -2px -2px 0 0 #{$accent-2-400}, inset 2px 2px 0 0 #{$accent-2-600};
-$shadow-selected-hover: inset -2px -2px 0 0 #{$accent-2-300}, inset 2px 2px 0 0 #{$accent-2-600};
-$shadow-selected-active: inset -2px -2px 0 0 #{$accent-2-300}, inset 2px 2px 0 0 #{$accent-2-600};
-
-// Rows (layer panel, list rows)
-$shadow-row-selected: inset 4px 4px 0 0 #{$accent-1-600}, inset -4px -4px 0 0 #{$accent-1-400};
-$color-row-selected-bg:   $accent-1-500;
-$color-row-selected-text: $accent-1-600;
-
-//Inner shadows interactive accent 1
-$inner-shadow-interactive-1:inset 2px 2px 0 0 #{$accent-1-400};
-$inner-shadow-interactive-1-hover:inset 2px 2px 0 0 #{$accent-1-300};
-$inner-shadow-interactive-1-active:inset 2px 2px 0 0 #{$accent-1-600}, inset -2px -2px 0 0 #{$accent-1-400};
-
-//Inner shadows interactive accent 2
-$inner-shadow-interactive-2:inset 2px 2px 0 0 #{$accent-2-400};
-$inner-shadow-interactive-2-hover:inset 2px 2px 0 0 #{$accent-2-300};
-$inner-shadow-interactive-2-active:inset 2px 2px 0 0 #{$accent-2-600}, inset -2px -2px 0 0 #{$accent-2-400};
-
-//Drop shadow des panneaux flottants (éditeur)
-$drop-shadow-panel: 8px 8px 0 0 #{$accent-1-600};
-
-//Drop shadows interactive
-$drop-shadow-interactive:8px 8px 0 0 #{$accent-2-600};
-$drop-shadow-interactive-hover:16px 16px 0 0 #{$accent-2-600};
-$drop-shadow-interactive-active:0px 0px 0 0 #{$accent-2-600};
-
-// Button primary shadows
-$shadow-btn-primary:        4px 4px 0 0 #{$accent-1-500}, 8px 8px 0 0 #{$accent-1-600};
-$shadow-btn-primary-hover:  8px 8px 0 0 #{$accent-1-500}, 16px 16px 0 0 #{$accent-1-600};
-$shadow-btn-primary-active: 0px 0px 0 0 #{$accent-1-500}, 0px 0px 0 0 #{$accent-1-600};
-
-// Display text shadow
-$text-shadow-display: 4px 4px 0 #{$accent-1-400}, 8px 8px 0 #{$accent-1-600};
-
-//Border
-$border-m-accent-1:2px solid $accent-1-600;
-$border-s-accent-1:1px solid $accent-1-600;
-
-$border-m-accent-2:2px solid $accent-2-600;
-$border-s-accent-2:1px solid $accent-2-600;
 
 // ─────────────────────────────────────────────
 // Z-index
@@ -250,38 +243,71 @@ $z-popover:       250;
 $z-toast:         300;
 $z-snake-dormant:  -1;
 $z-snake-bg:        0;
-$z-raised:          1; // Elements raised above flow (hover states, drop indicators)
+$z-raised:          1;
 $z-gallery:         1;
 $z-snake-hint:     10;
 $z-snake-active:  400;
 $z-snake-gameover: 500;
 
 // ─────────────────────────────────────────────
-// Transitions
+// Mouvement — 120 ms pour tout (ombre, translation, fond)
 // ─────────────────────────────────────────────
 $transition-fast: 120ms ease;
-$transition-base: 200ms ease;
+$transition-base: 120ms ease;
+$duration-toast-in: 160ms;
+$duration-ants:     600ms;
+$duration-hold:     500ms;
 
 // ─────────────────────────────────────────────
 // Breakpoints
 // ─────────────────────────────────────────────
+$bp-phone:   640px;
 $bp-tablet:  768px;
 $bp-desktop: 1024px;
 
 // ─────────────────────────────────────────────
 // Layout
 // ─────────────────────────────────────────────
-$header-height: 56px;
-$toolbar-width: 64px;
-$btn-height:    40px;
-$icon-size:     24px;
-$card-width:    206px;
-$thumb-gap:     6px;
-$layer-panel-width:    360px;
+$dock-width:      64px;
+$header-height:   80px;
+$toolbar-width:   $dock-width;
+$status-height:   40px;
+$btn-height:      $control-md;
+$icon-size:       24px;
+$icon-size-sm:    16px;
+$card-width:      240px;
+$card-min-width:  240px;
+$card-ratio:      string.unquote('5 / 4');
+$thumb-gap:       $space-s;
+$layer-panel-width:    336px;
 $layer-thumb-size:     40px;
 $layer-row-max-height: 320px;
 $drop-indicator-height: $outline-width-thick;
-$gallery-max-width:       1200px;
+$gallery-max-width:       1280px;
+$page-gutter:             64px;
+$page-gutter-fluid:       4vw;
+$grid-gap-x:              32px;
+$grid-gap-y:              48px;
 $card-confirm-min-height: 100px;
-$dimension-input-width:   64px;
-$ref-panel-width:         240px;
+$dimension-input-width:   96px;
+$ref-panel-width:         320px;
+$popover-width:           320px;
+
+// ─── Éditeur ───
+$brush-preview-size:       80px;  // vignette damier du popover pinceau
+$editor-layer-panel-width: 384px;
+$editor-micro-font:        8px;   // badge de taille sur l'outil, intitulés du rail couleurs
+$editor-hold-steps:        6;     // barre d'appui long : 6 pas, comme les pixels de chargement
+$editor-dot:               $space-xs; // pastille rouge « actif » sur un bouton
+$editor-corner-inset:      $space-m;  // coins de coupe autour de la zone de dessin
+$color-grid-on-dark:      rgba($white, 0.4); // grille sur fond de toile noir
+
+// ─── Galerie ───
+$logo-mark-size:       0.16em; // point rouge du logo, proportionnel au titre
+$logo-mark-gap:        0.08em;
+$logo-mark-offset:     0.06em;
+$opacity-dimmed:       0.8;    // galerie derrière le snake actif
+$group-card-min-width: 176px;  // vignettes dans la modale de groupe
+$empty-canvas-width:   160px;  // toile vide de l'état « aucun dessin »
+$skeleton-name-width:  72%;
+$loading-cycle:        1200ms; // barre de 6 pixels du chargement

@@ -1,54 +1,83 @@
 .wrapper {
   display: flex;
   flex-direction: column;
+  gap: $space-m;
+}
+
+.summary {
+  display: flex;
   align-items: center;
-  gap: $space-s;
-  height: 100%;
-  max-height: $size-slider-max-height;
-  min-height: 0;
+  gap: $space-m;
+}
+
+.preview {
+  flex-shrink: 0;
+  display: grid;
+  place-content: center;
+  width: $brush-preview-size;
+  height: $brush-preview-size;
+  border: $border;
+  @include checker;
+}
+
+.previewDot {
+  display: block;
+  min-width: $space-xs;
+  min-height: $space-xs;
+  background: $color-text;
+}
+
+.readout {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
 }
 
 .value {
+  display: flex;
+  align-items: baseline;
+  gap: $space-s;
+  font-family: $font-family-display;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-3xl;
+  line-height: $line-height-lg;
+}
+
+.unit {
   font-family: $font-family-mono;
+  font-weight: $font-weight-regular;
   font-size: $font-size-sm;
-  color: $color-text;
-  font-weight: $font-weight-semibold;
-  min-width: $btn-height;
-  text-align: center;
 }
 
-.track {
-  position: relative;
-  width: $space-sm;
-  flex: 1;
-  min-height: 0;
-  background: $neutral-0;
-  border: $border-m-accent-2;
-  touch-action: none;
-  cursor: pointer;
+.hint {
+  font-family: $font-family-mono;
+  font-size: $font-size-2xs;
+  line-height: $line-height-xs;
+  color: $color-text-muted;
+}
 
-  &:focus-visible {
-    outline: $outline-width solid $accent-1-400;
-    outline-offset: $outline-offset;
+.range {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+}
+
+.bounds {
+  display: flex;
+  justify-content: space-between;
+  font-family: $font-family-mono;
+  font-size: $font-size-2xs;
+  color: $color-text-muted;
+}
+
+.presets {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: $space-s;
+
+  > * {
+    padding: 0;
+    font-family: $font-family-mono;
+    font-weight: $font-weight-bold;
   }
-}
-
-.fill {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: $accent-1-400;
-  pointer-events: none;
-}
-
-.thumb {
-  position: absolute;
-  left: 50%;
-  width: $size-slider-thumb;
-  height: $size-slider-thumb;
-  background: $accent-1-500;
-  border: $border-m-accent-2;
-  transform: translate(-50%, 50%);
-  pointer-events: none;
 }

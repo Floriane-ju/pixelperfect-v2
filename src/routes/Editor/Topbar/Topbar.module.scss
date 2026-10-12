@@ -1,110 +1,172 @@
 .topbar {
   position: relative;
+  z-index: $z-dropdown;
+  flex-shrink: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: $space-sm;
-  padding: $space-sm;
-  padding-top: max(#{$space-sm}, env(safe-area-inset-top));
-  flex-shrink: 0;
+  gap: $space-m $space-l;
+  min-height: $header-height;
+  padding: $space-s $space-l;
+  padding-top: max(#{$space-s}, env(safe-area-inset-top));
+  border-bottom: $border;
+
+  @include phone-only {
+    padding: $space-s $space-m;
+  }
 }
 
-.leftSection {
+.identity {
   display: flex;
   align-items: center;
-  gap: $space-sm;
-  flex-shrink: 0;
-  flex: 1;
+  gap: $space-s;
   min-width: 0;
+}
+
+.back {
+  flex-shrink: 0;
+  margin-left: -$space-sm;
 }
 
 .titleGroup {
   display: flex;
   flex-direction: column;
+  gap: $space-xs;
   min-width: 0;
-  align-self: center;
+}
+
+.crumb {
+  @include text-meta;
+  color: $color-text-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crumbLink {
+  color: $color-text-muted;
+  text-decoration: underline;
+  text-underline-offset: $space-xxs;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: $space-m;
+  min-width: 0;
 }
 
 .titleText {
   margin: 0;
-  font-family: $font-family-display;
-  font-size: $font-size-md;
-  font-weight: $font-weight-regular;
-  line-height: 1;
-  color: $accent-2-700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.titleSize {
   font-family: $font-family-base;
-  font-size: $font-size-xs;
-  color: $accent-2-600;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-xl;
+  line-height: $line-height-md;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.rightSection {
-  display: flex;
-  align-items: center;
-  gap: $space-sm;
+.sizeChip {
   flex-shrink: 0;
-}
-
-.buttonGroup {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: $space-xs;
+  height: $space-l;
+  padding: 0 $space-s;
+  border: $border-thin;
+  font-family: $font-family-mono;
+  font-size: $font-size-xs;
+  white-space: nowrap;
 }
 
-// ── Layers panel ──────────────────────────────────────────────────────────────
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-m;
+}
 
-.layersContainer {
+.group {
+  display: flex;
+}
+
+.toggles {
+  display: flex;
+  gap: $space-s;
+}
+
+.separator {
+  width: $outline-width;
+  height: $space-2xl;
+  background: $color-border;
+}
+
+.slot {
   position: relative;
 }
 
-// ── Reference panel ───────────────────────────────────────────────────────────
-
-.refContainer {
-  position: relative;
-}
-
-.exportContainer {
-  position: relative;
-}
-
-.refPanel {
+.dot {
   position: absolute;
-  top: calc(100% + $space-s);
+  top: $space-xs + $outline-width;
+  right: $space-xs + $outline-width;
+  width: $editor-dot;
+  height: $editor-dot;
+  background: $color-primary;
+  pointer-events: none;
+}
+
+// ── Popover Référence ─────────────────────────────────────────────────────────
+
+.panel {
+  @include layer-surface;
+  position: absolute;
+  top: calc(100% + #{$space-m});
   right: 0;
-  background: $color-surface;
-  z-index: $z-dropdown;
-  width: $ref-panel-width;
-  padding: $space-sm;
+  z-index: $z-popover;
   display: flex;
   flex-direction: column;
-  gap: $space-sm;
+  gap: $space-m;
+  width: $ref-panel-width;
+  max-width: calc(100vw - #{$space-2xl});
+  padding: $space-m;
+}
+
+.panelTitle {
+  @include text-title($font-size-sm);
+  margin: 0;
+}
+
+.panelActions {
+  display: flex;
+  gap: $space-m;
+}
+
+.refEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: $card-ratio;
+  border: $border-dashed;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
 }
 
 .refError {
-  padding: $space-s $space-sm;
-  background: rgba($color-danger, $opacity-bg-tint);
-  color: $color-danger;
-  font-family: $font-family-base;
-  font-size: $font-size-xs;
-  line-height: 1.4;
   display: flex;
   align-items: center;
   gap: $space-s;
+  padding-left: $space-s;
+  border: $outline-width solid $color-danger;
+  color: $color-danger;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
 }
 
 .refErrorContent {
   flex: 1;
   min-width: 0;
 }
-
 
 .hiddenInput {
   @include hidden-input;

@@ -6,17 +6,15 @@
 }
 
 .menu {
+  @include layer-surface;
   position: fixed;
   z-index: $z-popover;
   display: flex;
   flex-direction: column;
   min-width: $menu-min-width-lg;
   margin: 0;
-  padding: $space-xxs;
+  padding: $space-s 0;
   list-style: none;
-  background: $accent-1-450;
-  border: $border-m-accent-2;
-  box-shadow: $inner-shadow-interactive-1;
 }
 
 .row {
@@ -30,11 +28,10 @@
   align-items: center;
   gap: $space-s;
   width: 100%;
-  padding: $space-l;
-  color: $accent-1-600;
+  min-height: $control-md;
+  padding: 0 $space-s 0 $space-m;
   font-family: $font-family-base;
-  font-size: $font-size-md;
-  font-weight: $font-weight-regular;
+  font-size: $font-size-base;
   text-align: left;
   @include no-select;
 }
@@ -47,41 +44,34 @@
 }
 
 .role {
+  @include text-meta;
   flex-shrink: 0;
-  padding: $space-xxs $space-s;
-  border: $border-s-accent-2;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  text-transform: uppercase;
-  letter-spacing: $letter-spacing-caps;
+  padding: 0 $space-s;
+  border: $border-thin;
 
   &[data-role='owner'] {
-    color: $accent-1-600;
-    background: $accent-1-500;
-  }
-
-  &[data-role='editor'] {
-    color: $accent-1-600;
-    background: transparent;
+    background: $color-ink-bg;
+    color: $color-ink-text;
   }
 }
 
 .state {
-  padding: $space-l;
-  color: $accent-1-600;
-  font-family: $font-family-base;
-  font-size: $font-size-md;
-  font-weight: $font-weight-regular;
+  display: flex;
+  align-items: center;
+  min-height: $control-md;
+  padding: 0 $space-m;
+  font-size: $font-size-base;
+  color: $color-text-muted;
   @include no-select;
 }
 
 .divider {
   display: block;
-  width: 100%;
   height: $outline-width-thin;
-  background: $accent-1-600;
+  margin: 0 $space-m;
+  background: $color-surface-hover;
 }
 
 .confirm {
-  padding: $space-l;
+  padding: $space-s $space-m;
 }

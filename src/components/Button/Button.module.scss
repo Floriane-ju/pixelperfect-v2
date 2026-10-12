@@ -1,13 +1,15 @@
-
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: $space-s;
+  border: $border;
   font-family: $font-family-base;
-  font-weight: $font-weight-bold;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-sm;
+  white-space: nowrap;
   transition: background-color $transition-fast, color $transition-fast,
-    box-shadow $transition-fast;
+    box-shadow $transition-fast, transform $transition-fast;
   cursor: pointer;
   @include no-select;
 
@@ -16,7 +18,7 @@
   }
 
   &:disabled {
-    opacity: 0.4;
+    opacity: $opacity-disabled;
     cursor: not-allowed;
   }
 }
@@ -36,96 +38,141 @@
   width: 100%;
 }
 
-// Variants
-.variant-primary {
-  background: $accent-2-600;
-  color: $accent-1-300;
-  box-shadow: $shadow-btn-primary;
+// ─── Variantes ───
 
-  &:hover:not(:disabled) {
-    box-shadow: $shadow-btn-primary-hover;
-  }
-
-  &:active:not(:disabled) {
-    box-shadow: $shadow-btn-primary-active;
-  }
-}
-
-.variant-secondary {
-  background: $accent-1-600;
-  color: $accent-2-600;
-}
-
-.variant-ghost {
-  background: transparent;
-  color: $accent-2-700;
-
-  &:hover:not(:disabled) {
-    color: $accent-2-600;
-  }
-}
-
-.variant-selected {
-  background: $accent-2-600;
-  color: $accent-1-300;
-  box-shadow: $shadow-selected;
-
-  &:hover:not(:disabled) {
-    box-shadow: $shadow-selected-hover;
-  }
-
-  &:active:not(:disabled) {
-    box-shadow: $shadow-selected-active;
-  }
-}
-
-.variant-selectable {
-  background: $accent-1-500;
-  color: $accent-2-500;
-  box-shadow: $shadow-selectable;
-  border:$border-s-accent-1;
-
-  &:hover:not(:disabled) {
-    box-shadow: $shadow-selectable-hover;
-  }
-
-  &:active:not(:disabled) {
-    box-shadow: $shadow-selectable-active;
-  }
-}
-
+/** Principal : rouge, ombre encre 4 px. */
+.variant-primary,
 .variant-danger {
-  background: $color-danger;
-  color: $color-white;
+  background: $color-primary;
+  color: $color-on-primary;
+  @include raised-interactive;
 
-  &:hover:not(:disabled) {
-    filter: brightness(1.1);
+  &:active:not(:disabled) {
+    background: $color-primary-pressed;
   }
 }
 
-// Sizes
+/** Secondaire : papier, ombre encre 4 px. */
+.variant-secondary {
+  background: $color-surface;
+  color: $color-text;
+  @include raised-interactive;
+
+  &:active:not(:disabled) {
+    background: $color-surface-hover;
+  }
+}
+
+/** Discret : sans cadre ; soulignement au survol (texte) ou voile (icône). */
+.variant-ghost {
+  border-color: transparent;
+  background: transparent;
+  color: $color-text;
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+    text-underline-offset: $space-xs;
+    text-decoration-thickness: $outline-width;
+  }
+
+  &:active:not(:disabled) {
+    background: $color-surface-hover;
+  }
+
+  &.iconOnly {
+    &:hover:not(:disabled) {
+      background: $color-hover-tint;
+    }
+
+    &:active:not(:disabled) {
+      background: $color-pressed-tint;
+    }
+  }
+}
+
+/** Puce / bascule au repos : papier encadré. */
+.variant-selectable {
+  background: $color-surface;
+  color: $color-text;
+
+  &:hover:not(:disabled) {
+    background: $color-surface-hover;
+  }
+
+  &:active:not(:disabled) {
+    background: $color-bg-dot;
+  }
+}
+
+/** Puce choisie / bascule ouverte : encre pleine. */
+.variant-selected {
+  background: $color-ink-bg;
+  color: $color-ink-text;
+
+  &:hover:not(:disabled) {
+    background: $color-ink-hover;
+    border-color: $color-ink-hover;
+  }
+}
+
+/** Sur fond encre : dock, rails, barres de titre. */
+.variant-ink {
+  border: 0;
+  background: transparent;
+  color: $color-ink-text;
+
+  &:hover:not(:disabled) {
+    background: $color-ink-hover;
+  }
+
+  &:active:not(:disabled) {
+    background: $color-ink-pressed;
+  }
+
+  &:focus-visible {
+    @include focus-ring(-$outline-width);
+  }
+
+  &[aria-pressed='true'],
+  &[aria-expanded='true'] {
+    background: $color-ink-text;
+    color: $color-ink-bg;
+  }
+
+  &[aria-current='page'] {
+    background: $color-primary;
+    color: $color-on-primary;
+  }
+}
+
+// ─── Tailles ───
 .size-sm {
-  height: $space-2xl;
-  padding: 0 $space-sm;
+  height: $control-sm;
+  padding: 0 $space-m;
   font-size: $font-size-sm;
 }
 
 .size-md {
-  height: $btn-height;
+  height: $control-md;
   padding: 0 $space-m;
-  font-size: $font-size-md;
+  font-size: $font-size-base;
 }
 
 .size-lg {
-  height: $space-4xl;
+  height: $control-md;
   padding: 0 $space-l;
-  font-size: $font-size-lg;
+  font-size: $font-size-base;
 }
 
-// Icon-only: carré, pas de padding
+/** Icône à gauche d'un libellé : padding droit plus large (cf. « + Nouveau dessin »). */
+.variant-primary:has(> .icon:first-child):has(> .label) {
+  padding-right: $space-l;
+}
+
+// Icon-only : carré, pas de padding
 .iconOnly {
   padding: 0;
-  &.size-sm { width: $space-2xl; }
-  &.size-md { width: $btn-height; }
-  &.size-lg { width: $space-4xl; }
+  &.size-sm { width: $control-sm; }
+  &.size-md { width: $control-md; }
+  &.size-lg { width: $control-lg; height: $control-lg; }
 }

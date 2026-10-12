@@ -1,0 +1,89 @@
+.rail {
+  position: relative;
+  z-index: $z-dropdown;
+  flex: 0 0 $dock-width;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-s;
+  width: $dock-width;
+  min-height: 0;
+  padding: $space-s 0;
+  @include safe-area-top;
+  @include safe-area-bottom;
+  background: $color-ink-bg;
+  color: $color-ink-text;
+
+  @include phone-only {
+    flex: 0 0 auto;
+    flex-direction: row;
+    width: 100%;
+    padding: $space-s;
+    @include safe-area-bottom;
+    overflow-x: auto;
+  }
+}
+
+.current {
+  flex-shrink: 0;
+  width: $control-sm;
+  height: $control-sm;
+  border: $outline-width solid $color-ink-text;
+}
+
+.hex {
+  font-family: $font-family-mono;
+  font-size: $font-size-3xs;
+  font-weight: $font-weight-bold;
+  line-height: $line-height-xs;
+}
+
+.pickerSlot {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.pickerTrigger {
+  @include ink-button;
+}
+
+.divider {
+  @include ink-divider;
+
+  @include phone-only {
+    width: $outline-width;
+    height: $space-2xl;
+  }
+}
+
+.heading {
+  font-family: $font-family-display;
+  font-size: $editor-micro-font;
+  line-height: $line-height-xs;
+  text-transform: uppercase;
+  color: $color-ink-muted;
+}
+
+@mixin swatch-column {
+  display: flex;
+  flex-direction: column;
+  gap: $swatch-gap;
+
+  @include phone-only {
+    flex-direction: row;
+  }
+}
+
+.swatches {
+  @include swatch-column;
+  flex-shrink: 0;
+}
+
+.swatchesScroll {
+  @include swatch-column;
+  flex: 0 1 auto;
+  min-height: 0;
+  padding: $space-xxs;
+  overflow-y: auto;
+  scrollbar-width: none;
+}

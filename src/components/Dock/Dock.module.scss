@@ -1,0 +1,88 @@
+.dock {
+  position: sticky;
+  top: 0;
+  z-index: $z-dropdown;
+  flex: 0 0 $dock-width;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-s;
+  width: $dock-width;
+  height: 100dvh;
+  padding: $space-s 0;
+  @include safe-area-top;
+  @include safe-area-bottom;
+  background: $color-ink-bg;
+  color: $color-ink-text;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.logo {
+  display: grid;
+  grid-template-columns: repeat(2, $pixel-mark);
+  grid-auto-rows: $pixel-mark;
+  margin: $space-s $space-m $space-m;
+}
+
+.logoRed {
+  background: $color-primary;
+}
+
+.logoPaper {
+  background: $color-ink-text;
+}
+
+.footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-s;
+}
+
+.version {
+  padding-bottom: $space-s;
+  font-family: $font-family-display;
+  font-size: $font-size-2xs;
+  line-height: $line-height-xs;
+  color: $color-ink-muted;
+}
+
+.divider {
+  @include ink-divider;
+}
+
+// Sur téléphone, le dock « responsive » devient la barre du haut.
+.layout-responsive {
+  @include phone-only {
+    position: sticky;
+    flex: 0 0 auto;
+    align-self: stretch;
+    flex-direction: row;
+    width: 100%;
+    height: auto;
+    padding: $space-s;
+    padding-top: max(#{$space-s}, env(safe-area-inset-top));
+    overflow: visible;
+
+    .logo {
+      margin: 0 $space-s;
+    }
+
+    .footer {
+      margin: 0 0 0 auto;
+      flex-direction: row;
+    }
+
+    .version {
+      padding: 0 $space-s;
+    }
+
+    .divider {
+      width: $outline-width;
+      height: $space-2xl;
+    }
+  }
+}

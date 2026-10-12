@@ -4,6 +4,7 @@ import { MembersMenu } from '@/components/MembersMenu';
 import { listGroupMembers, removeGroupMember } from '@/lib/groupSharing';
 import { ModalHeader } from '@/components/Modal';
 import { Button } from '@/components/Button';
+import { Icons } from '@/components/Icons';
 import { useModalA11y } from '@/hooks/useModalA11y';
 import { useDraggableModal } from '@/hooks/useDraggableModal';
 import { cx } from '@/lib/cx';
@@ -55,7 +56,10 @@ export function GroupModal({
   // les interactions avec la galerie derrière lui.
   useEffect(() => {
     const start = () => setIsDragging(true);
-    const end = () => { setIsDragging(false); setIsOverlayDragOver(false); };
+    const end = () => {
+      setIsDragging(false);
+      setIsOverlayDragOver(false);
+    };
     window.addEventListener('dragstart', start);
     window.addEventListener('dragend', end);
     // `dragend` ne part pas toujours : la carte source est retirée du DOM au drop.
@@ -72,10 +76,13 @@ export function GroupModal({
       className={cx(
         styles.overlay,
         isDragging && styles.overlayDragActive,
-        isOverlayDragOver && styles.overlayDropTarget,
+        isOverlayDragOver && styles.overlayDropTarget
       )}
       style={{ zIndex }}
-      onDragOver={(e) => { e.preventDefault(); setIsOverlayDragOver(true); }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsOverlayDragOver(true);
+      }}
       onDragLeave={() => setIsOverlayDragOver(false)}
       onDrop={(e) => {
         e.preventDefault();
@@ -100,14 +107,14 @@ export function GroupModal({
           title={name}
           titleId={titleId}
           onClose={onClose}
-          tone="accent-2"
           dragHandlers={dragHandlers}
-          actions={(
+          actions={
             <>
               {onShare && (
                 // Le nom du groupe est sa clé : un renommage remonte le menu (liste rechargée).
                 <MembersMenu
                   key={name}
+                  variant="ink"
                   label="Membres du groupe"
                   title="Membres du groupe"
                   load={() => listGroupMembers(name)}
@@ -122,50 +129,62 @@ export function GroupModal({
               )}
               {onShare && (
                 <Button
-                  variant="secondary"
+                  variant="ink"
                   iconOnly
                   iconLeft="export"
                   aria-label="Partager le groupe"
                   title="Partager le groupe"
-                  onClick={(e) => { e.stopPropagation(); onShare(); }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                />
-              )}
-              {onNewDrawing && (
-                <Button
-                  variant="primary"
-                  iconOnly
-                  iconLeft="add"
-                  aria-label="Nouveau dessin"
-                  title="Nouveau dessin"
-                  onClick={(e) => { e.stopPropagation(); onNewDrawing(); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onShare();
+                  }}
                   onPointerDown={(e) => e.stopPropagation()}
                 />
               )}
             </>
-          )}
+          }
         />
         <div className={styles.content}>
-          {drawings.map((d) => {
+          {drawings.map((d, i) => {
             const isOwner = currentUserId !== null && d.owner_id === currentUserId;
             return (
               <DrawingCard
                 key={d.id}
                 drawing={d}
+                index={i}
                 isOwner={isOwner}
                 onClick={() => onCardClick(d.id)}
                 onRename={onRename ? (title) => onRename(d.id, title) : undefined}
                 onDelete={onDelete && isOwner ? () => onDelete(d.id) : undefined}
                 onRemoveFromGroup={onRemoveFromGroup ? () => onRemoveFromGroup(d.id) : undefined}
                 onInvite={onInvite && isOwner ? () => onInvite(d) : undefined}
-                onCollaboratorRemoved={onCollaboratorRemoved ? () => onCollaboratorRemoved(d.id) : undefined}
+                onCollaboratorRemoved={
+                  onCollaboratorRemoved ? () => onCollaboratorRemoved(d.id) : undefined
+                }
               />
             );
           })}
-          {drawings.length === 0 && (
-            <p className={styles.empty}>Aucun dessin dans ce groupe.</p>
+          {drawings.length === 0 && <p className={styles.empty}>Aucun dessin dans ce groupe.</p>}
+          {onNewDrawing && (
+            <button
+              type="button"
+              className={styles.addTile}
+              aria-haspopup="dialog"
+              onClick={onNewDrawing}
+            >
+              <span className={styles.addArt} aria-hidden="true">
+                <Icons icon="add" size={24} />
+              </span>
+              <span className={styles.addLabel}>Nouveau dessin</span>
+            </button>
           )}
         </div>
+        <footer className={styles.footer}>
+          <span className={styles.hint}>Glisser une vignette hors du groupe pour l’en retirer</span>
+          <Button variant="secondary" onClick={onClose}>
+            Fermer
+          </Button>
+        </footer>
       </div>
     </div>
   );

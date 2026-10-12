@@ -25,10 +25,10 @@ export function NewGroupModal({ onClose, onConfirm }: NewGroupModalProps) {
       initialFocusRef={inputRef}
       actions={
         <>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose}>
             Annuler
           </Button>
-          <Button variant="primary" size="sm" onClick={handleSubmit} disabled={!name.trim()}>
+          <Button variant="primary" size="lg" onClick={handleSubmit} disabled={!name.trim()}>
             Créer
           </Button>
         </>

@@ -19,7 +19,7 @@ export function Snackbar({ message, icon, duration = DEFAULT_DURATION, onClose }
 
   return (
     <div className={styles.snackbar}>
-      {icon ? <Icons className={styles.icon} icon={icon} size={20} /> : null}
+      {icon ? <Icons className={styles.icon} icon={icon} size={16} /> : null}
       <span className={styles.message}>{message}</span>
     </div>
   );

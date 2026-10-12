@@ -3,23 +3,32 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: $space-m;
+  gap: $space-l;
   height: 100dvh;
   padding: $space-l;
   font-family: $font-family-base;
   color: $color-text;
-  background: $color-bg;
+  text-align: center;
+  @include paper-dots;
 }
 
 .message {
-  font-size: $font-size-md;
-  color: $color-danger;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: $space-s;
+  margin: 0;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-lg;
+  line-height: $line-height-sm;
+
+  &::before {
+    @include pixel-mark;
+  }
 }
 
 .actions {
   display: flex;
-  gap: $space-sm;
+  gap: $space-l;
   flex-wrap: wrap;
   justify-content: center;
 }

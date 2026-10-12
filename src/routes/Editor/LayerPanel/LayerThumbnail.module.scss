@@ -3,6 +3,8 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: $color-field;
+  border: $border-thin;
 }
 
 .canvas {

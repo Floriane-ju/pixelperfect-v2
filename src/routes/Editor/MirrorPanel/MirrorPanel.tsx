@@ -17,7 +17,8 @@ export interface MirrorPanelProps {
   onClose: () => void;
 }
 
-const AXIS_OPTIONS: ReadonlyArray<{ axis: MirrorAxis; icon: 'mirror' | 'mirror-v' | 'radial'; label: string }> = [
+const AXIS_OPTIONS: ReadonlyArray<{ axis: MirrorAxis; icon?: 'mirror' | 'mirror-v' | 'radial'; label: string }> = [
+  { axis: 'none', label: 'Aucune' },
   { axis: 'horizontal', icon: 'mirror', label: 'Miroir horizontal' },
   { axis: 'vertical', icon: 'mirror-v', label: 'Miroir vertical' },
   { axis: 'radial', icon: 'radial', label: 'Miroir radial' },
@@ -41,28 +42,29 @@ export function MirrorPanel({
 
   return (
     <div ref={panelRef} className={styles.panel} role="dialog" aria-label="Symétrie">
-      <section className={styles.section}>
-        <span className={styles.label}>Symétrie</span>
-        <div className={styles.options} role="radiogroup" aria-label="Type de symétrie">
-          {AXIS_OPTIONS.map(({ axis: a, icon, label }) => (
-            <Button
-              key={a}
-              variant={axis === a ? 'selected' : 'selectable'}
-              size="md"
-              iconOnly
-              iconLeft={icon}
-              role="radio"
-              aria-checked={axis === a}
-              title={label}
-              aria-label={label}
-              onClick={() => onAxisChange(axis === a ? 'none' : a)}
-            />
-          ))}
-        </div>
-      </section>
+      <h2 className={styles.title}>Symétrie</h2>
+      <div className={styles.axes} role="radiogroup" aria-label="Type de symétrie">
+        {AXIS_OPTIONS.map(({ axis: a, icon, label }) => (
+          <Button
+            key={a}
+            variant={axis === a ? 'selected' : 'selectable'}
+            size="md"
+            iconOnly={icon !== undefined}
+            iconLeft={icon}
+            role="radio"
+            aria-checked={axis === a}
+            title={label}
+            aria-label={label}
+            className={styles.axis}
+            onClick={() => onAxisChange(axis === a ? 'none' : a)}
+          >
+            {icon === undefined ? label : null}
+          </Button>
+        ))}
+      </div>
 
       {axis === 'radial' && (
-        <section className={styles.section}>
+        <section className={styles.row}>
           <span className={styles.label}>Réflexions</span>
           <div className={styles.options} role="radiogroup" aria-label="Nombre de réflexions">
             {SEGMENT_OPTIONS.map(n => (

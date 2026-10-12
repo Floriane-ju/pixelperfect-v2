@@ -21,12 +21,14 @@ export interface MenuProps {
   triggerVariant?: ButtonVariant;
   triggerSize?: ButtonSize;
   triggerTitle?: string;
+  /** Libellé visible du déclencheur ; sans lui, le déclencheur est un bouton icône. */
+  triggerLabel?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
 
 /** Doit correspondre à `min-width` de `.menu` : largeur supposée avant la première mesure. */
-const MENU_FALLBACK_WIDTH = 220;
+const MENU_FALLBACK_WIDTH = 208;
 
 function getMenuItems(menu: HTMLElement | null): HTMLButtonElement[] {
   return menu ? Array.from(menu.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')) : [];
@@ -37,8 +39,9 @@ export function Menu({
   ariaLabel = 'Options',
   triggerIcon = 'more',
   triggerVariant = 'ghost',
-  triggerSize = 'sm',
+  triggerSize = 'md',
   triggerTitle,
+  triggerLabel,
   open: openProp,
   onOpenChange,
 }: MenuProps) {
@@ -100,14 +103,16 @@ export function Menu({
         ref={triggerRef}
         variant={triggerVariant}
         size={triggerSize}
-        iconOnly
+        iconOnly={!triggerLabel}
         iconLeft={triggerIcon}
         title={triggerTitle}
         aria-label={ariaLabel}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-      />
+      >
+        {triggerLabel}
+      </Button>
       {open && position && createPortal(
         <ul
           ref={menuRef}
@@ -119,6 +124,10 @@ export function Menu({
         >
           {items.map((item, idx) => (
             <li key={item.label} role="none" className={styles.row}>
+              {/* Un seul séparateur, avant la première action dangereuse. */}
+              {item.variant === 'danger' && idx > 0 && items[idx - 1]?.variant !== 'danger' && (
+                <span className={styles.divider} aria-hidden="true" />
+              )}
               <button
                 type="button"
                 role="menuitem"
@@ -132,10 +141,9 @@ export function Menu({
                   close();
                 }}
               >
-                {item.icon && <Icons className={styles.icon} icon={item.icon} />}
+                {item.icon && <Icons className={styles.icon} icon={item.icon} size={16} />}
                 <span className={styles.label}>{item.label}</span>
               </button>
-              {idx < items.length - 1 && <span className={styles.divider} aria-hidden="true" />}
             </li>
           ))}
         </ul>,

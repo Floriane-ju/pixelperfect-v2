@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import { isAuthApiError } from '@supabase/supabase-js';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
+import { Dock } from '@/components/Dock';
 import { signIn } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import styles from './Login.module.scss';
@@ -25,10 +26,14 @@ export function Login() {
     // Déjà connecté : retour à la galerie. Ignoré si l'utilisateur est parti entre-temps.
     let ignore = false;
     supabase.auth.getSession().then(
-      ({ data }) => { if (!ignore && data.session) navigate('/', { replace: true }); },
-      () => {},
+      ({ data }) => {
+        if (!ignore && data.session) navigate('/', { replace: true });
+      },
+      () => {}
     );
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [navigate]);
 
   useEffect(() => {
@@ -81,47 +86,66 @@ export function Login() {
     }
   };
 
+  const goToLibrary = () => navigate('/', { replace: true });
+
   return (
-    <main className={styles.page}>
-      <Button
-        variant="ghost"
-        iconOnly
-        iconLeft="back"
-        aria-label="Retour"
-        className={styles.back}
-        onClick={() => navigate('/', { replace: true })}
-      />
-      <div className={styles.card}>
-        <h1 className={styles.title}>Pixel Perfect</h1>
-        <form className={styles.form} onSubmit={(e) => void handleSubmit(e)}>
-          <Input
-            id="email"
-            label="Email"
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? 'login-error' : undefined}
-          />
-          <Input
-            id="password"
-            label="Mot de passe"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? 'login-error' : undefined}
-          />
-          {error && <p id="login-error" className={styles.error} role="alert">{error}</p>}
-          <Button type="submit" variant="primary" fullWidth disabled={loading || locked}>
-            {locked ? `Réessayez dans ${remaining} s` : loading ? 'Connexion…' : 'Se connecter'}
-          </Button>
-        </form>
-      </div>
-    </main>
+    <div className={styles.page}>
+      <Dock version={__APP_VERSION__}>
+        <Button
+          variant="ink"
+          iconOnly
+          iconLeft="library"
+          aria-label="Bibliothèque"
+          title="Bibliothèque"
+          onClick={goToLibrary}
+        />
+      </Dock>
+      <main className={styles.main}>
+        <Button variant="ghost" iconLeft="back" className={styles.back} onClick={goToLibrary}>
+          Retour
+        </Button>
+        <section className={styles.card} aria-labelledby="login-title">
+          <header className={styles.titlebar}>Connexion</header>
+          <div className={styles.body}>
+            <h1 id="login-title" className={styles.title}>
+              <span>Pixel</span>
+              <span className={styles.titleLast}>Perfect</span>
+            </h1>
+            <form className={styles.form} onSubmit={(e) => void handleSubmit(e)}>
+              <Input
+                id="email"
+                label="Email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? 'login-error' : undefined}
+              />
+              <Input
+                id="password"
+                label="Mot de passe"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? 'login-error' : undefined}
+              />
+              {error && (
+                <p id="login-error" className={styles.error} role="alert">
+                  {error}
+                </p>
+              )}
+              <Button type="submit" variant="primary" fullWidth disabled={loading || locked}>
+                {locked ? `Réessayez dans ${remaining} s` : loading ? 'Connexion…' : 'Se connecter'}
+              </Button>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }

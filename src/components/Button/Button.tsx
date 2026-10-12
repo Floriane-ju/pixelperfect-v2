@@ -10,7 +10,12 @@ export type ButtonVariant =
   | 'ghost'
   | 'danger'
   | 'selected'
-  | 'selectable';
+  | 'selectable'
+  /** Sur fond encre (dock, rails) : `aria-pressed` → papier, `aria-current` → rouge. */
+  | 'ink';
+const ICON_SIZE_SM = 16;
+const ICON_SIZE_LG = 24;
+
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -20,6 +25,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   iconRight?: IconName;
   fullWidth?: boolean;
   iconOnly?: boolean;
+  /** Appui long tactile sur un bouton icône → libellé en snackbar. À couper si l'appui long sert déjà. */
+  longPressLabel?: boolean;
   ref?: Ref<HTMLButtonElement>;
 }
 
@@ -30,6 +37,7 @@ export function Button({
   iconRight,
   fullWidth = false,
   iconOnly = false,
+  longPressLabel = true,
   className,
   children,
   type = 'button',
@@ -47,7 +55,10 @@ export function Button({
   }
 
   const ariaLabel = typeof rest['aria-label'] === 'string' ? rest['aria-label'] : undefined;
-  const { handlers, consumeFired } = useLongPressLabel(ariaLabel, iconOnly);
+  const { handlers, consumeFired } = useLongPressLabel(ariaLabel, iconOnly && longPressLabel);
+
+  // Icône 24 px seule dans un bouton carré, 16 px à côté d'un libellé ou dans un petit bouton.
+  const iconSize = iconOnly && size !== 'sm' ? ICON_SIZE_LG : ICON_SIZE_SM;
 
   const classes = cx(
     styles.button,
@@ -91,9 +102,9 @@ export function Button({
       onPointerMove={compose(handlers.onPointerMove, onPointerMove)}
       {...rest}
     >
-      {iconLeft ? <Icons className={styles.icon} icon={iconLeft} /> : null}
+      {iconLeft ? <Icons className={styles.icon} icon={iconLeft} size={iconSize} /> : null}
       {children ? <span className={styles.label}>{children}</span> : null}
-      {iconRight ? <Icons className={styles.icon} icon={iconRight} /> : null}
+      {iconRight ? <Icons className={styles.icon} icon={iconRight} size={iconSize} /> : null}
     </button>
   );
 }

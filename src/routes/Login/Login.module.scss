@@ -1,35 +1,77 @@
 .page {
-  position: relative;
   display: flex;
+  width: 100%;
+  min-height: 100dvh;
+
+  @include phone-only {
+    flex-direction: column;
+  }
+}
+
+.main {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100dvh;
-  padding: $space-l;
+  gap: $space-l;
+  padding: $space-6xl $space-m;
 }
 
 .back {
-  position: fixed;
-  top: calc($space-l + env(safe-area-inset-top));
-  left: calc($space-l + env(safe-area-inset-left));
+  position: absolute;
+  top: $space-l;
+  left: $space-l;
+
+  @include phone-only {
+    position: static;
+    align-self: flex-start;
+  }
 }
 
 .card {
-  background: $color-surface;
-  border: $border-m-accent-2;
-  box-shadow: $shadow-modal;
-  padding: $space-2xl;
+  @include layer-surface;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  max-width: $dialog-width-md;
-  background:$accent-1-450;
+  max-width: $dialog-width-sm;
+}
+
+.titlebar {
+  @include ink-titlebar;
+  @include text-title;
+  font-size: $font-size-sm;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: $space-l;
+  padding: $space-2xl $space-l $space-l;
 }
 
 .title {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+  margin: 0;
   font-family: $font-family-display;
-  font-size: $font-size-md;
-  text-align: center;
-  margin: 0 0 $space-2xl;
-  color: $accent-2-600;
-  line-height: 2;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-3xl;
+  line-height: $line-height-tight;
+}
+
+.titleLast {
+  display: flex;
+  align-items: flex-end;
+  gap: $space-xs;
+
+  &::after {
+    @include pixel-mark;
+    margin-bottom: $space-xs;
+  }
 }
 
 .form {
@@ -39,7 +81,15 @@
 }
 
 .error {
-  font-size: $font-size-sm;
-  color: $color-danger;
+  display: flex;
+  align-items: center;
+  gap: $space-s;
   margin: 0;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $color-danger;
+
+  &::before {
+    @include pixel-mark;
+  }
 }

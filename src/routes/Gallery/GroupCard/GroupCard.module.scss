@@ -1,100 +1,65 @@
+@use '../card' as card;
+
 .card {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-width: 0;
-  background: $accent-2-400;
-  border:$border-m-accent-2;
-  cursor: pointer;
-  box-shadow: $drop-shadow-interactive,$inner-shadow-interactive-2;
-  transition: box-shadow $transition-fast;
-  @include no-select;
-
-  &:hover {
-    box-shadow: $drop-shadow-interactive-hover,$inner-shadow-interactive-2-hover;
-  }
-
-  &:active:not(:has(header:active)) {
-    box-shadow: $drop-shadow-interactive-active,$inner-shadow-interactive-2-active;
-  }
-
-  &:focus-visible {
-    @include focus-ring;
-    outline-offset: 0;
-  }
-
-  &.dropTarget {
-    box-shadow: $drop-shadow-interactive-hover, $inner-shadow-interactive-2-hover;
-    outline: $outline-width solid $accent-1-600;
-    outline-offset: -$outline-offset;
-  }
+  @include card.card;
+  @include card.num-active('.num');
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $space-s;
-  padding: $space-s;
-  border-bottom:$border-m-accent-2;
+.head {
+  @include card.head;
 }
 
-.title {
-  flex: 1;
-  min-width: 0;
-  font-size: $font-size-md;
-  color: $accent-1-300;
-  font-weight: $font-weight-regular;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.num {
+  @include card.num;
 }
 
-.renameInput {
-  flex: 1;
-  min-width: 0;
-  height: $space-l;
-  padding: 0 $space-s;
-  background: $accent-1-300;
-  font-size: $font-size-md;
-  color: $accent-1-600;
-  font-family: $font-family-base;
-
-  &:focus-visible {
-    @include focus-ring;
-    outline-offset: -$outline-offset;
-  }
+.meta {
+  @include card.meta;
 }
 
 .preview {
-  padding: 0 $space-xs $space-xs;
-}
-
-.previewContent {
-  padding: $space-sm;
-}
-
-.grid {
+  @include card.preview;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  // L'aperçu centre son contenu (flex) : ici chaque case doit remplir sa cellule.
+  align-items: stretch;
+  justify-items: stretch;
   gap: $thumb-gap;
+
+  &.dropTarget {
+    @include card.preview-drop-target;
+  }
 }
 
 .thumb {
-  aspect-ratio: 1;
-  min-width: 0;
-  background: $accent-1-500;
-}
-
-.thumbInner {
-  background: $color-white;
-  width: 100%;
-  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  padding: $space-m;
+  border: $border-thin;
+  background: $color-field;
+}
+
+.thumbInner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  aspect-ratio: 1;
+  max-width: 100%;
 }
 
 .thumbEmpty {
-  aspect-ratio: 1;
+  border: $outline-width-thin dotted $color-text-muted;
+}
+
+.name {
+  @include card.name;
+}
+
+.renameInput {
+  @include card.rename-input;
 }

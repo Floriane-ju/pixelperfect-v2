@@ -76,12 +76,12 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
       initialFocusRef={nameRef}
       actions={
         <>
-          <Button variant="ghost" size="sm" onClick={onClose} disabled={isCreating}>
+          <Button variant="ghost" onClick={onClose} disabled={isCreating}>
             Annuler
           </Button>
           <Button
             variant="primary"
-            size="sm"
+            size="lg"
             onClick={() => void handleSubmit()}
             disabled={isCreating}
           >
@@ -154,7 +154,7 @@ export function NewDrawingModal({ onClose, onConfirm }: NewDrawingModalProps) {
               className={styles.dimensionField}
               inputClassName={styles.dimensionInput}
             />
-            <span className={styles.dimensionUnit}>px</span>
+            <span className={styles.dimensionUnit}>{MIN_SIZE} – {MAX_SIZE} px</span>
           </div>
         )}
       </div>

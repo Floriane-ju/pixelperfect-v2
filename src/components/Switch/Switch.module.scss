@@ -15,7 +15,7 @@
   }
 
   &:disabled {
-    opacity: 0.4;
+    opacity: $opacity-disabled;
     cursor: not-allowed;
   }
 }
@@ -25,11 +25,9 @@
   display: block;
   width: $switch-width;
   height: $switch-height;
-  padding: $switch-pad;
-  background: $accent-1-500;
-  border: $border-s-accent-2;
-  box-shadow: $shadow-selectable;
-  transition: background-color $transition-fast, box-shadow $transition-fast;
+  border: $border;
+  background: $color-surface;
+  transition: background-color $transition-fast;
 }
 
 .thumb {
@@ -38,18 +36,22 @@
   left: $switch-pad;
   width: $switch-thumb;
   height: $switch-thumb;
-  background: $accent-1-600;
+  background: $color-text;
   transition: transform $transition-fast, background-color $transition-fast;
 }
 
+.switch:hover:not(:disabled) .track {
+  background: $color-surface-hover;
+}
+
 .checked {
-  .track {
-    background: $accent-1-600;
-    box-shadow: $shadow-selected;
+  .track,
+  &:hover:not(:disabled) .track {
+    background: $color-primary;
   }
 
   .thumb {
-    background: $accent-1-300;
+    background: $color-on-primary;
     transform: translateX(#{$switch-travel});
   }
 }

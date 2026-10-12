@@ -5,9 +5,8 @@
 }
 
 .label {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $color-text-muted;
+  @include text-meta;
+  color: $color-text;
 }
 
 .presets {
@@ -18,9 +17,10 @@
 
 .customRow {
   display: flex;
-  align-items: center;
-  gap: $space-s;
-  margin-top: $space-xs;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: $space-m;
+  padding-top: $space-s;
 }
 
 .dimensionField {
@@ -28,27 +28,37 @@
 }
 
 .dimensionInput {
-  text-align: center;
+  padding: 0 $space-s;
+  font-family: $font-family-mono;
+}
 
-  &::-webkit-inner-spin-button,
-  &::-webkit-outer-spin-button {
-    opacity: 1;
-  }
+.dimensionSep,
+.dimensionUnit {
+  display: inline-flex;
+  align-items: center;
+  height: $control-md;
 }
 
 .dimensionSep {
-  color: $color-text-muted;
-  font-size: $font-size-sm;
+  font-family: $font-family-display;
 }
 
 .dimensionUnit {
-  color: $color-text-muted;
+  font-family: $font-family-mono;
   font-size: $font-size-xs;
+  color: $color-text-muted;
 }
 
 .error {
-  color: $color-danger;
+  display: flex;
+  align-items: center;
+  gap: $space-s;
+  margin: 0;
   font-size: $font-size-sm;
-  background: rgba($color-danger, $opacity-bg-subtle);
-  padding: $space-s;
+  line-height: $line-height-sm;
+  color: $color-danger;
+
+  &::before {
+    @include pixel-mark;
+  }
 }

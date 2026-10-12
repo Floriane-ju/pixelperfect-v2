@@ -1,20 +1,20 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba($color-black, $opacity-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: $z-modal;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: max(#{$space-6xl}, 12dvh) $space-m $space-m;
+  overflow-y: auto;
+  @include scrim;
 }
 
 .dialog {
-  background: $color-surface;
-  padding: $space-l;
-  width: calc(100% - #{$space-2xl});
+  @include layer-surface;
   display: flex;
   flex-direction: column;
-  gap: $space-l;
+  width: 100%;
 }
 
 .size-sm {
@@ -25,15 +25,31 @@
   max-width: $dialog-width-md;
 }
 
+.titlebar {
+  @include ink-titlebar;
+}
+
 .heading {
-  margin: 0;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
-  color: $color-text;
+  @include floating-panel-title;
+}
+
+.close {
+  @include ink-button;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: $space-l;
+  padding: $space-l;
 }
 
 .actions {
   display: flex;
-  gap: $space-s;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
+  gap: $space-l;
+  padding: $space-m $space-l $space-l;
+  border-top: $border-thin;
 }

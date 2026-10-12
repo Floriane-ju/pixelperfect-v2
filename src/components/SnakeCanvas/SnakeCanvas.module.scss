@@ -22,17 +22,27 @@
   align-items: center;
   justify-content: center;
   gap: $space-l;
-  background: rgba(255, 255, 255, $opacity-overlay);
   padding: $space-l;
+  @include scrim;
 }
 
 .title {
-  font-family: $font-family-display;
-  font-size: $font-size-display;
-  color: $accent-2-600;
-  text-align: center;
-  text-shadow: $text-shadow-display;
+  @include layer-surface;
+  display: flex;
+  align-items: flex-end;
+  gap: $space-s;
   margin: 0;
+  padding: $space-l $space-2xl;
+  font-family: $font-family-display;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-display;
+  line-height: $line-height-tight;
+  text-align: center;
+
+  &::after {
+    @include pixel-mark;
+    margin-bottom: $space-xs;
+  }
 }
 
 .actions {
@@ -65,11 +75,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: $outline-width solid $accent-1-300;
-  font-family: $font-family-base;
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  color: $accent-1-300;
+  border: $border;
+  background: $color-surface;
+  font-family: $font-family-display;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  color: $color-text;
 }
 
 .keyZ {

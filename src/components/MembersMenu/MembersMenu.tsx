@@ -2,7 +2,7 @@ import { useCallback, useEffect, useEffectEvent, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/Button';
-import type { ButtonSize } from '@/components/Button';
+import type { ButtonSize, ButtonVariant } from '@/components/Button';
 import { InlineConfirm } from '@/components/InlineConfirm';
 import { useAnchoredMenu } from '@/hooks/useAnchoredMenu';
 import type { CollaboratorRole } from '@/types';
@@ -20,6 +20,8 @@ export interface MembersMenuProps {
   label: string;
   title?: string;
   size?: ButtonSize;
+  /** `ink` sur une barre de titre encre (GroupModal). */
+  variant?: ButtonVariant;
   load: () => Promise<MenuMember[]>;
   remove: (userId: string) => Promise<void>;
   canRemove: (member: MenuMember) => boolean;
@@ -42,6 +44,7 @@ export function MembersMenu({
   label,
   title,
   size,
+  variant = 'ghost',
   load,
   remove,
   canRemove,
@@ -106,7 +109,7 @@ export function MembersMenu({
   return (
     <div ref={rootRef} className={styles.root} onClick={(e) => e.stopPropagation()}>
       <Button
-        variant="ghost"
+        variant={variant}
         size={size}
         iconOnly
         iconLeft="collaborators"

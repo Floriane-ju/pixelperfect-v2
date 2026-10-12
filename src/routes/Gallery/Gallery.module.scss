@@ -1,128 +1,187 @@
-.gallery {
+@use 'sass:list';
+
+.page {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.galleryBody {
   position: relative;
   z-index: $z-gallery;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: opacity $transition-base;
+
+  @include phone-only {
+    flex-direction: column;
+  }
+}
+
+.galleryBodyDimmed {
+  opacity: $opacity-dimmed;
+  pointer-events: none;
+}
+
+.gallery {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: $gallery-max-width;
-  height: 100dvh;
-  overflow: hidden;
-  padding:0 $space-4xl;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 clamp(#{$space-m}, #{$page-gutter-fluid}, #{$page-gutter});
 }
 
-.version {
-  font-size: $font-size-sm;
-  color: $accent-1-600;
-  font-weight: $font-weight-regular;
-  white-space: nowrap;
-  position: fixed;
-  bottom: max(#{$space-s}, env(safe-area-inset-bottom));
-  left: $space-s;
-  pointer-events: none;
-  z-index: $z-snake-hint;
-}
-
+// ─── En-tête ───
 .header {
-  display: flex;
-  flex-direction: row;
-  align-items: end;
-  justify-content:space-between;
-  gap: $space-l;
-  padding: $space-4xl 0;
-  padding-top: max(#{$space-4xl}, env(safe-area-inset-top));
   flex-shrink: 0;
-  transition: padding $transition-base;
-}
-
-.headerCompact {
-  padding-bottom: $space-l;
-  padding-top: max(#{$space-l}, env(safe-area-inset-top));
-}
-
-.headerActions {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
-  gap: $space-sm;
-  flex-shrink: 0;
-}
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $space-l $space-2xl;
+  padding: max(#{$page-gutter}, env(safe-area-inset-top)) 0 $space-3xl;
+  border-bottom: $border;
+  transition: padding $transition-base;
 
-.titleGroup {
-  display: flex;
-  align-items: baseline;
-  gap: $space-sm;
-  min-width: 0;
-}
-
-.title {
-  margin: 0;
-  font-family: $font-family-display;
-  font-size: $font-size-display;
-  font-weight: $font-weight-regular;
-  color: $accent-2-600;
-  line-height: 1.4;
-  white-space: nowrap;
-  flex-shrink: 0;
-  text-shadow: $text-shadow-display;
-  transition: font-size $transition-base;
-}
-
-.titleCompact {
-  font-size: $font-size-display-compact;
-
-  // Titre sur une seule ligne une fois réduit.
-  br {
-    display: none;
+  @include phone-only {
+    padding-top: $space-2xl;
+    padding-bottom: $space-l;
   }
 }
 
-.galleryBody {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  position: relative;
-  transition: opacity $transition-base;
+.headerCompact {
+  padding-top: max(#{$space-l}, env(safe-area-inset-top));
+  padding-bottom: $space-l;
 }
 
-.galleryBodyDimmed {
-  opacity: 0.8;
-  pointer-events: none;
+.title {
+  display: flex;
+  flex-direction: column;
+  gap: $space-s;
+  margin: 0;
+  font-family: $font-family-display;
+  font-weight: $font-weight-bold;
+  font-size: clamp(#{$font-size-logo-min}, #{$font-size-logo-fluid}, #{$font-size-logo-max});
+  line-height: $line-height-tight;
+  letter-spacing: $letter-spacing-logo;
+  white-space: nowrap;
+}
+
+.titleLast {
+  display: flex;
+  align-items: flex-end;
+  gap: $logo-mark-gap;
+
+  &::after {
+    @include pixel-mark($logo-mark-size);
+    margin-bottom: $logo-mark-offset;
+  }
+}
+
+// Réduit au défilement : une seule ligne.
+.titleCompact {
+  flex-direction: row;
+  gap: $logo-mark-gap * 4;
+  font-size: $font-size-display-compact;
+}
+
+.headerAside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $space-l;
+
+  > button {
+    align-self: flex-end;
+  }
+
+  @include phone-only {
+    width: 100%;
+
+    > button {
+      align-self: stretch;
+    }
+  }
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: $space-s $space-2xl;
+  margin: 0;
+  @include text-meta;
+
+  dt {
+    color: $color-text-muted;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.metaHidden {
+  display: none;
+}
+
+// ─── Liste ───
+.scroller {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-3xl;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  // Les ombres et le décalage au survol des vignettes débordent : on leur laisse la place.
+  margin: 0 (-$space-s);
+  padding: 0 $space-s max(#{$space-2xl}, env(safe-area-inset-bottom));
 }
 
 .content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax($card-width, 1fr));
-  gap: $space-l;
+  grid-template-columns: repeat(auto-fill, minmax($card-min-width, 1fr));
+  gap: $grid-gap-y $grid-gap-x;
   align-content: flex-start;
-  padding-bottom: max(#{$space-4xl}, env(safe-area-inset-bottom));
+  padding-top: $space-l;
 }
 
 .contentDropTarget {
-  outline: $outline-width dashed $accent-1-500;
-  outline-offset: -$space-xs;
+  outline: $outline-width dashed $color-primary;
+  outline-offset: $space-xs;
 }
 
-.state {
+.footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  flex: 1;
-  color: $accent-1-500;
-  font-size: $font-size-md;
-  opacity: $opacity-overlay;
-  padding: $space-2xl;
+  justify-content: space-between;
+  gap: $space-m;
+  margin-top: auto;
+  padding-top: $space-m;
+  border-top: $border;
+  @include text-meta;
 }
 
-.stateError {
-  @extend .state;
-  color: $color-danger;
-  opacity: 1;
+.strip {
+  display: flex;
+
+  > span {
+    width: $space-m;
+    height: $space-m;
+  }
+
+  @for $i from 1 through list.length($deco-strip) {
+    > span:nth-child(#{$i}) {
+      background: list.nth($deco-strip, $i);
+    }
+  }
 }
 
 .hiddenInput {
