@@ -1,6 +1,9 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { MouseEvent, PointerEvent, RefObject } from 'react';
 
+/** Appui long avant que la poignée passe en glisser : un appui bref reste un clic. */
+export const DRAG_HOLD_MS = 300;
+
 export type DropPosition = 'before' | 'after';
 
 export interface DragState {
@@ -68,6 +71,15 @@ export function useDragReorder<T extends HTMLElement>({
   const [drag, setDrag] = useState<DragState | null>(null);
   const dragRef = useRef<DragState | null>(null);
   useLayoutEffect(() => { dragRef.current = drag; });
+  const holdTimerRef = useRef<number | null>(null);
+  // Un glisser a eu lieu : le clic qui suit le relâcher ne doit pas sélectionner.
+  const draggedRef = useRef(false);
+  useLayoutEffect(() => () => clearHold(), []);
+
+  function clearHold() {
+    if (holdTimerRef.current !== null) window.clearTimeout(holdTimerRef.current);
+    holdTimerRef.current = null;
+  }
 
   const setItemRef = useCallback((id: string) => (el: T | null) => {
     if (el) itemRefs.current.set(id, el);
@@ -88,6 +100,7 @@ export function useDragReorder<T extends HTMLElement>({
   };
 
   const handleEnd = (e: PointerEvent<HTMLElement>) => {
+    clearHold();
     const current = dragRef.current;
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
@@ -104,12 +117,20 @@ export function useDragReorder<T extends HTMLElement>({
       e.stopPropagation();
       e.preventDefault();
       e.currentTarget.setPointerCapture(e.pointerId);
-      setDrag({ id, targetId: null, pos: 'before' });
+      draggedRef.current = false;
+      clearHold();
+      holdTimerRef.current = window.setTimeout(() => {
+        holdTimerRef.current = null;
+        draggedRef.current = true;
+        setDrag({ id, targetId: null, pos: 'before' });
+      }, DRAG_HOLD_MS);
     },
     onPointerMove: handleMove,
     onPointerUp: handleEnd,
     onPointerCancel: handleEnd,
-    onClick: e => e.stopPropagation(),
+    onClick: e => {
+      if (draggedRef.current) e.stopPropagation();
+    },
   });
 
   return { drag, itemRefs, setItemRef, handleProps };

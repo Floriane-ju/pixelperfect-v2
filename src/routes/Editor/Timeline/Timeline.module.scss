@@ -23,6 +23,10 @@
   position: relative;
 }
 
+.itemHidden {
+  opacity: $opacity-disabled;
+}
+
 .itemDragging {
   opacity: $opacity-drop-target;
 }
@@ -69,12 +73,16 @@
   padding: $space-xs;
 }
 
-.empty {
-  @include text-meta;
-  color: $color-text-muted;
+
+.actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: $space-xs;
 }
 
-.speed {
+.separator {
   flex-shrink: 0;
-  width: $editor-speed-width;
+  width: $outline-width;
+  height: $space-2xl;
+  background: $color-border;
 }

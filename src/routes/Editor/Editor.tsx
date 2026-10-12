@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { CSSProperties } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { LOCAL_OWNER } from '@/lib/localLibrary';
+import { MAX_LAYERS } from '@/lib/drawingValidation';
 import type { DrawingData, HexColor } from '@/types';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { cx } from '@/lib/cx';
@@ -148,7 +149,9 @@ export function Editor() {
   const handleAnimationModeToggle = useCallback(() => {
     setAnimationMode(v => !v);
     setPlaying(false);
-  }, []);
+    // Le panneau Calques n'existe pas en mode animation : la timeline le remplace.
+    setOpenPanel(p => (p === 'layers' ? null : p));
+  }, [setOpenPanel]);
 
   const handleOnionSkinToggle = useCallback(() => setOnionSkin(v => !v), []);
 
@@ -203,6 +206,7 @@ export function Editor() {
     onUndo: undo,
     onRedo: redo,
     activeLayerId,
+    animationMode,
     layers: drawing.data.layers,
     canvasWidth: drawing.data.width,
     canvasHeight: drawing.data.height,
@@ -261,6 +265,8 @@ export function Editor() {
             onBgColorChange: setBgColor,
             animationMode,
             onAnimationModeToggle: handleAnimationModeToggle,
+            fps,
+            onFpsChange: setFps,
             onionSkin,
             onOnionSkinToggle: handleOnionSkinToggle,
           }}
@@ -301,16 +307,21 @@ export function Editor() {
           </div>
           {animationMode && (
             <Timeline
-              frames={drawing.data.layers.filter(l => l.visible)}
+              frames={drawing.data.layers}
               currentId={shownFrameId}
               canvasWidth={drawing.data.width}
               canvasHeight={drawing.data.height}
               playing={isPlaying}
-              fps={fps}
               onPlayingToggle={handlePlayingToggle}
               onFrameSelect={handleFrameSelect}
-              onFpsChange={setFps}
               onFrameReorder={afterCommit(handleLayerReorder)}
+              atLayerCap={drawing.data.layers.length >= MAX_LAYERS}
+              canDelete={drawing.data.layers.length > 1}
+              selectedVisible={activeLayer?.visible ?? true}
+              onFrameAdd={afterCommit(handleLayerAdd)}
+              onFrameVisibilityToggle={afterCommit(() => handleLayerVisibilityToggle(activeLayerId))}
+              onFrameDuplicate={afterCommit(() => handleLayerDuplicate(activeLayerId))}
+              onFrameDelete={afterCommit(() => handleLayerDelete(activeLayerId))}
             />
           )}
           <StatusBar

@@ -14,6 +14,7 @@ export interface SliderProps {
   label?: string;
   valueLabel?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export function Slider({
@@ -27,6 +28,7 @@ export function Slider({
   label,
   valueLabel,
   className,
+  disabled = false,
 }: SliderProps) {
   const inputId = useId();
 
@@ -38,7 +40,7 @@ export function Slider({
   );
 
   return (
-    <div className={cx(styles.wrapper, className)}>
+    <div className={cx(styles.wrapper, disabled && styles.disabled, className)}>
       {(label || valueLabel) && (
         <div className={styles.labelRow}>
           {label && <label htmlFor={inputId}>{label}</label>}
@@ -54,6 +56,7 @@ export function Slider({
         step={step}
         value={value}
         onChange={handleChange}
+        disabled={disabled}
         aria-label={ariaLabel}
         aria-valuetext={ariaValueText}
       />

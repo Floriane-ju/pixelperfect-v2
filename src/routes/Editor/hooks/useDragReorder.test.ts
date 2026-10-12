@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { findDropTarget } from './useDragReorder';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { DRAG_HOLD_MS, findDropTarget, useDragReorder } from './useDragReorder';
 
 const spans = [
   { id: 'a', start: 0, end: 10 },
@@ -27,5 +28,38 @@ describe('findDropTarget', () => {
 
   it('ne cible rien dans un interstice', () => {
     expect(findDropTarget(spans, 15, 'c')).toEqual({ targetId: null, pos: 'before' });
+  });
+});
+
+describe('useDragReorder — poignée', () => {
+  afterEach(() => vi.useRealTimers());
+
+  const pointer = (stopPropagation = vi.fn()) => {
+    const el = { setPointerCapture: vi.fn(), hasPointerCapture: () => false, releasePointerCapture: vi.fn() };
+    return { pointerId: 1, type: 'pointerup', currentTarget: el, stopPropagation, preventDefault: vi.fn() };
+  };
+
+  it('un appui bref laisse passer le clic sans démarrer de glisser', () => {
+    vi.useFakeTimers();
+    const { result } = renderHook(() => useDragReorder<HTMLLIElement>({ axis: 'x', onDrop: vi.fn() }));
+    const props = result.current.handleProps('a');
+    act(() => props.onPointerDown(pointer() as never));
+    act(() => props.onPointerUp(pointer() as never));
+    act(() => { vi.advanceTimersByTime(DRAG_HOLD_MS); });
+    expect(result.current.drag).toBeNull();
+    const stop = vi.fn();
+    props.onClick({ stopPropagation: stop } as never);
+    expect(stop).not.toHaveBeenCalled();
+  });
+
+  it('un appui long démarre le glisser et absorbe le clic', () => {
+    vi.useFakeTimers();
+    const { result } = renderHook(() => useDragReorder<HTMLLIElement>({ axis: 'x', onDrop: vi.fn() }));
+    act(() => result.current.handleProps('a').onPointerDown(pointer() as never));
+    act(() => { vi.advanceTimersByTime(DRAG_HOLD_MS); });
+    expect(result.current.drag?.id).toBe('a');
+    const stop = vi.fn();
+    result.current.handleProps('a').onClick({ stopPropagation: stop } as never);
+    expect(stop).toHaveBeenCalled();
   });
 });

@@ -17,10 +17,16 @@ export interface SettingsPanelProps {
   onBgColorChange: (color: EditorBgColor) => void;
   animationMode: boolean;
   onAnimationModeToggle: () => void;
+  /** Vitesse de lecture de l'animation, en images par seconde. */
+  fps: number;
+  onFpsChange: (fps: number) => void;
   onionSkin: boolean;
   onOnionSkinToggle: () => void;
   onClose: () => void;
 }
+
+const MIN_FPS = 1;
+const MAX_FPS = 24;
 
 const BG_OPTIONS: ReadonlyArray<{ value: EditorBgColor; label: string }> = [
   { value: 'white', label: 'Blanc' },
@@ -37,6 +43,8 @@ export function SettingsPanel({
   onBgColorChange,
   animationMode,
   onAnimationModeToggle,
+  fps,
+  onFpsChange,
   onionSkin,
   onOnionSkinToggle,
   onClose,
@@ -99,7 +107,18 @@ export function SettingsPanel({
           <span className={styles.label} id={animationLabelId}>Mode animation</span>
           <Switch checked={animationMode} onChange={onAnimationModeToggle} aria-labelledby={animationLabelId} />
         </div>
-        {/* Toujours rendue : le panneau, ancré en bas, ne doit pas grandir au basculement. */}
+        {/* Toujours rendus : le panneau, ancré en bas, ne doit pas grandir au basculement. */}
+        <Slider
+          label="Vitesse"
+          valueLabel={`${fps} img/s`}
+          min={MIN_FPS}
+          max={MAX_FPS}
+          value={fps}
+          onChange={onFpsChange}
+          disabled={!animationMode}
+          ariaLabel="Vitesse de lecture"
+          ariaValueText={`${fps} images par seconde`}
+        />
         <div className={styles.row}>
           <span className={styles.label} id={onionLabelId}>Pelure d'oignon</span>
           <Switch

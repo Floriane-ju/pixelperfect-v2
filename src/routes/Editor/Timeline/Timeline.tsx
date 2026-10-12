@@ -2,43 +2,54 @@ import type { KeyboardEvent } from 'react';
 import type { PixelLayer } from '@/types';
 import { Button } from '@/components/Button';
 import { Icons } from '@/components/Icons';
-import { Slider } from '@/components/Slider';
 import { cx } from '@/lib/cx';
 import { useDragReorder } from '@/routes/Editor/hooks/useDragReorder';
 import { LayerThumbnail } from '@/routes/Editor/LayerPanel/LayerThumbnail';
 import styles from './Timeline.module.scss';
 
-const MIN_FPS = 1;
-const MAX_FPS = 24;
 const THUMB_SIZE = 32;
 
 export interface TimelineProps {
-  /** Calques servant de frames, dans l'ordre de lecture. */
+  /** Tous les calques, dans l'ordre de lecture ; les masqués sont sautés à la lecture. */
   frames: PixelLayer[];
   /** Frame affichée (lecture ou frame active en pause). */
   currentId: string | null;
   canvasWidth: number;
   canvasHeight: number;
   playing: boolean;
-  fps: number;
   onPlayingToggle: () => void;
   onFrameSelect: (id: string) => void;
-  onFpsChange: (fps: number) => void;
   onFrameReorder: (fromId: string, toId: string, position: 'before' | 'after') => void;
+  /** Plafond de calques atteint : ajout et duplication désactivés. */
+  atLayerCap: boolean;
+  /** Faux s'il ne reste qu'un calque. */
+  canDelete: boolean;
+  /** Visibilité du calque sélectionné (masqué = plus une frame). */
+  selectedVisible: boolean;
+  onFrameAdd: () => void;
+  /** Masque, duplique ou supprime le calque sélectionné. */
+  onFrameVisibilityToggle: () => void;
+  onFrameDuplicate: () => void;
+  onFrameDelete: () => void;
 }
 
-/** Bande de lecture : play/pause, frames (calques visibles) et vitesse. */
+/** Bande de lecture : play/pause, frames (calques) et actions sur le calque sélectionné. */
 export function Timeline({
   frames,
   currentId,
   canvasWidth,
   canvasHeight,
   playing,
-  fps,
   onPlayingToggle,
   onFrameSelect,
-  onFpsChange,
   onFrameReorder,
+  atLayerCap,
+  canDelete,
+  selectedVisible,
+  onFrameAdd,
+  onFrameVisibilityToggle,
+  onFrameDuplicate,
+  onFrameDelete,
 }: TimelineProps) {
   // Frames dans l'ordre de `layers` : « avant » à l'écran = « avant » dans les calques.
   const { drag, setItemRef, handleProps } = useDragReorder<HTMLLIElement>({ axis: 'x', onDrop: onFrameReorder });
@@ -62,17 +73,17 @@ export function Timeline({
         iconLeft={playing ? 'pause' : 'play'}
         aria-label={playing ? 'Pause' : 'Lire'}
         aria-pressed={playing}
-        disabled={frames.length < 2}
+        disabled={frames.filter(l => l.visible).length < 2}
         onClick={onPlayingToggle}
       />
       <ol className={styles.frames}>
-        {frames.length === 0 && <li className={styles.empty}>Aucun calque visible</li>}
         {frames.map((layer, i) => (
           <li
             key={layer.id}
             ref={setItemRef(layer.id)}
             className={cx(
               styles.item,
+              !layer.visible && styles.itemHidden,
               drag?.id === layer.id && styles.itemDragging,
               drag?.targetId === layer.id && (drag.pos === 'before' ? styles.itemDropBefore : styles.itemDropAfter),
             )}
@@ -81,7 +92,7 @@ export function Timeline({
               variant={layer.id === currentId ? 'selected' : 'selectable'}
               size="sm"
               className={styles.frame}
-              aria-label={`Frame ${i + 1} : ${layer.name}`}
+              aria-label={`Frame ${i + 1} : ${layer.name}${layer.visible ? '' : ' (masqué)'}`}
               aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight"
               aria-current={layer.id === currentId ? 'true' : undefined}
               tooltip={false}
@@ -96,15 +107,41 @@ export function Timeline({
           </li>
         ))}
       </ol>
-      <Slider
-        className={styles.speed}
-        valueLabel={`${fps} img/s`}
-        min={MIN_FPS}
-        max={MAX_FPS}
-        value={fps}
-        onChange={onFpsChange}
-        ariaLabel="Vitesse de lecture"
-        ariaValueText={`${fps} images par seconde`}
+      <div className={styles.actions}>
+        {/* En lecture, la frame affichée n'est pas le calque sélectionné : on évite l'ambiguïté. */}
+        <Button
+          variant="ghost"
+          iconOnly
+          iconLeft={selectedVisible ? 'eye' : 'eye-off'}
+          aria-label={selectedVisible ? 'Masquer le calque sélectionné' : 'Afficher le calque sélectionné'}
+          disabled={playing}
+          onClick={onFrameVisibilityToggle}
+        />
+        <Button
+          variant="ghost"
+          iconOnly
+          iconLeft="duplicate"
+          aria-label="Dupliquer le calque sélectionné"
+          disabled={atLayerCap || playing}
+          onClick={onFrameDuplicate}
+        />
+        <Button
+          variant="ghost"
+          iconOnly
+          iconLeft="trash"
+          aria-label="Supprimer le calque sélectionné"
+          disabled={!canDelete || playing}
+          onClick={onFrameDelete}
+        />
+      </div>
+      <span className={styles.separator} aria-hidden="true" />
+      <Button
+        variant="ghost"
+        iconOnly
+        iconLeft="add"
+        aria-label="Nouveau calque"
+        disabled={atLayerCap}
+        onClick={onFrameAdd}
       />
     </section>
   );

@@ -17,7 +17,7 @@ const COPIED_FEEDBACK_MS = 2000;
 export function Topbar() {
   const {
     title, groupName, canUndo, canRedo, onUndo, onRedo,
-    activeLayerId, layers, canvasWidth, canvasHeight, onCanvasResize, openPanel, onPanelToggle, onPanelClose,
+    activeLayerId, animationMode, layers, canvasWidth, canvasHeight, onCanvasResize, openPanel, onPanelToggle, onPanelClose,
     onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete, onLayerReorder,
     onBack, refImage, getCommittedLayers,
   } = useEditorContext();
@@ -94,31 +94,33 @@ export function Topbar() {
         <span className={styles.separator} aria-hidden="true" />
 
         <div className={styles.toggles}>
-          <div className={styles.slot}>
-            <Button
-              variant={openPanel === 'layers' ? 'selected' : 'selectable'}
-              iconOnly
-              iconLeft="layers"
-              title="Calques"
-              aria-label="Calques"
-              aria-expanded={openPanel === 'layers'}
-              onClick={() => onPanelToggle('layers')}
-            />
-            {openPanel === 'layers' && (
-              <LayerPanel
-                layers={layers}
-                activeLayerId={activeLayerId}
-                canvasWidth={canvasWidth}
-                canvasHeight={canvasHeight}
-                onAdd={onLayerAdd}
-                onSelect={onLayerSelect}
-                onVisibilityToggle={onLayerVisibilityToggle}
-                onDuplicate={onLayerDuplicate}
-                onDelete={onLayerDelete}
-                onReorder={onLayerReorder}
+          {!animationMode && (
+            <div className={styles.slot}>
+              <Button
+                variant={openPanel === 'layers' ? 'selected' : 'selectable'}
+                iconOnly
+                iconLeft="layers"
+                title="Calques"
+                aria-label="Calques"
+                aria-expanded={openPanel === 'layers'}
+                onClick={() => onPanelToggle('layers')}
               />
-            )}
-          </div>
+              {openPanel === 'layers' && (
+                <LayerPanel
+                  layers={layers}
+                  activeLayerId={activeLayerId}
+                  canvasWidth={canvasWidth}
+                  canvasHeight={canvasHeight}
+                  onAdd={onLayerAdd}
+                  onSelect={onLayerSelect}
+                  onVisibilityToggle={onLayerVisibilityToggle}
+                  onDuplicate={onLayerDuplicate}
+                  onDelete={onLayerDelete}
+                  onReorder={onLayerReorder}
+                />
+              )}
+            </div>
+          )}
 
           <div className={styles.slot}>
             <Button

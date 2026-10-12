@@ -5,6 +5,14 @@
   width: 100%;
 }
 
+.disabled {
+  opacity: $opacity-disabled;
+
+  .input {
+    cursor: not-allowed;
+  }
+}
+
 .labelRow {
   display: flex;
   justify-content: space-between;

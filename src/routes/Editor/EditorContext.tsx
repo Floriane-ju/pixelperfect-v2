@@ -17,6 +17,8 @@ export interface EditorContextValue {
   onUndo: () => void;
   onRedo: () => void;
   activeLayerId: string;
+  /** Mode animation : la timeline remplace le panneau Calques. */
+  animationMode: boolean;
   layers: PixelLayer[];
   canvasWidth: number;
   canvasHeight: number;
