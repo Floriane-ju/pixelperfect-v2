@@ -107,8 +107,6 @@ export function Editor() {
     if (!selectionRef.current.hasFloating) handleRedo();
   }, [handleRedo]);
 
-  useEditorShortcuts({ handleUndo: undo, handleRedo: redo, setTool, selectionRef });
-
   // Opération structurelle sur les calques : la sélection flottante est posée d'abord, sinon
   // l'historique capturerait l'état « pixels levés » et l'undo ferait disparaître la sélection.
   const afterCommit = <A extends unknown[]>(fn: (...args: A) => void) => (...args: A) => {
@@ -136,6 +134,13 @@ export function Editor() {
     if (isPlaying && playedFrameId) setActiveLayerId(playedFrameId);
     setPlaying(!isPlaying);
   }, [isPlaying, playedFrameId, setActiveLayerId]);
+  useEditorShortcuts({
+    handleUndo: undo,
+    handleRedo: redo,
+    setTool,
+    selectionRef,
+    onPlayToggle: animationMode ? handlePlayingToggle : undefined,
+  });
   const handleFrameSelect = useCallback((layerId: string) => {
     setPlaying(false);
     setActiveLayerId(layerId);

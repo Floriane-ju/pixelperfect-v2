@@ -10,9 +10,11 @@ interface UseEditorShortcutsParams {
   handleRedo: () => void;
   setTool: (t: Tool) => void;
   selectionRef: MutableRefObject<UseSelectionApi>;
+  /** Lecture/pause de l'animation (Espace) — absent hors mode animation. */
+  onPlayToggle?: () => void;
 }
 
-export function useEditorShortcuts({ handleUndo, handleRedo, setTool, selectionRef }: UseEditorShortcutsParams): void {
+export function useEditorShortcuts({ handleUndo, handleRedo, setTool, selectionRef, onPlayToggle }: UseEditorShortcutsParams): void {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -61,6 +63,12 @@ export function useEditorShortcuts({ handleUndo, handleRedo, setTool, selectionR
         setTool(tool);
         return;
       }
+      if (e.key === ' ' && onPlayToggle) {
+        // Empêche aussi l'activation du bouton focalisé (double bascule).
+        e.preventDefault();
+        if (!e.repeat) onPlayToggle();
+        return;
+      }
       if (e.key === 'Escape') {
         const sel = selectionRef.current;
         if (sel.state.kind !== 'idle') {
@@ -80,5 +88,5 @@ export function useEditorShortcuts({ handleUndo, handleRedo, setTool, selectionR
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [handleUndo, handleRedo, setTool, selectionRef]);
+  }, [handleUndo, handleRedo, setTool, selectionRef, onPlayToggle]);
 }
