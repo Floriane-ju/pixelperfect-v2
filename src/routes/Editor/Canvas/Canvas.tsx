@@ -43,6 +43,8 @@ interface CanvasProps {
   showGrid?: boolean;
   selection?: UseSelectionApi;
   title?: string;
+  /** Lecture d'animation : navigation (pan, pinch, molette) seule, aucun outil. */
+  readOnly?: boolean;
 }
 
 export function Canvas({
@@ -64,6 +66,7 @@ export function Canvas({
   showGrid = false,
   selection,
   title,
+  readOnly = false,
 }: CanvasProps) {
   const checkerRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -227,7 +230,7 @@ export function Canvas({
       return;
     }
 
-    if (navResult !== 'draw') return;
+    if (navResult !== 'draw' || readOnly) return;
 
     const px = screenToCanvas(e.clientX, e.clientY);
 
@@ -280,7 +283,7 @@ export function Canvas({
     lastPixel.current = px;
     pendingStartRef.current = px;
     schedulePipetteLongPress(e.clientX, e.clientY, px);
-  }, [data.layers, activeLayerId, tool, layerCanvasesRef, layerPixelsRef, onInvisibleLayerAttempt, screenToCanvas, drawPreview, onDrawStart, onNavPointerDown, onNavPointerUp, schedulePipetteLongPress, selection, abortGesture]);
+  }, [data.layers, activeLayerId, tool, layerCanvasesRef, layerPixelsRef, onInvisibleLayerAttempt, screenToCanvas, drawPreview, onDrawStart, onNavPointerDown, onNavPointerUp, schedulePipetteLongPress, selection, abortGesture, readOnly]);
 
   const handlePointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (onNavPointerMove(e.pointerId, e.clientX, e.clientY)) return;

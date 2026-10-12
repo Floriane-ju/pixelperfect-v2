@@ -269,7 +269,7 @@ export function Editor() {
         <div className={styles.workspace}>
           <Topbar />
           <div
-            className={cx(styles.canvasArea, isPlaying && styles.playing)}
+            className={styles.canvasArea}
             data-bg={bgColor}
             style={{ ['--checker-opacity' as string]: String(gridOpacity) } as CSSProperties}
           >
@@ -289,13 +289,14 @@ export function Editor() {
               onDrawStart={handleDrawStart}
               onDrawEnd={handleDrawEnd}
               onPickColor={handlePickColor}
-              onTwoFingerTap={undo}
+              onTwoFingerTap={isPlaying ? undefined : undo}
               hoveredColor={hoveredColor}
               refImage={refImage}
               onDisplaySizeChange={setCanvasDisplaySize}
               showGrid={showGrid}
               selection={selection}
               title={drawing.title}
+              readOnly={isPlaying}
             />
           </div>
           {animationMode && (
