@@ -1,8 +1,7 @@
 import { memo, useEffect, useRef, type CSSProperties } from 'react';
 import type { DrawingRow } from '@/types';
+import { toneDownLight } from '@/lib/color';
 import styles from './DrawingThumbnail.module.scss';
-
-const WHITE_COLORS = new Set(['#fff', '#ffff', '#ffffff', '#ffffffff']);
 
 export interface DrawingThumbnailProps {
   drawing: Pick<DrawingRow, 'id' | 'updated_at' | 'data'>;
@@ -27,6 +26,15 @@ export const DrawingThumbnail = memo(function DrawingThumbnail({ drawing }: Draw
     if (!ctx) return;
 
     ctx.clearRect(0, 0, data.width, data.height);
+    const toned = new Map<string, string>();
+    const tone = (color: string) => {
+      let css = toned.get(color);
+      if (css === undefined) {
+        css = styles.lightTone ? toneDownLight(color, styles.lightTone) : color;
+        toned.set(color, css);
+      }
+      return css;
+    };
 
     for (const layer of data.layers) {
       if (!layer.visible) continue;
@@ -38,7 +46,7 @@ export const DrawingThumbnail = memo(function DrawingThumbnail({ drawing }: Draw
         const x = parseInt(key.slice(0, comma), 10);
         const y = parseInt(key.slice(comma + 1), 10);
 
-        ctx.fillStyle = WHITE_COLORS.has(color.toLowerCase()) ? (styles.whitePixel ?? color) : color;
+        ctx.fillStyle = tone(color);
         ctx.fillRect(x, y, 1, 1);
       }
     }

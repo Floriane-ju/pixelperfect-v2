@@ -9,7 +9,8 @@
   image-rendering: crisp-edges;
 }
 
-// Lu par le composant : les pixels blancs sont peints dans ce ton pour rester visibles sur la carte.
+// Lu par le composant : le blanc est peint dans ce ton, les tons clairs en dégradé vers lui,
+// pour rester visibles sur la carte sans casser la luminosité du dessin.
 :export {
-  whitePixel: $color-thumbnail-white;
+  lightTone: $color-thumbnail-white;
 }
