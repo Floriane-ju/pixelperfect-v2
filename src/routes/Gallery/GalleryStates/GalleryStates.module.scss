@@ -94,6 +94,13 @@
   text-align: center;
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: $space-m;
+}
+
 .message {
   margin: 0;
   font-weight: $font-weight-semibold;

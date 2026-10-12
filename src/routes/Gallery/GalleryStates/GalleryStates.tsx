@@ -36,18 +36,27 @@ export function GalleryLoading() {
 
 export interface GalleryEmptyProps {
   onCreate: () => void;
+  /** Affiche un bouton « Se connecter » (mode anonyme). */
+  onLogin?: () => void;
 }
 
-export function GalleryEmpty({ onCreate }: GalleryEmptyProps) {
+export function GalleryEmpty({ onCreate, onLogin }: GalleryEmptyProps) {
   return (
     <div className={styles.center}>
       <span className={styles.emptyCanvas} aria-hidden="true">
         <span className={styles.emptyPixel} />
       </span>
       <p className={styles.message}>Aucun dessin pour le moment.</p>
-      <Button variant="primary" iconLeft="add" aria-haspopup="dialog" onClick={onCreate}>
-        Nouveau dessin
-      </Button>
+      <div className={styles.actions}>
+        {onLogin && (
+          <Button variant="secondary" iconLeft="login" onClick={onLogin}>
+            Se connecter
+          </Button>
+        )}
+        <Button variant="primary" iconLeft="add" aria-haspopup="dialog" onClick={onCreate}>
+          Nouveau dessin
+        </Button>
+      </div>
     </div>
   );
 }

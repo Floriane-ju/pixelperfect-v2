@@ -10,7 +10,7 @@ export interface GalleryDockProps {
   onSignOut: () => void;
 }
 
-/** Dock de la galerie : bibliothèque, puis import/export/connexion (anonyme) ou profil/déconnexion. */
+/** Dock de la galerie : bibliothèque, puis import/export (anonyme) ou profil ; connexion/déconnexion en pied. */
 export function GalleryDock({
   isAuth,
   onImport,
@@ -32,7 +32,16 @@ export function GalleryDock({
             title="Se déconnecter"
             onClick={onSignOut}
           />
-        ) : undefined
+        ) : (
+          <Button
+            variant="ink"
+            iconOnly
+            iconLeft="login"
+            aria-label="Se connecter"
+            title="Se connecter"
+            onClick={onLogin}
+          />
+        )
       }
     >
       <Button
@@ -70,14 +79,6 @@ export function GalleryDock({
             aria-label="Exporter la bibliothèque"
             title="Exporter"
             onClick={onExport}
-          />
-          <Button
-            variant="ink"
-            iconOnly
-            iconLeft="login"
-            aria-label="Se connecter"
-            title="Se connecter"
-            onClick={onLogin}
           />
         </>
       )}

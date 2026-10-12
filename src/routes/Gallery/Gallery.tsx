@@ -249,7 +249,12 @@ export function Gallery() {
           >
             {status === 'loading' && <GalleryLoading />}
             {status === 'error' && <GalleryError message={errorMsg} onRetry={reload} />}
-            {status === 'idle' && !hasContent && <GalleryEmpty onCreate={openNewDrawing} />}
+            {status === 'idle' && !hasContent && (
+              <GalleryEmpty
+                onCreate={openNewDrawing}
+                onLogin={isAuth ? undefined : () => navigate('/login')}
+              />
+            )}
 
             {hasContent && (
               <section
