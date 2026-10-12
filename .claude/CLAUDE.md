@@ -38,11 +38,15 @@ src/
   AppLayout.tsx         # layout racine + SessionProvider + SnackbarProvider
   components/           # composants réutilisables (Button, Input, Switch, Slider, Snackbar,
                         #   ColorSwatch, ColorWheelIcon, BrushSizeSlider, Icons, Menu,
-                        #   ErrorBoundary, SessionProvider)
+                        #   ErrorBoundary, SessionProvider, SnakeCanvas)
     <Name>/<Name>.tsx + <Name>.module.scss + index.ts
-    Dialog/             # dialogue centré (voile + clic extérieur) — ConfirmModal, NewDrawing,
+    Button/             # variantes primary|secondary|ghost|danger|selected|selectable|ink
+                        #   (`ink` = sur fond encre : aria-pressed → papier, aria-current → rouge)
+    Dock/               # colonne encre 64 px (logo, boutons `ink`, version en pied) ; Dock +
+                        #   DockDivider, layout responsive (barre du haut sur téléphone) | rail
+    Dialog/             # dialogue centré (voile tramé, barre de titre encre si `title`) — ConfirmModal, NewDrawing,
                         #   NewGroup, InviteCollaborator passent par lui
-    Modal/              # modale flottante déplaçable + ModalHeader (réutilisé par GroupModal)
+    Modal/              # modale flottante déplaçable + ModalHeader (barre encre, réutilisé par GroupModal)
     InlineConfirm/      # confirmation en place (carte, ligne de menu), layout row|column
     MembersMenu/        # menu des membres (collaborateurs d'un dessin, membres d'un groupe) + retrait
     SessionProvider/    # contexte session (useSession) — split Context/Provider/hook (cf. Snackbar)
@@ -67,14 +71,17 @@ src/
     offlineQueue.ts     # file IndexedDB (migre les anciennes entrées localStorage)
   routes/
     Login/              # auth (route publique)
-    Gallery/            # liste, groupes, modales (NewDrawing, NewGroup, Group,
-                        #   InviteCollaborator), DrawingCard/Thumbnail, Menu
+    Gallery/            # GalleryDock, GalleryStates (chargement/vide/erreur), liste, groupes,
+                        #   modales (NewDrawing, NewGroup, Group, InviteCollaborator),
+                        #   DrawingCard/GroupCard (gabarit commun `_card.scss`), DrawingThumbnail
     Editor/             # Canvas (+ overlays, hooks navigation/composite/sélection),
-                        #   Topbar, LayerPanel, ColorPicker, SettingsPanel, MirrorPanel, EditorContext,
+                        #   ToolDock (outils + popover taille pinceau à l'appui long, symétrie,
+                        #   affichage), Topbar (+ RefImagePanel), ColorRail (+ ColorPicker),
+                        #   StatusBar, LayerPanel, SettingsPanel, MirrorPanel, EditorContext, tools.ts,
                         #   hooks (useSave, useUndoRedo, useLayers, useSelection,
                         #   useColorPalette, useReferenceImage, useEditorShortcuts),
                         #   utilitaires (colorMerge, exportSvg, shapePixels) avec tests
-  styles/               # _variables, _mixins, global.scss
+  styles/               # _variables (tokens), _mixins, global.scss
   types/                # DrawingData, PixelLayer, DrawingRow, CollaboratorRole, HexColor
 
 supabase/migrations/    # migrations SQL (RLS, RPC, triggers). Le schéma historique vit dans le
@@ -85,6 +92,14 @@ public/                 # icônes PWA + favicon
 
 ## Conventions
 - **Toute valeur de style** (couleur, espace, taille, durée…) passe par une variable SCSS dans `src/styles/_variables.scss`. Pas de littéraux dans les modules.
+- **Design system « direction 07 »** (papier, encre, un rouge) : papier `$paper` tramé, encre `$ink`,
+  **un seul accent** `$red` réservé à l'action, l'état actif et le focus. Typo : Silkscreen
+  (`$font-family-display`, titres/numéros), Archivo (texte), Space Mono (méta). Pas de rayon ni de
+  flou : traits 1/2 px, ombres dures `$shadow-raised` / `$shadow-hover` / `$shadow-layer`, 120 ms.
+  Utiliser les mixins plutôt que recopier : `raised-interactive` (survol −2 px, pressé +4 px),
+  `layer-surface` (menus, popovers, dialogues), `ink-titlebar` / `ink-button` (fenêtres, dock),
+  `paper-dots`, `checker`, `scrim`, `pixel-mark`, `text-meta`, `focus-ring`. Référence visuelle :
+  artefact Design « PixelPerfect — refonte rétro pro », page Direction 07.
 - **Composants UI** systématiquement extraits dans `src/components/`. Un dossier par composant : `<Name>.tsx` + `<Name>.module.scss` + `index.ts`.
 - Imports via l'alias `@/` (= `src/`). Pas de `../../..`.
 - Pas d'`any`. Utiliser `unknown` puis narrower.
