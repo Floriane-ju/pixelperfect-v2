@@ -78,6 +78,20 @@
   font-family: $font-family-mono;
   font-size: $font-size-xs;
   white-space: nowrap;
+
+  // Classe doublée : passe devant `.variant-ghost` (soulignement au survol) quel que soit l'ordre des feuilles.
+  &#{&} {
+    border-color: $color-border;
+
+    &:hover:not(:disabled) {
+      text-decoration: none;
+      background: $color-hover-tint;
+    }
+
+    &:active:not(:disabled) {
+      background: $color-pressed-tint;
+    }
+  }
 }
 
 .actions {

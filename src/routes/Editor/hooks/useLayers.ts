@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import { MAX_LAYERS } from '@/lib/drawingValidation';
 import type { DrawingData, DrawingRow, HexColor, PixelLayer } from '@/types';
+import { resizeLayers } from '../resizeLayers';
 
 interface UseLayersParams {
   setDrawing: Dispatch<SetStateAction<DrawingRow | null>>;
@@ -106,8 +107,20 @@ export function useLayers({ setDrawing, setActiveLayerId, scheduleSave, pushHist
     scheduleSave();
   }, [latestDataRef, pushHistory, setDrawing, scheduleSave]);
 
+  const handleCanvasResize = useCallback((width: number, height: number) => {
+    const current = latestDataRef.current;
+    if (!current || (current.width === width && current.height === height)) return;
+    pushHistory(current);
+    setDrawing(prev => {
+      if (!prev) return prev;
+      return { ...prev, data: { ...prev.data, width, height, layers: resizeLayers(prev.data.layers, width, height) } };
+    });
+    scheduleSave();
+  }, [latestDataRef, pushHistory, setDrawing, scheduleSave]);
+
   return {
     handleLayerChange,
+    handleCanvasResize,
     handleLayerVisibilityToggle,
     handleLayerDuplicate,
     handleLayerAdd,

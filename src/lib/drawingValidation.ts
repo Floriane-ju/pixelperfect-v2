@@ -1,6 +1,6 @@
 import type { DrawingData, HexColor, PixelLayer } from '@/types';
 
-const MAX_DIMENSION = 512;
+export const MAX_DIMENSION = 512;
 export const MAX_LAYERS = 64;
 const PIXEL_KEY_RE = /^(\d+),(\d+)$/;
 const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;

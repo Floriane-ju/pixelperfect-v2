@@ -8,6 +8,7 @@ import { useOutsideDismiss } from '@/hooks/useOutsideDismiss';
 import { useEditorContext } from '../useEditorContext';
 import { buildLayersSvg } from '../exportSvg';
 import { copyLayersPng } from '../exportPng';
+import { ResizeCanvasModal } from '../ResizeCanvasModal';
 import { RefImagePanel } from './RefImagePanel';
 import styles from './Topbar.module.scss';
 
@@ -16,13 +17,14 @@ const COPIED_FEEDBACK_MS = 2000;
 export function Topbar() {
   const {
     title, groupName, canUndo, canRedo, onUndo, onRedo,
-    activeLayerId, layers, canvasWidth, canvasHeight, openPanel, onPanelToggle, onPanelClose,
+    activeLayerId, layers, canvasWidth, canvasHeight, onCanvasResize, openPanel, onPanelToggle, onPanelClose,
     onLayerAdd, onLayerSelect, onLayerVisibilityToggle, onLayerDuplicate, onLayerDelete, onLayerReorder,
     onBack, refImage, getCommittedLayers,
   } = useEditorContext();
 
   const topbarRef = useRef<HTMLElement>(null);
   const [copied, setCopied] = useState(false);
+  const [resizing, setResizing] = useState(false);
   const snackbar = useSnackbar();
 
   // La coche ne s'affiche que si le presse-papier a réellement accepté l'écriture.
@@ -70,7 +72,15 @@ export function Topbar() {
           </span>
           <div className={styles.titleRow}>
             <h1 className={styles.titleText}>{title}</h1>
-            <span className={styles.sizeChip}>{canvasWidth} × {canvasHeight} px</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={styles.sizeChip}
+              title="Modifier la taille du dessin"
+              onClick={() => setResizing(true)}
+            >
+              {canvasWidth} × {canvasHeight} px
+            </Button>
           </div>
         </div>
       </div>
@@ -147,6 +157,14 @@ export function Topbar() {
           ]}
         />
       </div>
+      {resizing && (
+        <ResizeCanvasModal
+          width={canvasWidth}
+          height={canvasHeight}
+          onClose={() => setResizing(false)}
+          onConfirm={(w, h) => { setResizing(false); onCanvasResize(w, h); }}
+        />
+      )}
     </header>
   );
 }

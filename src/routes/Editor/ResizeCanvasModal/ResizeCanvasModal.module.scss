@@ -1,0 +1,39 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: $space-m;
+}
+
+.dimensionField {
+  width: $dimension-input-width;
+}
+
+.dimensionInput {
+  padding: 0 $space-s;
+  font-family: $font-family-mono;
+}
+
+.sep,
+.unit {
+  display: inline-flex;
+  align-items: center;
+  height: $control-md;
+}
+
+.sep {
+  font-family: $font-family-display;
+}
+
+.unit {
+  font-family: $font-family-mono;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+}
+
+.warning {
+  margin: 0;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $color-text-muted;
+}

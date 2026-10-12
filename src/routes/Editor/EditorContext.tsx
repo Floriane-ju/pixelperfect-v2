@@ -20,6 +20,8 @@ export interface EditorContextValue {
   layers: PixelLayer[];
   canvasWidth: number;
   canvasHeight: number;
+  /** Redimensionne le dessin, ancré en haut à gauche (pixels hors cadre supprimés). */
+  onCanvasResize: (width: number, height: number) => void;
   openPanel: OpenPanel;
   onPanelToggle: (p: 'layers' | 'color' | 'ref' | 'export') => void;
   onPanelClose: () => void;
