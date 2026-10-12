@@ -13,10 +13,15 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const [state, setState] = useState<SessionState>({ session: null, loading: true });
 
   useEffect(() => {
+    let settled = false;
+    // Un rejet laisserait `loading` à true indéfiniment (galerie bloquée sur « Chargement… »).
     supabase.auth
       .getSession()
-      .then(({ data }) => setState({ session: data.session, loading: false }))
-      .catch(() => setState({ session: null, loading: false }));
+      .then(({ data }) => data.session, () => null)
+      .then((session) => {
+        // onAuthStateChange a pu répondre d'abord avec un état plus récent.
+        if (!settled) setState({ session, loading: false });
+      });
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, s) => {

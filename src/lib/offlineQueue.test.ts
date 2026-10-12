@@ -38,7 +38,13 @@ function installFakeLocalStorage(): void {
   });
 }
 
-function fakeRequest<T>(compute: () => T): IDBRequest<T> {
+interface FakeTransaction {
+  oncomplete: (() => void) | null;
+  onerror: (() => void) | null;
+}
+
+/** Sans `tx`, seul `onsuccess` est émis ; avec, le module attend aussi le commit (`oncomplete`). */
+function fakeRequest<T>(compute: () => T, tx?: FakeTransaction): IDBRequest<T> {
   const req = { onsuccess: null, onerror: null, result: undefined, error: null } as unknown as {
     onsuccess: (() => void) | null;
     onerror: (() => void) | null;
@@ -49,24 +55,37 @@ function fakeRequest<T>(compute: () => T): IDBRequest<T> {
     try {
       req.result = compute();
       req.onsuccess?.();
+      tx?.oncomplete?.();
     } catch (err) {
       req.error = err;
       req.onerror?.();
+      tx?.onerror?.();
     }
   });
   return req as unknown as IDBRequest<T>;
 }
 
-function installFakeIndexedDb(): void {
-  const objectStore = {
-    put: (value: unknown, key: string) => fakeRequest(() => backingStore.set(key, value)),
-    get: (key: string) => fakeRequest(() => backingStore.get(key)),
-    delete: (key: string) => fakeRequest(() => backingStore.delete(key)),
+function fakeObjectStore(tx?: FakeTransaction) {
+  return {
+    put: (value: unknown, key: string) => fakeRequest(() => backingStore.set(key, value), tx),
+    get: (key: string) => fakeRequest(() => backingStore.get(key), tx),
+    delete: (key: string) => fakeRequest(() => backingStore.delete(key), tx),
+    getAllKeys: () => fakeRequest(() => [...backingStore.keys()], tx),
   };
+}
+
+function installFakeIndexedDb(): void {
   const db = {
     objectStoreNames: { contains: () => true },
-    createObjectStore: () => objectStore,
-    transaction: () => ({ objectStore: () => objectStore }),
+    createObjectStore: () => fakeObjectStore(),
+    transaction: () => {
+      const tx: FakeTransaction & { objectStore: () => ReturnType<typeof fakeObjectStore> } = {
+        oncomplete: null,
+        onerror: null,
+        objectStore: () => fakeObjectStore(tx),
+      };
+      return tx;
+    },
   };
   vi.stubGlobal('indexedDB', {
     open: () => fakeRequest(() => db),
@@ -175,7 +194,7 @@ describe('offlineQueue — migration localStorage héritée', () => {
 
     expect(await getPending('d1')).toEqual(validData);
     expect(localStorage.getItem(LEGACY_PREFIX + 'd1')).toBeNull();
-    expect(backingStore.get('d1')).toEqual(validData);
+    expect(backingStore.get('d1')).toMatchObject({ data: validData });
   });
 
   it('rend null ET purge un JSON hérité illisible', async () => {

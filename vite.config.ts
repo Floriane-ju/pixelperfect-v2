@@ -95,27 +95,10 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html'],
-      include: ['src/**/*.{ts,tsx}'],
-      exclude: [
-        'src/**/*.{test,spec}.{ts,tsx}',
-        'src/**/index.ts',
-        'src/main.tsx',
-        'src/vite-env.d.ts',
-        'src/types/**',
-      ],
-      // Seuils délibérément absents pour l'instant : ils exigent `@vitest/coverage-v8`, qui
-      // n'est pas installé, donc aucun chiffre n'a pu être mesuré. Poser des seuils devinés
-      // ferait échouer la CI ou, pire, la rendrait verte sur un plancher fantaisiste.
-      //
-      // Pour les activer :
-      //   pnpm add -D @vitest/coverage-v8
-      //   pnpm run test:coverage        # relever les chiffres réels
-      // puis inscrire ici un `thresholds` légèrement en dessous du mesuré, et ajouter
-      // `pnpm run test:coverage` au job CI. Un plancher qui ne redescend jamais vaut mieux
-      // qu'un objectif jamais mesuré — mais il doit partir d'une mesure.
+    // Valeurs factices : lib/supabase.ts lève à l'import sans ces variables.
+    env: {
+      VITE_SUPABASE_URL: 'http://localhost:54321',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key',
     },
   },
 });
